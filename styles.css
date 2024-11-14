@@ -1,0 +1,154 @@
+/* style.css */
+
+/* Estilos generales para el menú lateral */
+#sidebarMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 200px;
+    background-color: #f8f9fa; /* Color de fondo */
+    transition: all 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto; /* Agregar scroll si el contenido es más grande */
+}
+
+#sidebarMenu.collapsed {
+    width: 80px;
+}
+
+#sidebarMenu .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+#sidebarMenu .nav-link .link-text {
+    display: inline;
+    margin-left: 10px;
+    transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+#sidebarMenu.collapsed .nav-link .link-text {
+    opacity: 0;
+    visibility: hidden;
+    width: 0;
+    overflow: hidden;
+}
+
+#sidebarMenu .nav-link i {
+    font-size: 1.2rem;
+    width: 40px;
+    text-align: center;
+}
+
+#sidebarMenu .btn {
+    width: 100%;
+}
+
+#sidebarMenu.collapsed .btn .link-text {
+    display: none;
+}
+
+#sidebarMenu .toggle-btn {
+    display: none; /* Ocultar por defecto */
+}
+
+#sidebarMenu.collapsed #sidebarCollapse i {
+    transform: rotate(180deg);
+}
+
+#sidebarMenu.collapsed #sidebarCollapse .link-text {
+    display: none;
+}
+
+/* Ajustar el contenido principal cuando el menú está colapsado */
+.main-content {
+    margin-left: 200px;
+    transition: all 0.3s ease;
+}
+
+#sidebarMenu.collapsed + .main-content {
+    margin-left: 80px;
+}
+
+/* Asegurar que el contenido principal esté por debajo del menú lateral */
+.main-content {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    #sidebarMenu {
+        position: fixed;
+        width: 250px;
+        height: 100vh;
+        left: -250px;
+        top: 0;
+        transition: left 0.3s ease;
+    }
+
+    #sidebarMenu.show {
+        left: 0;
+    }
+
+    #sidebarMenu.collapsed {
+        width: 250px;
+        left: -250px;
+    }
+
+    #sidebarMenu.collapsed.show {
+        left: 0;
+    }
+
+    #sidebarMenu .toggle-btn {
+        display: block; /* Mostrar botón de cierre en el menú lateral */
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    #sidebarMenu.collapsed ~ .main-content {
+        margin-left: 0;
+    }
+}
+
+/* Estilos para el botón de toggle */
+.toggle-btn {
+    display: none; /* Ocultar en pantallas grandes */
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1100;
+    background-color: #0d6efd;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .toggle-btn {
+        display: block; /* Mostrar en pantallas pequeñas */
+    }
+}
+
+/* Ajustes adicionales para la tabla y otros elementos si es necesario */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.grand-total-container {
+    text-align: right;
+}
