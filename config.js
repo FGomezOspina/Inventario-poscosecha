@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 stemsPerBunch: 7
             },
             REG: {
-                stemsPerBunch: 25,
+                stemsPerBunch: 25, // Valor predeterminado para REG
                 lengths: {
                     70: { bunchesPerProcona: 8 },
                     60: { bunchesPerProcona: 8 },
@@ -28,9 +28,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 stemsPerBunch: 0
             },
             REG: {
-                stemsPerBunch: 0,
                 lengths: {
-                    70: { bunchesPerProcona: 0 },
+                    70: { bunchesPerProcona: 0, stemsPerBunch: 10 },
+                    60: { bunchesPerProcona: 0, stemsPerBunch: 10 },
+                    55: { bunchesPerProcona: 0, stemsPerBunch: 10 },
+                    50: { bunchesPerProcona: 0, stemsPerBunch: 10 },
+                    40: { bunchesPerProcona: 0, stemsPerBunch: 10 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            }
+        },
+        EUPATORIUM: {
+            TJ: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            },
+            REG: {
+                lengths: {
+                    70: { bunchesPerProcona: 0, stemsPerBunch: 10 },
+                    60: { bunchesPerProcona: 0, stemsPerBunch: 10 },
+                    55: { bunchesPerProcona: 0 },
+                    50: { bunchesPerProcona: 0 },
+                    40: { bunchesPerProcona: 0 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            }
+        },
+        PAPYRUS: {
+            TJ: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            },
+            REG: {
+                lengths: {
+                    70: { bunchesPerProcona: 0, stemsPerBunch: 20 },
                     60: { bunchesPerProcona: 0 },
                     55: { bunchesPerProcona: 0 },
                     50: { bunchesPerProcona: 0 },
@@ -48,10 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 stemsPerBunch: 0
             },
             REG: {
-                stemsPerBunch: 0,
                 lengths: {
-                    70: { bunchesPerProcona: 0 },
-                    60: { bunchesPerProcona: 0 },
+                    70: { bunchesPerProcona: 0, stemsPerBunch: 25 },
+                    60: { bunchesPerProcona: 0, stemsPerBunch: 20 },
                     55: { bunchesPerProcona: 0 },
                     50: { bunchesPerProcona: 0 },
                     40: { bunchesPerProcona: 0 }
@@ -68,52 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 stemsPerBunch: 0
             },
             REG: {
-                stemsPerBunch: 0,
                 lengths: {
-                    70: { bunchesPerProcona: 0 },
-                    60: { bunchesPerProcona: 0 },
-                    55: { bunchesPerProcona: 0 },
-                    50: { bunchesPerProcona: 0 },
-                    40: { bunchesPerProcona: 0 }
-                }
-            },
-            WS10: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
-            }
-        },
-        EUPATORIUM: {
-            TJ: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
-            },
-            REG: {
-                stemsPerBunch: 0,
-                lengths: {
-                    70: { bunchesPerProcona: 0 },
-                    60: { bunchesPerProcona: 0 },
-                    55: { bunchesPerProcona: 0 },
-                    50: { bunchesPerProcona: 0 },
-                    40: { bunchesPerProcona: 0 }
-                }
-            },
-            WS10: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
-            }
-        },
-        PAPYRUS: {
-            TJ: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
-            },
-            REG: {
-                stemsPerBunch: 0,
-                lengths: {
-                    70: { bunchesPerProcona: 0 },
-                    60: { bunchesPerProcona: 0 },
-                    55: { bunchesPerProcona: 0 },
-                    50: { bunchesPerProcona: 0 },
+                    70: { bunchesPerProcona: 0, stemsPerBunch: 20 },
+                    60: { bunchesPerProcona: 0, stemsPerBunch: 25 },
+                    55: { bunchesPerProcona: 0, stemsPerBunch: 25 },
+                    50: { bunchesPerProcona: 0, stemsPerBunch: 25 },
                     40: { bunchesPerProcona: 0 }
                 }
             },
@@ -156,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         config = JSON.parse(JSON.stringify(defaultConfigs));
     }
 
-    // **Guardar la configuración fusionada de nuevo en localStorage para asegurar su integridad**
+    // Guardar la configuración fusionada de nuevo en localStorage para asegurar su integridad
     localStorage.setItem('config', JSON.stringify(config));
 
     function openConfigModal() {
@@ -177,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <form id="configForm">
                             <div class="mb-3">
                                 <label for="configCategory" class="form-label">Categoría</label>
-                                <select class="form-select" id="configCategory">
+                                <select class="form-select" id="configCategory" name="configCategory">
                                     <option value="" disabled selected>Seleccione una categoría</option>
                                     ${Object.keys(defaultConfigs).map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                                 </select>
@@ -189,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-primary" id="saveConfigBtn">Guardar cambios</button>
+                        <button type="button" class="btn btn-primary" id="saveConfigBtn" disabled>Guardar cambios</button>
                     </div>
                 </div>
             </div>
@@ -199,12 +194,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
 
+        const saveConfigBtn = modal.querySelector('#saveConfigBtn');
+
         // Manejar el cambio de categoría para cargar su configuración
         modal.querySelector('#configCategory').addEventListener('change', function() {
             const selectedCategory = this.value;
             const categoryConfigDiv = modal.querySelector('#categoryConfig');
             // Generar el formulario específico para la categoría
             categoryConfigDiv.innerHTML = generateSpecificConfigForm(selectedCategory);
+            saveConfigBtn.disabled = !selectedCategory;
         });
 
         // Función para generar el formulario específico para una categoría
@@ -214,29 +212,42 @@ document.addEventListener('DOMContentLoaded', () => {
             let formHtml = '';
 
             ['TJ', 'REG', 'WS10'].forEach(tipo => {
-                const tipoConfig = config[category][tipo] || { bunchesPerProcona: 0, stemsPerBunch: 0 };
-                formHtml += `
-                    <h5>${tipo}</h5>
-                    <div class="mb-3">
-                        <label>Bunches/Procona:</label>
-                        <input type="number" class="form-control" name="${category}_${tipo}_bunchesPerProcona" value="${tipoConfig.bunchesPerProcona !== undefined ? tipoConfig.bunchesPerProcona : 0}">
-                    </div>
-                    <div class="mb-3">
-                        <label>Stems/Bunch:</label>
-                        <input type="number" class="form-control" name="${category}_${tipo}_stemsPerBunch" value="${tipoConfig.stemsPerBunch !== undefined ? tipoConfig.stemsPerBunch : 0}">
-                    </div>
-                `;
+                const tipoConfig = config[category][tipo] || {};
 
-                if (tipo === 'REG') {
+                formHtml += `<h5>${tipo}</h5>`;
+
+                if (tipo !== 'REG') {
+                    formHtml += `
+                        <div class="mb-3">
+                            <label>Bunches/Procona:</label>
+                            <input type="number" class="form-control" name="${category}_${tipo}_bunchesPerProcona" value="${tipoConfig.bunchesPerProcona !== undefined ? tipoConfig.bunchesPerProcona : 0}">
+                        </div>
+                        <div class="mb-3">
+                            <label>Stems/Bunch:</label>
+                            <input type="number" class="form-control" name="${category}_${tipo}_stemsPerBunch" value="${tipoConfig.stemsPerBunch !== undefined ? tipoConfig.stemsPerBunch : 0}">
+                        </div>
+                    `;
+                } else {
+                    // Para REG
+                    formHtml += `
+                        <div class="mb-3">
+                            <label>Stems/Bunch (Predeterminado):</label>
+                            <input type="number" class="form-control" name="${category}_REG_stemsPerBunch_default" value="${tipoConfig.stemsPerBunch !== undefined ? tipoConfig.stemsPerBunch : 0}">
+                        </div>
+                    `;
                     formHtml += '<h6>Longitudes:</h6>';
                     const lengths = tipoConfig.lengths || {};
                     // Utilizar las longitudes de defaultConfigs para asegurar todas las longitudes
                     Object.keys(defaultConfigs[category].REG.lengths).forEach(long => {
-                        const longConfig = lengths[long] || { bunchesPerProcona: 0 };
+                        const longConfig = lengths[long] || { bunchesPerProcona: 0, stemsPerBunch: '' };
                         formHtml += `
                             <div class="mb-3">
                                 <label>Bunches/Procona para ${long} cm:</label>
                                 <input type="number" class="form-control" name="${category}_REG_bunchesPerProcona_${long}" value="${longConfig.bunchesPerProcona !== undefined ? longConfig.bunchesPerProcona : 0}">
+                            </div>
+                            <div class="mb-3">
+                                <label>Stems/Bunch para ${long} cm:</label>
+                                <input type="number" class="form-control" name="${category}_REG_stemsPerBunch_${long}" value="${longConfig.stemsPerBunch !== undefined ? longConfig.stemsPerBunch : ''}">
                             </div>
                         `;
                     });
@@ -258,20 +269,46 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             ['TJ', 'REG', 'WS10'].forEach(tipo => {
-                const bunchesKey = `${selectedCategory}_${tipo}_bunchesPerProcona`;
-                const stemsKey = `${selectedCategory}_${tipo}_stemsPerBunch`;
+                if (!config[selectedCategory][tipo]) {
+                    config[selectedCategory][tipo] = {};
+                }
 
-                const bunchesValue = parseInt(formData.get(bunchesKey));
-                const stemsValue = parseInt(formData.get(stemsKey));
+                if (tipo !== 'REG') {
+                    const bunchesKey = `${selectedCategory}_${tipo}_bunchesPerProcona`;
+                    const stemsKey = `${selectedCategory}_${tipo}_stemsPerBunch`;
 
-                config[selectedCategory][tipo].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
-                config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsValue) ? 0 : stemsValue;
+                    const bunchesValue = parseInt(formData.get(bunchesKey));
+                    const stemsValue = parseInt(formData.get(stemsKey));
 
-                if (tipo === 'REG') {
-                    Object.keys(config[selectedCategory][tipo].lengths).forEach(long => {
-                        const longKey = `${selectedCategory}_REG_bunchesPerProcona_${long}`;
-                        const longValue = parseInt(formData.get(longKey));
-                        config[selectedCategory][tipo].lengths[long].bunchesPerProcona = isNaN(longValue) ? 0 : longValue;
+                    config[selectedCategory][tipo].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
+                    config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsValue) ? 0 : stemsValue;
+                } else {
+                    // REG
+                    const stemsPerBunchDefaultKey = `${selectedCategory}_REG_stemsPerBunch_default`;
+                    const stemsPerBunchDefaultValue = parseInt(formData.get(stemsPerBunchDefaultKey));
+                    config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsPerBunchDefaultValue) ? 0 : stemsPerBunchDefaultValue;
+
+                    if (!config[selectedCategory][tipo].lengths) {
+                        config[selectedCategory][tipo].lengths = {};
+                    }
+                    Object.keys(defaultConfigs[selectedCategory].REG.lengths).forEach(long => {
+                        const bunchesKey = `${selectedCategory}_REG_bunchesPerProcona_${long}`;
+                        const stemsPerBunchKey = `${selectedCategory}_REG_stemsPerBunch_${long}`;
+
+                        const bunchesValue = parseInt(formData.get(bunchesKey));
+                        const stemsPerBunchValue = parseInt(formData.get(stemsPerBunchKey));
+
+                        if (!config[selectedCategory][tipo].lengths[long]) {
+                            config[selectedCategory][tipo].lengths[long] = {};
+                        }
+
+                        config[selectedCategory][tipo].lengths[long].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
+
+                        if (!isNaN(stemsPerBunchValue)) {
+                            config[selectedCategory][tipo].lengths[long].stemsPerBunch = stemsPerBunchValue;
+                        } else {
+                            delete config[selectedCategory][tipo].lengths[long].stemsPerBunch;
+                        }
                     });
                 }
             });
@@ -279,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Actualizar la configuración en localStorage
             localStorage.setItem('config', JSON.stringify(config));
 
-            // **Asegurar que estas funciones sean accesibles globalmente**
+            // Asegurar que estas funciones sean accesibles globalmente
             if (typeof window.saveTableData === 'function') {
                 window.saveTableData();
             } else {
@@ -337,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (configBtn) {
         configBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // **Asegúrate de que 'currentUser' esté definido globalmente y tenga una propiedad 'role'**
+            // Asegúrate de que 'currentUser' esté definido globalmente y tenga una propiedad 'role'
             if (window.currentUser && window.currentUser.role === 'admin') { 
                 openConfigModal();
             } else {
