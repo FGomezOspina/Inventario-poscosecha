@@ -16,22 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSidebarBtn = document.getElementById('closeSidebar');
 
     // Variables de configuración y datos
-    let config = {
-        TJ: { bunchesPerProcona: 20, stemsPerBunch: 7 },
-        REG: { stemsPerBunch: 25, lengths: { 70: { bunchesPerProcona: 8 }, 60: { bunchesPerProcona: 8 }, 55: { bunchesPerProcona: 8 }, 50: { bunchesPerProcona: 4 }, 40: { bunchesPerProcona: 8 } } },
-        WS10: { bunchesPerProcona: 20, stemsPerBunch: 10 }
-    };
-    // Cargar configuración si existe
-    const savedConfig = JSON.parse(localStorage.getItem('config'));
-    if (savedConfig) {
-        config = savedConfig;
-    }
+    let config = JSON.parse(localStorage.getItem('config')) || {};
 
     const longDefaults = [60, 55, 50];
     const tjRegOptions = ["TJ", "REG", "WS10"];
-    const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
+    const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Stems Total", "Notas"];
     const varietyOptions = {
-        "VERONICAS": ["ARTIST", "BIZARRE", "CAYA", "JUNE", "NAVY", "ROSWITHA"],
+        "VERONICA": ["ARTIST", "BIZARRE", "CAYA", "JUNE", "NAVY", "ROSWITHA"],
         "MENTHA": ["MENTHA", "MENTHA SPRAY"],
         "HYPERICUM": ["BELLIMO", "TANGO", "UNO"],
         "EUPATORIUM": ["MOMENTS", "PINK"],
@@ -97,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tipoCell) {
                 tipoCell.innerText = selectedTipo || '';
             }
+            updateCalculations(row);
             saveTableData();
         });
 
@@ -133,9 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Event listener para actualizar cálculos al cambiar el valor de "TJ - REG"
         select.addEventListener('change', () => {
             const row = getRowFromCell(select);
-            const groupId = row.getAttribute('data-group-id');
             updateCalculations(row);
-            updateStemsTotal(groupId);
             saveTableData();
         });
 
@@ -145,6 +135,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para obtener la fila desde una celda
     function getRowFromCell(cell) {
         return cell.closest('tr');
+    }
+
+    // Función para crear una celda editable
+    function createEditableCell(colName, value = '', rowspan = 1) {
+        const cell = document.createElement('td');
+        cell.contentEditable = true;
+        cell.classList.add('editable');
+        cell.setAttribute('data-col', colName);
+        if (rowspan > 1) {
+            cell.setAttribute('rowspan', rowspan);
+        }
+        cell.innerText = value;
+        return cell;
     }
 
     // *** NUEVA FUNCIÓN: addDataCellsToRow ***
@@ -254,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addDataCellsToRow(subRow, i, groupId, false);
         }
 
+        updateCalculations(mainRow);
         updateStemsTotal(groupId);
         saveTableData();
         showAlert('Grupo agregado correctamente.');
@@ -262,22 +266,29 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
-    // Función para crear una celda editable
-    function createEditableCell(colName, value = '', rowspan = 1) {
-        const cell = document.createElement('td');
-        cell.contentEditable = true;
-        cell.classList.add('editable');
-        cell.setAttribute('data-col', colName);
-        if (rowspan > 1) {
-            cell.setAttribute('rowspan', rowspan);
-        }
-        cell.innerText = value;
-        return cell;
-    }
-
     // Función para actualizar cálculos en una fila
     function updateCalculations(row) {
         const groupId = row.getAttribute('data-group-id');
+        if (!groupId) {
+            console.warn('La fila no tiene un ID de grupo.');
+            return;
+        }
+
+        // Encontrar la fila principal del grupo
+        const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
+        if (!mainRow) {
+            console.warn(`No se encontró la fila principal para el ID de grupo ${groupId}.`);
+            return;
+        }
+
+        const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
+        const tipo = tipoCell ? tipoCell.innerText.trim() : '';
+
+        if (!tipo || !config[tipo]) {
+            console.warn(`Configuración para la categoría "${tipo}" no encontrada.`);
+            return;
+        }
+
         const tjRegCell = row.querySelector('td[data-col="TJ - REG"] select');
         const longCell = row.querySelector('td[data-col="Long"]');
         const tjRegValue = tjRegCell ? tjRegCell.value : '';
@@ -289,21 +300,21 @@ document.addEventListener('DOMContentLoaded', () => {
         let bunchesPerProcona = 0;
         let stemsPerBunch = 0;
 
-        // Obtener valores de configuración
+        // Obtener valores de configuración basados en la categoría
         if (tjRegValue === "TJ" || tjRegValue === "WS10") {
-            bunchesPerProcona = config[tjRegValue].bunchesPerProcona;
-            stemsPerBunch = config[tjRegValue].stemsPerBunch;
+            bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona;
+            stemsPerBunch = config[tipo][tjRegValue].stemsPerBunch;
             // En TJ y WS10, la longitud no importa para Bunches/Procona
         } else if (tjRegValue === "REG") {
-            stemsPerBunch = config.REG.stemsPerBunch;
-            
-            // **Verificación Añadida: Asegurar que config.REG.lengths[longValue] existe**
-            if (config.REG.lengths && config.REG.lengths[longValue]) {
-                bunchesPerProcona = config.REG.lengths[longValue].bunchesPerProcona;
+            stemsPerBunch = config[tipo].REG.stemsPerBunch;
+
+            // **Verificación Añadida: Asegurar que config[tipo].REG.lengths[longValue] existe**
+            if (config[tipo].REG.lengths && config[tipo].REG.lengths[longValue]) {
+                bunchesPerProcona = config[tipo].REG.lengths[longValue].bunchesPerProcona;
             } else {
                 // Manejar el caso donde la longitud no está definida
                 bunchesPerProcona = 0; // Puedes asignar un valor predeterminado si lo deseas
-                console.warn(`Longitud ${longValue} no está definida en config.REG.lengths.`);
+                console.warn(`Longitud ${longValue} no está definida en config.${tipo}.REG.lengths.`);
             }
         } else {
             // Otros casos
@@ -796,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = getRowFromCell(cell);
             const groupId = row.getAttribute('data-group-id');
 
-            if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Long"].includes(col)) {
+            if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Long", "TJ - REG"].includes(col)) {
                 updateCalculations(row);
                 updateStemsTotal(groupId);
             }
@@ -816,4 +827,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================
     window.saveTableData = saveTableData;
     window.updateAllCalculations = updateAllCalculations;
-}); // <-- Cierre de DOMContentLoaded
+});

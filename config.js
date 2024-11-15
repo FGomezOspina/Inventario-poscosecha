@@ -1,24 +1,126 @@
 // config.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const defaultConfig = {
-        TJ: {
-            bunchesPerProcona: 20,
-            stemsPerBunch: 7
-        },
-        REG: {
-            stemsPerBunch: 25,
-            lengths: {
-                70: { bunchesPerProcona: 8 },
-                60: { bunchesPerProcona: 8 },
-                55: { bunchesPerProcona: 8 },
-                50: { bunchesPerProcona: 4 },
-                40: { bunchesPerProcona: 8 }
+    const defaultConfigs = {
+        VERONICA: {
+            TJ: {
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
+            },
+            REG: {
+                stemsPerBunch: 25,
+                lengths: {
+                    70: { bunchesPerProcona: 8 },
+                    60: { bunchesPerProcona: 8 },
+                    55: { bunchesPerProcona: 8 },
+                    50: { bunchesPerProcona: 4 },
+                    40: { bunchesPerProcona: 8 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 20,
+                stemsPerBunch: 10
             }
         },
-        WS10: {
-            bunchesPerProcona: 20,
-            stemsPerBunch: 10
+        HYPERICUM: {
+            TJ: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            },
+            REG: {
+                stemsPerBunch: 0,
+                lengths: {
+                    70: { bunchesPerProcona: 0 },
+                    60: { bunchesPerProcona: 0 },
+                    55: { bunchesPerProcona: 0 },
+                    50: { bunchesPerProcona: 0 },
+                    40: { bunchesPerProcona: 0 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            }
+        },
+        ORIGANUM: {
+            TJ: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            },
+            REG: {
+                stemsPerBunch: 0,
+                lengths: {
+                    70: { bunchesPerProcona: 0 },
+                    60: { bunchesPerProcona: 0 },
+                    55: { bunchesPerProcona: 0 },
+                    50: { bunchesPerProcona: 0 },
+                    40: { bunchesPerProcona: 0 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            }
+        },
+        MENTHA: {
+            TJ: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            },
+            REG: {
+                stemsPerBunch: 0,
+                lengths: {
+                    70: { bunchesPerProcona: 0 },
+                    60: { bunchesPerProcona: 0 },
+                    55: { bunchesPerProcona: 0 },
+                    50: { bunchesPerProcona: 0 },
+                    40: { bunchesPerProcona: 0 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            }
+        },
+        EUPATORIUM: {
+            TJ: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            },
+            REG: {
+                stemsPerBunch: 0,
+                lengths: {
+                    70: { bunchesPerProcona: 0 },
+                    60: { bunchesPerProcona: 0 },
+                    55: { bunchesPerProcona: 0 },
+                    50: { bunchesPerProcona: 0 },
+                    40: { bunchesPerProcona: 0 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            }
+        },
+        PAPYRUS: {
+            TJ: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            },
+            REG: {
+                stemsPerBunch: 0,
+                lengths: {
+                    70: { bunchesPerProcona: 0 },
+                    60: { bunchesPerProcona: 0 },
+                    55: { bunchesPerProcona: 0 },
+                    50: { bunchesPerProcona: 0 },
+                    40: { bunchesPerProcona: 0 }
+                }
+            },
+            WS10: {
+                bunchesPerProcona: 0,
+                stemsPerBunch: 0
+            }
         }
     };
 
@@ -48,25 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let config = {};
 
     if (savedConfig) {
-        config = deepMerge(JSON.parse(JSON.stringify(defaultConfig)), savedConfig);
+        // Fusionar las configuraciones guardadas con las predeterminadas
+        config = deepMerge(JSON.parse(JSON.stringify(defaultConfigs)), savedConfig);
     } else {
-        config = JSON.parse(JSON.stringify(defaultConfig));
-    }
-
-    // **Asegurar que config.REG.lengths contiene todas las longitudes necesarias**
-    const requiredLengths = ['70', '60', '55', '50', '40'];
-    if (!config.REG || typeof config.REG !== 'object') {
-        config.REG = JSON.parse(JSON.stringify(defaultConfig.REG));
-    } else {
-        if (!config.REG.lengths || typeof config.REG.lengths !== 'object') {
-            config.REG.lengths = JSON.parse(JSON.stringify(defaultConfig.REG.lengths));
-        } else {
-            requiredLengths.forEach(length => {
-                if (!config.REG.lengths.hasOwnProperty(length)) {
-                    config.REG.lengths[length] = JSON.parse(JSON.stringify(defaultConfig.REG.lengths[length]));
-                }
-            });
-        }
+        config = JSON.parse(JSON.stringify(defaultConfigs));
     }
 
     // **Guardar la configuración fusionada de nuevo en localStorage para asegurar su integridad**
@@ -76,18 +163,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.createElement('div');
         modal.classList.add('modal', 'fade');
         modal.setAttribute('tabindex', '-1');
-        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-labelledby', 'configModalLabel');
+        modal.setAttribute('aria-hidden', 'true');
 
         modal.innerHTML = `
-            <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-dialog modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Configuración</h5>
+                        <h5 class="modal-title" id="configModalLabel">Configuración</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <form id="configForm">
-                            ${generateConfigForm()}
+                            <div class="mb-3">
+                                <label for="configCategory" class="form-label">Categoría</label>
+                                <select class="form-select" id="configCategory">
+                                    <option value="" disabled selected>Seleccione una categoría</option>
+                                    ${Object.keys(defaultConfigs).map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div id="categoryConfig">
+                                <!-- Configuración específica de la categoría seleccionada -->
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -102,8 +199,99 @@ document.addEventListener('DOMContentLoaded', () => {
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
 
-        document.getElementById('saveConfigBtn').addEventListener('click', () => {
-            saveConfigFromForm();
+        // Manejar el cambio de categoría para cargar su configuración
+        modal.querySelector('#configCategory').addEventListener('change', function() {
+            const selectedCategory = this.value;
+            const categoryConfigDiv = modal.querySelector('#categoryConfig');
+            // Generar el formulario específico para la categoría
+            categoryConfigDiv.innerHTML = generateSpecificConfigForm(selectedCategory);
+        });
+
+        // Función para generar el formulario específico para una categoría
+        function generateSpecificConfigForm(category) {
+            if (!config[category]) return '<p>No hay configuración disponible para esta categoría.</p>';
+
+            let formHtml = '';
+
+            ['TJ', 'REG', 'WS10'].forEach(tipo => {
+                const tipoConfig = config[category][tipo] || { bunchesPerProcona: 0, stemsPerBunch: 0 };
+                formHtml += `
+                    <h5>${tipo}</h5>
+                    <div class="mb-3">
+                        <label>Bunches/Procona:</label>
+                        <input type="number" class="form-control" name="${category}_${tipo}_bunchesPerProcona" value="${tipoConfig.bunchesPerProcona !== undefined ? tipoConfig.bunchesPerProcona : 0}">
+                    </div>
+                    <div class="mb-3">
+                        <label>Stems/Bunch:</label>
+                        <input type="number" class="form-control" name="${category}_${tipo}_stemsPerBunch" value="${tipoConfig.stemsPerBunch !== undefined ? tipoConfig.stemsPerBunch : 0}">
+                    </div>
+                `;
+
+                if (tipo === 'REG') {
+                    formHtml += '<h6>Longitudes:</h6>';
+                    const lengths = tipoConfig.lengths || {};
+                    // Utilizar las longitudes de defaultConfigs para asegurar todas las longitudes
+                    Object.keys(defaultConfigs[category].REG.lengths).forEach(long => {
+                        const longConfig = lengths[long] || { bunchesPerProcona: 0 };
+                        formHtml += `
+                            <div class="mb-3">
+                                <label>Bunches/Procona para ${long} cm:</label>
+                                <input type="number" class="form-control" name="${category}_REG_bunchesPerProcona_${long}" value="${longConfig.bunchesPerProcona !== undefined ? longConfig.bunchesPerProcona : 0}">
+                            </div>
+                        `;
+                    });
+                }
+            });
+
+            return formHtml;
+        }
+
+        // Manejar el botón de guardar configuración
+        modal.querySelector('#saveConfigBtn').addEventListener('click', () => {
+            const form = modal.querySelector('#configForm');
+            const formData = new FormData(form);
+
+            const selectedCategory = formData.get('configCategory');
+            if (!selectedCategory) {
+                showAlert('Categoría no seleccionada.', 'danger');
+                return;
+            }
+
+            ['TJ', 'REG', 'WS10'].forEach(tipo => {
+                const bunchesKey = `${selectedCategory}_${tipo}_bunchesPerProcona`;
+                const stemsKey = `${selectedCategory}_${tipo}_stemsPerBunch`;
+
+                const bunchesValue = parseInt(formData.get(bunchesKey));
+                const stemsValue = parseInt(formData.get(stemsKey));
+
+                config[selectedCategory][tipo].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
+                config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsValue) ? 0 : stemsValue;
+
+                if (tipo === 'REG') {
+                    Object.keys(config[selectedCategory][tipo].lengths).forEach(long => {
+                        const longKey = `${selectedCategory}_REG_bunchesPerProcona_${long}`;
+                        const longValue = parseInt(formData.get(longKey));
+                        config[selectedCategory][tipo].lengths[long].bunchesPerProcona = isNaN(longValue) ? 0 : longValue;
+                    });
+                }
+            });
+
+            // Actualizar la configuración en localStorage
+            localStorage.setItem('config', JSON.stringify(config));
+
+            // **Asegurar que estas funciones sean accesibles globalmente**
+            if (typeof window.saveTableData === 'function') {
+                window.saveTableData();
+            } else {
+                console.warn('saveTableData no está definido.');
+            }
+
+            if (typeof window.updateAllCalculations === 'function') {
+                window.updateAllCalculations();
+            } else {
+                console.warn('updateAllCalculations no está definido.');
+            }
+
             bootstrapModal.hide();
             modal.remove();
             showAlert('Configuración guardada correctamente.');
@@ -111,87 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modal.addEventListener('hidden.bs.modal', () => {
             modal.remove();
-        });
-    }
-
-    function generateConfigForm() {
-        let html = '';
-
-        ["TJ", "WS10"].forEach(type => {
-            html += `
-                <h5>${type}</h5>
-                <div class="mb-3">
-                    <label>Bunches/Procona:</label>
-                    <input type="number" class="form-control" name="${type}_bunchesPerProcona" value="${config[type].bunchesPerProcona}">
-                </div>
-                <div class="mb-3">
-                    <label>Stems/Bunch:</label>
-                    <input type="number" class="form-control" name="${type}_stemsPerBunch" value="${config[type].stemsPerBunch}">
-                </div>
-            `;
-        });
-
-        html += `
-            <h5>REG</h5>
-            <div class="mb-3">
-                <label>Stems/Bunch:</label>
-                <input type="number" class="form-control" name="REG_stemsPerBunch" value="${config.REG.stemsPerBunch}">
-            </div>
-        `;
-
-        Object.keys(config.REG.lengths).forEach(length => {
-            html += `
-                <div class="mb-3">
-                    <label>Bunches/Procona para ${length} cm:</label>
-                    <input type="number" class="form-control" name="REG_bunchesPerProcona_${length}" value="${config.REG.lengths[length].bunchesPerProcona}">
-                </div>
-            `;
-        });
-
-        return html;
-    }
-
-    function saveConfigFromForm() {
-        const form = document.getElementById('configForm');
-        const formData = new FormData(form);
-
-        ["TJ", "WS10"].forEach(type => {
-            config[type].bunchesPerProcona = parseInt(formData.get(`${type}_bunchesPerProcona`)) || 0;
-            config[type].stemsPerBunch = parseInt(formData.get(`${type}_stemsPerBunch`)) || 0;
-        });
-
-        config.REG.stemsPerBunch = parseInt(formData.get('REG_stemsPerBunch')) || 0;
-
-        Object.keys(config.REG.lengths).forEach(length => {
-            config.REG.lengths[length].bunchesPerProcona = parseInt(formData.get(`REG_bunchesPerProcona_${length}`)) || 0;
-        });
-
-        localStorage.setItem('config', JSON.stringify(config));
-
-        // **Asegurar que estas funciones sean accesibles globalmente**
-        if (typeof window.saveTableData === 'function') {
-            window.saveTableData();
-        } else {
-            console.warn('saveTableData no está definido.');
-        }
-
-        if (typeof window.updateAllCalculations === 'function') {
-            window.updateAllCalculations();
-        } else {
-            console.warn('updateAllCalculations no está definido.');
-        }
-    }
-
-    // Event listener para el botón de configuración
-    const configBtn = document.getElementById('configBtn');
-    if (configBtn) {
-        configBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (window.currentUser && window.currentUser.role === 'admin') { // Acceder a currentUser global
-                openConfigModal();
-            } else {
-                showAlert('No tienes permisos para acceder a la configuración.', 'danger');
-            }
         });
     }
 
@@ -223,5 +330,19 @@ document.addEventListener('DOMContentLoaded', () => {
             alert.classList.add('hide');
             setTimeout(() => alert.remove(), 500); // Permite que la animación de cierre termine
         }, 3000); // Cambia este valor si quieres que dure más o menos tiempo
+    }
+
+    // Event listener para el botón de configuración
+    const configBtn = document.getElementById('configBtn');
+    if (configBtn) {
+        configBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // **Asegúrate de que 'currentUser' esté definido globalmente y tenga una propiedad 'role'**
+            if (window.currentUser && window.currentUser.role === 'admin') { 
+                openConfigModal();
+            } else {
+                showAlert('No tienes permisos para acceder a la configuración.', 'danger');
+            }
+        });
     }
 });
