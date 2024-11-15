@@ -1,7 +1,7 @@
 // config.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    let config = {
+    const defaultConfig = {
         TJ: {
             bunchesPerProcona: 20,
             stemsPerBunch: 7
@@ -22,11 +22,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Función para realizar una fusión profunda de objetos
+    function deepMerge(target, source) {
+        for (const key in source) {
+            if (source.hasOwnProperty(key)) {
+                if (
+                    source[key] &&
+                    typeof source[key] === 'object' &&
+                    !Array.isArray(source[key])
+                ) {
+                    if (!target[key] || typeof target[key] !== 'object') {
+                        target[key] = {};
+                    }
+                    deepMerge(target[key], source[key]);
+                } else {
+                    target[key] = source[key];
+                }
+            }
+        }
+        return target;
+    }
+
     // Cargar configuración desde localStorage si existe
     const savedConfig = JSON.parse(localStorage.getItem('config'));
+    let config = {};
+
     if (savedConfig) {
-        config = savedConfig;
+        config = deepMerge(JSON.parse(JSON.stringify(defaultConfig)), savedConfig);
+    } else {
+        config = JSON.parse(JSON.stringify(defaultConfig));
     }
+
+    // **Asegurar que config.REG.lengths contiene todas las longitudes necesarias**
+    const requiredLengths = ['70', '60', '55', '50', '40'];
+    if (!config.REG || typeof config.REG !== 'object') {
+        config.REG = JSON.parse(JSON.stringify(defaultConfig.REG));
+    } else {
+        if (!config.REG.lengths || typeof config.REG.lengths !== 'object') {
+            config.REG.lengths = JSON.parse(JSON.stringify(defaultConfig.REG.lengths));
+        } else {
+            requiredLengths.forEach(length => {
+                if (!config.REG.lengths.hasOwnProperty(length)) {
+                    config.REG.lengths[length] = JSON.parse(JSON.stringify(defaultConfig.REG.lengths[length]));
+                }
+            });
+        }
+    }
+
+    // **Guardar la configuración fusionada de nuevo en localStorage para asegurar su integridad**
+    localStorage.setItem('config', JSON.stringify(config));
 
     function openConfigModal() {
         const modal = document.createElement('div');
@@ -123,8 +167,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         localStorage.setItem('config', JSON.stringify(config));
-        saveTableData(); // Asegúrate de que esta función esté accesible globalmente
-        updateAllCalculations(); // Asegúrate de que esta función esté accesible globalmente
+
+        // **Asegurar que estas funciones sean accesibles globalmente**
+        if (typeof window.saveTableData === 'function') {
+            window.saveTableData();
+        } else {
+            console.warn('saveTableData no está definido.');
+        }
+
+        if (typeof window.updateAllCalculations === 'function') {
+            window.updateAllCalculations();
+        } else {
+            console.warn('updateAllCalculations no está definido.');
+        }
     }
 
     // Event listener para el botón de configuración
@@ -138,5 +193,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAlert('No tienes permisos para acceder a la configuración.', 'danger');
             }
         });
+    }
+
+    // Función para mostrar alertas (similar a la de main.js)
+    function showAlert(message, type = 'success') {
+        // Obtén el contenedor de alertas o crea uno si no existe
+        let alertContainer = document.getElementById('alertContainer');
+        if (!alertContainer) {
+            alertContainer = document.createElement('div');
+            alertContainer.id = 'alertContainer';
+            document.body.prepend(alertContainer);
+        }
+
+        // Crea el elemento de alerta
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = 'alert';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        // Añade la alerta al contenedor
+        alertContainer.appendChild(alert);
+
+        // Configura un temporizador para cerrar la alerta después de unos segundos
+        setTimeout(() => {
+            alert.classList.remove('show');
+            alert.classList.add('hide');
+            setTimeout(() => alert.remove(), 500); // Permite que la animación de cierre termine
+        }, 3000); // Cambia este valor si quieres que dure más o menos tiempo
     }
 });

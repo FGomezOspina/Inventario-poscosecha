@@ -147,6 +147,47 @@ document.addEventListener('DOMContentLoaded', () => {
         return cell.closest('tr');
     }
 
+    // *** NUEVA FUNCIÓN: addDataCellsToRow ***
+    function addDataCellsToRow(row, index, groupId, isMainRow = true) {
+        const fieldsToUse = fields.filter(field => field !== "Stems Total");
+
+        fieldsToUse.forEach((field) => {
+            const cell = document.createElement('td');
+            cell.classList.add('editable');
+            cell.setAttribute('data-col', field);
+
+            if (field === "TJ - REG") {
+                const select = createTJRegSelect();
+                cell.appendChild(select);
+            } else if (field === "Long") {
+                cell.contentEditable = true;
+                cell.innerText = longDefaults[index] || '';
+                cell.addEventListener('input', () => {
+                    updateCalculations(row);
+                    saveTableData();
+                });
+            } else if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4"].includes(field)) {
+                cell.contentEditable = true;
+                cell.innerText = ''; // Cambiado de '0' a ''
+                cell.addEventListener('input', () => {
+                    updateCalculations(row);
+                    saveTableData();
+                });
+            } else if (["Bunches/Procona", "Bunches Total", "Stems"].includes(field)) {
+                cell.contentEditable = false; // Campos calculados
+                cell.innerText = '0';
+            } else {
+                cell.contentEditable = true;
+                cell.innerText = '';
+                cell.addEventListener('input', () => {
+                    saveTableData();
+                });
+            }
+
+            row.appendChild(cell);
+        });
+    }
+
     // Función para agregar un nuevo grupo
     function addGroup() {
         const groupId = Date.now();
@@ -234,47 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return cell;
     }
 
-    // Función para agregar celdas de datos a una fila
-    function addDataCellsToRow(row, index, groupId, isMainRow = true) {
-        const fieldsToUse = fields.filter(field => field !== "Stems Total");
-
-        fieldsToUse.forEach((field) => {
-            const cell = document.createElement('td');
-            cell.classList.add('editable');
-            cell.setAttribute('data-col', field);
-
-            if (field === "TJ - REG") {
-                const select = createTJRegSelect();
-                cell.appendChild(select);
-            } else if (field === "Long") {
-                cell.contentEditable = true;
-                cell.innerText = longDefaults[index] || '';
-                cell.addEventListener('input', () => {
-                    updateCalculations(row);
-                    saveTableData();
-                });
-            } else if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4"].includes(field)) {
-                cell.contentEditable = true;
-                cell.innerText = ''; // Cambiado de '0' a ''
-                cell.addEventListener('input', () => {
-                    updateCalculations(row);
-                    saveTableData();
-                });
-            } else if (["Bunches/Procona", "Bunches Total", "Stems"].includes(field)) {
-                cell.contentEditable = false; // Campos calculados
-                cell.innerText = '0';
-            } else {
-                cell.contentEditable = true;
-                cell.innerText = '';
-                cell.addEventListener('input', () => {
-                    saveTableData();
-                });
-            }
-
-            row.appendChild(cell);
-        });
-    }
-
     // Función para actualizar cálculos en una fila
     function updateCalculations(row) {
         const groupId = row.getAttribute('data-group-id');
@@ -296,7 +296,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // En TJ y WS10, la longitud no importa para Bunches/Procona
         } else if (tjRegValue === "REG") {
             stemsPerBunch = config.REG.stemsPerBunch;
-            bunchesPerProcona = config.REG.lengths[longValue] ? config.REG.lengths[longValue].bunchesPerProcona : 0;
+            
+            // **Verificación Añadida: Asegurar que config.REG.lengths[longValue] existe**
+            if (config.REG.lengths && config.REG.lengths[longValue]) {
+                bunchesPerProcona = config.REG.lengths[longValue].bunchesPerProcona;
+            } else {
+                // Manejar el caso donde la longitud no está definida
+                bunchesPerProcona = 0; // Puedes asignar un valor predeterminado si lo deseas
+                console.warn(`Longitud ${longValue} no está definida en config.REG.lengths.`);
+            }
         } else {
             // Otros casos
             bunchesPerProcona = 0;
@@ -547,10 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-
-        // Actualizar el Gran Total
-        updateGrandTotal();
-    }
+    } // <-- Cierre de loadTableData
 
     // Función para generar el archivo Excel utilizando ExcelJS
     async function generateExcelFile() {
@@ -676,18 +681,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const stemsTotalColIndex = headers.indexOf("Stems Total") + 1;
 
             // Color naranja suave para "Bunches Total"
-            excelRow.getCell(bunchesTotalColIndex).fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFFCE4D6' } // Naranja suave
-            };
+            if (bunchesTotalColIndex > 0) {
+                excelRow.getCell(bunchesTotalColIndex).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFFCE4D6' } // Naranja suave
+                };
+            }
 
             // Color azul suave para "Stems Total"
-            excelRow.getCell(stemsTotalColIndex).fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFDDEBF7' } // Azul suave
-            };
+            if (stemsTotalColIndex > 0) {
+                excelRow.getCell(stemsTotalColIndex).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFDDEBF7' } // Azul suave
+                };
+            }
 
             rowIndex++;
         }
@@ -801,4 +810,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     responsableInput.addEventListener('input', saveTableData);
     window.addEventListener('beforeunload', saveTableData);
-});
+
+    // ============================
+    // Exposición de Funciones Globales
+    // ============================
+    window.saveTableData = saveTableData;
+    window.updateAllCalculations = updateAllCalculations;
+}); // <-- Cierre de DOMContentLoaded
