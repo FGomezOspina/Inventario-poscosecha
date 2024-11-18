@@ -13,10 +13,6 @@
     overflow-y: auto; /* Agregar scroll si el contenido es más grande */
 }
 
-#sidebarMenu.collapsed {
-    width: 80px;
-}
-
 #sidebarMenu .nav-link {
     display: flex;
     align-items: center;
@@ -29,13 +25,6 @@
     transition: opacity 0.3s ease, width 0.3s ease;
 }
 
-#sidebarMenu.collapsed .nav-link .link-text {
-    opacity: 0;
-    visibility: hidden;
-    width: 0;
-    overflow: hidden;
-}
-
 #sidebarMenu .nav-link i {
     font-size: 1.2rem;
     width: 40px;
@@ -44,10 +33,6 @@
 
 #sidebarMenu .btn {
     width: 100%;
-}
-
-#sidebarMenu.collapsed .btn .link-text {
-    display: none;
 }
 
 #sidebarMenu .toggle-btn {
@@ -66,10 +51,6 @@
 .main-content {
     margin-left: 200px;
     transition: all 0.3s ease;
-}
-
-#sidebarMenu.collapsed + .main-content {
-    margin-left: 80px;
 }
 
 /* Asegurar que el contenido principal esté por debajo del menú lateral */
@@ -142,13 +123,112 @@
 
 /* Ajustes adicionales para la tabla y otros elementos si es necesario */
 .table-responsive {
-    overflow-x: auto;
+    position: relative;
+    overflow: auto;
+    max-height: 70vh; /* Establecer una altura máxima para permitir el scroll */
 }
 
-.table th, .table td {
-    vertical-align: middle;
+.table {
+    position: relative;
 }
 
-.grand-total-container {
-    text-align: right;
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #fff;
+}
+
+.fixed-table-header {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 200px; /* Ajustar según el ancho del menú lateral */
+    right: 0;
+    background-color: #fff;
+    z-index: 999;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.fixed-table-header table {
+    margin-bottom: 0;
+}
+
+.fixed-table-header th,
+.fixed-table-header td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid black !important;
+}
+
+/* Colores para las columnas P */
+td[data-col="P1"],
+td[data-col="P2"],
+td[data-col="P3"],
+td[data-col="P4"],
+th[data-col="P1"],
+th[data-col="P2"],
+th[data-col="P3"],
+th[data-col="P4"] {
+    background-color: #D9E1F2; /* Azul claro */
+    border: 1px solid black !important; /* Bordes negros */
+}
+
+/* Colores para las columnas R */
+td[data-col="R1"],
+td[data-col="R2"],
+td[data-col="R3"],
+td[data-col="R4"],
+th[data-col="R1"],
+th[data-col="R2"],
+th[data-col="R3"],
+th[data-col="R4"] {
+    background-color: #FCE4D6; /* Naranja claro */
+    border: 1px solid black !important; /* Bordes negros */
+}
+
+/* Colores para la columna 'Long' */
+td[data-col="Long"],
+th[data-col="Long"] {
+    background-color: #FFFFCC; /* Amarillo claro */
+    border: 1px solid black !important; /* Líneas negras */
+}
+
+/* Asegurar que todas las celdas tengan bordes negros */
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid black !important;
+}
+
+/* Estilos para el botón de eliminar grupo */
+.delete-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    color: #a71d2a;
+}
+
+/* Resaltar la celda enfocada */
+.editable:focus {
+    outline: 2px solid #0d6efd;
+}
+
+/* Ocultar los controles de selección en los select al enfocarlos */
+.editable select:focus {
+    outline: none;
+}
+
+/* Ajustes para permitir el desplazamiento horizontal en móviles */
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .fixed-table-header {
+        left: 0;
+    }
 }
