@@ -7,10 +7,10 @@
     left: 0;
     height: 100vh;
     width: 200px;
-    background-color: #f8f9fa; /* Color de fondo */
+    background-color: #f8f9fa;
     transition: all 0.3s ease;
     z-index: 1000;
-    overflow-y: auto; /* Agregar scroll si el contenido es más grande */
+    overflow-y: auto;
 }
 
 #sidebarMenu .nav-link {
@@ -20,7 +20,6 @@
 }
 
 #sidebarMenu .nav-link .link-text {
-    display: inline;
     margin-left: 10px;
     transition: opacity 0.3s ease, width 0.3s ease;
 }
@@ -35,75 +34,17 @@
     width: 100%;
 }
 
-#sidebarMenu .toggle-btn {
-    display: none; /* Ocultar por defecto */
-}
-
-#sidebarMenu.collapsed #sidebarCollapse i {
-    transform: rotate(180deg);
-}
-
-#sidebarMenu.collapsed #sidebarCollapse .link-text {
-    display: none;
-}
-
-/* Ajustar el contenido principal cuando el menú está colapsado */
+/* Ajustar el contenido principal */
 .main-content {
     margin-left: 200px;
     transition: all 0.3s ease;
-}
-
-/* Asegurar que el contenido principal esté por debajo del menú lateral */
-.main-content {
     position: relative;
     z-index: 1;
 }
 
-@media (max-width: 768px) {
-    #sidebarMenu {
-        position: fixed;
-        width: 250px;
-        height: 100vh;
-        left: -250px;
-        top: 0;
-        transition: left 0.3s ease;
-    }
-
-    #sidebarMenu.show {
-        left: 0;
-    }
-
-    #sidebarMenu.collapsed {
-        width: 250px;
-        left: -250px;
-    }
-
-    #sidebarMenu.collapsed.show {
-        left: 0;
-    }
-
-    #sidebarMenu .toggle-btn {
-        display: block; /* Mostrar botón de cierre en el menú lateral */
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-    }
-
-    .main-content {
-        margin-left: 0;
-    }
-
-    #sidebarMenu.collapsed ~ .main-content {
-        margin-left: 0;
-    }
-}
-
 /* Estilos para el botón de toggle */
 .toggle-btn {
-    display: none; /* Ocultar en pantallas grandes */
+    display: none;
     position: fixed;
     top: 10px;
     left: 10px;
@@ -116,85 +57,52 @@
 }
 
 @media (max-width: 768px) {
+    #sidebarMenu {
+        width: 250px;
+        left: -250px;
+    }
+
+    #sidebarMenu.show {
+        left: 0;
+    }
+
     .toggle-btn {
-        display: block; /* Mostrar en pantallas pequeñas */
+        display: block;
+    }
+
+    .main-content {
+        margin-left: 0;
     }
 }
 
-/* Ajustes adicionales para la tabla y otros elementos si es necesario */
+/* Estilos para la tabla */
 .table-responsive {
-    position: relative;
     overflow: auto;
-    max-height: 70vh; /* Establecer una altura máxima para permitir el scroll */
-}
-
-.table {
-    position: relative;
-}
-
-.table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background-color: #fff;
-}
-
-.fixed-table-header {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 200px; /* Ajustar según el ancho del menú lateral */
-    right: 0;
-    background-color: #fff;
-    z-index: 999;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.fixed-table-header table {
-    margin-bottom: 0;
-}
-
-.fixed-table-header th,
-.fixed-table-header td {
-    padding: 8px;
-    text-align: left;
-    border: 1px solid black !important;
+    max-height: 70vh;
 }
 
 /* Colores para las columnas P */
-td[data-col="P1"],
-td[data-col="P2"],
-td[data-col="P3"],
-td[data-col="P4"],
-th[data-col="P1"],
-th[data-col="P2"],
-th[data-col="P3"],
-th[data-col="P4"] {
-    background-color: #D9E1F2; /* Azul claro */
-    border: 1px solid black !important; /* Bordes negros */
+td[data-col^="P"],
+th[data-col^="P"] {
+    background-color: #D9E1F2;
+    border: 1px solid black !important;
 }
 
 /* Colores para las columnas R */
-td[data-col="R1"],
-td[data-col="R2"],
-td[data-col="R3"],
-td[data-col="R4"],
-th[data-col="R1"],
-th[data-col="R2"],
-th[data-col="R3"],
-th[data-col="R4"] {
-    background-color: #FCE4D6; /* Naranja claro */
-    border: 1px solid black !important; /* Bordes negros */
+td[data-col^="R"],
+th[data-col^="R"] {
+    background-color: #FCE4D6;
+    border: 1px solid black !important;
 }
 
 /* Colores para la columna 'Long' */
 td[data-col="Long"],
 th[data-col="Long"] {
-    background-color: #FFFFCC; /* Amarillo claro */
-    border: 1px solid black !important; /* Líneas negras */
+    background-color: #FFFFCC;
+    border: 1px solid black !important;
 }
 
-/* Asegurar que todas las celdas tengan bordes negros */
+/* Bordes negros para todas las celdas */
 .table-bordered th,
 .table-bordered td {
     border: 1px solid black !important;
@@ -217,18 +125,8 @@ th[data-col="Long"] {
     outline: 2px solid #0d6efd;
 }
 
-/* Ocultar los controles de selección en los select al enfocarlos */
-.editable select:focus {
-    outline: none;
-}
-
-/* Ajustes para permitir el desplazamiento horizontal en móviles */
-@media (max-width: 768px) {
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    .fixed-table-header {
-        left: 0;
-    }
+/* Estilos para el campo de fecha */
+td[data-col="Fecha"] input[type="date"],
+th[data-col="Fecha"] {
+    min-width: 120px;
 }
