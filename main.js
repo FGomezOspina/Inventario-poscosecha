@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const generateExcelBtn = document.getElementById('generateExcelBtn');
     const dataTable = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
     const responsableInput = document.getElementById('responsable');
-    const fechaInput = document.getElementById('fecha'); // Campo de fecha
     const alertPlaceholder = document.getElementById('alertPlaceholder');
 
     // Elementos del menú lateral
@@ -191,6 +190,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return cell;
     }
 
+    // Función para crear una celda de fecha
+    function createDateCell(colName, value = '', rowspan = 1) {
+        const cell = document.createElement('td');
+        cell.setAttribute('data-col', colName);
+        cell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
+        if (rowspan > 1) {
+            cell.setAttribute('rowspan', rowspan);
+        }
+
+        const input = document.createElement('input');
+        input.type = 'date';
+        input.value = value;
+        input.classList.add('form-control', 'form-control-sm');
+        input.style.minWidth = '120px';
+
+        input.addEventListener('change', () => {
+            saveTableData();
+        });
+
+        cell.appendChild(input);
+
+        return cell;
+    }
+
     // Función para agregar celdas de datos a una fila
     function addDataCellsToRow(row, index, groupId, isMainRow = true, longsArray) {
         const fieldsToUse = fields;
@@ -269,6 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Crear celda "Batch"
         const batchCell = createEditableCell('Batch', '', numRows);
         mainRow.appendChild(batchCell);
+
+        // Crear celda "Fecha"
+        const today = new Date().toISOString().split('T')[0]; // Fecha actual
+        const fechaCell = createDateCell('Fecha', today, numRows);
+        mainRow.appendChild(fechaCell);
 
         // Agregar celdas de datos para la primera fila
         addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
@@ -491,6 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     variety: '',
                     tipo: '',
                     batch: '',
+                    fecha: '',
                     stemsTotal: 0,
                     rows: []
                 };
@@ -503,6 +532,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 group.variety = row.cells[0].querySelector('select').value;
                 group.tipo = row.querySelector('td[data-col="Tipo"]').innerText.trim();
                 group.batch = row.cells[2].innerText.trim();
+                // Obtener "Fecha"
+                const fechaCell = row.querySelector('td[data-col="Fecha"]');
+                const fechaInput = fechaCell ? fechaCell.querySelector('input') : null;
+                group.fecha = fechaInput ? fechaInput.value : '';
                 // Obtener "Stems Total"
                 const stemsTotalCell = row.querySelector('td[data-col="Stems Total"]');
                 group.stemsTotal = stemsTotalCell ? parseInt(stemsTotalCell.innerText.trim()) : 0;
@@ -510,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Solo guardar datos de filas que contienen datos (excluye las celdas con rowspan y acciones)
             const rowData = {};
-            const startIndex = isMainRow ? 3 : 0; // Ajuste por "Variety", "Tipo" y "Batch"
+            const startIndex = isMainRow ? 4 : 0; // Ajuste por "Variety", "Tipo", "Batch" y "Fecha"
             const endIndex = isMainRow ? row.cells.length - 2 : row.cells.length - 1; // Ignorar "Acciones" en filas
 
             for (let i = startIndex; i < endIndex; i++) {
@@ -523,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('tableData', JSON.stringify(groups));
         localStorage.setItem('responsable', responsableInput.value.trim());
-        localStorage.setItem('fecha', fechaInput.value); // Guardar la fecha
     }
 
     // Función para cargar los datos de la tabla desde el almacenamiento local
@@ -531,16 +563,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(localStorage.getItem('tableData'));
         const responsable = localStorage.getItem('responsable') || '';
         responsableInput.value = responsable;
-
-        // Cargar la fecha
-        const fechaGuardada = localStorage.getItem('fecha');
-        if (fechaGuardada) {
-            fechaInput.value = fechaGuardada;
-        } else {
-            // Si no hay fecha guardada, establecer la fecha actual
-            const today = new Date().toISOString().split('T')[0];
-            fechaInput.value = today;
-        }
 
         if (data && Object.keys(data).length > 0) {
             Object.keys(data).forEach(groupId => {
@@ -569,6 +591,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Crear celda "Batch"
                     const batchCell = createEditableCell('Batch', group.batch, numRows);
                     mainRow.appendChild(batchCell);
+
+                    // Crear celda "Fecha"
+                    const fechaCell = createDateCell('Fecha', group.fecha || '', numRows);
+                    mainRow.appendChild(fechaCell);
 
                     // Agregar celdas de datos para la primera fila
                     addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
@@ -613,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Actualizar celdas con datos en la primera fila
                     const fieldsToUse = fields;
                     fieldsToUse.forEach((field, idx) => {
-                        const cellIndex = idx + 3; // Ajuste por "Variety", "Tipo" y "Batch"
+                        const cellIndex = idx + 4; // Ajuste por "Variety", "Tipo", "Batch" y "Fecha"
                         const cell = mainRow.cells[cellIndex];
                         if (cell) {
                             if (field === "TJ - REG") {
@@ -670,11 +696,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const responsable = responsableInput.value.trim() || "Desconocido";
         const fechaHora = new Date().toLocaleString();
 
-        worksheet.mergeCells('A1:S1');
+        worksheet.mergeCells('A1:T1');
         worksheet.getCell('A1').value = `Responsable del Conteo: ${responsable}`;
         worksheet.getCell('A1').font = { bold: true };
 
-        worksheet.mergeCells('A2:S2');
+        worksheet.mergeCells('A2:T2');
         worksheet.getCell('A2').value = `Fecha y Hora de Generación: ${fechaHora}`;
         worksheet.getCell('A2').font = { bold: true };
 
@@ -682,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
         worksheet.addRow([]);
 
         // Encabezados
-        const headers = ["Variety", "Tipo", "Batch", "TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Stems Total", "Notas"];
+        const headers = ["Variety", "Tipo", "Batch", "Fecha", "TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Stems Total", "Notas"];
         const headerRow = worksheet.addRow(headers);
 
         // Aplicar estilos a los encabezados
@@ -713,6 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let variety = '';
         let batch = '';
+        let fechaValue = '';
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
@@ -726,31 +753,36 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isMainRow) {
                 const rowspan = parseInt(row.cells[0].getAttribute('rowspan')) || 1;
 
-                // Agregar los datos de "Variety", "Tipo" y "Batch"
+                // Agregar los datos de "Variety", "Tipo", "Batch", "Fecha"
                 variety = row.cells[0].querySelector('select').value;
                 const tipo = row.cells[1].innerText.trim();
                 batch = row.cells[2].innerText.trim();
+                const fechaInput = row.cells[3].querySelector('input');
+                fechaValue = fechaInput ? fechaInput.value : '';
 
                 excelRowData.push(variety); // "Variety"
                 excelRowData.push(tipo); // "Tipo"
                 excelRowData.push(batch); // "Batch"
+                excelRowData.push(fechaValue); // "Fecha"
 
-                // Registrar las celdas combinadas para "Variety", "Tipo" y "Batch"
+                // Registrar las celdas combinadas para "Variety", "Tipo", "Batch", "Fecha"
                 if (rowspan > 1) {
                     worksheet.mergeCells(rowIndex, 1, rowIndex + rowspan - 1, 1); // "Variety"
                     worksheet.mergeCells(rowIndex, 2, rowIndex + rowspan - 1, 2); // "Tipo"
                     worksheet.mergeCells(rowIndex, 3, rowIndex + rowspan - 1, 3); // "Batch"
+                    worksheet.mergeCells(rowIndex, 4, rowIndex + rowspan - 1, 4); // "Fecha"
                 }
             } else {
                 // Para subfilas, usamos el último valor de variety y batch
                 excelRowData.push(""); // "Variety"
                 excelRowData.push(""); // "Tipo"
                 excelRowData.push(""); // "Batch"
+                excelRowData.push(""); // "Fecha"
             }
 
             // Obtener los demás datos
             const cells = row.querySelectorAll('td');
-            const startIndex = isMainRow ? 3 : 0; // Ajuste para las celdas "Variety", "Tipo" y "Batch"
+            const startIndex = isMainRow ? 4 : 0; // Ajuste para las celdas "Variety", "Tipo", "Batch" y "Fecha"
 
             let tjRegValue = '';
             let longValue = '';
@@ -864,7 +896,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     Variety: variety,
                     Batch: batch,
                     Long: longValue,
-                    Stems: stemsValue
+                    Stems: stemsValue,
+                    Fecha: fechaValue // Agregamos la fecha
                 });
             }
 
@@ -1001,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const batchSheet = workbook.addWorksheet('Por Batch');
 
         // Encabezados para la hoja "Por Batch"
-        const batchHeaders = ["Variety", "Batch", "Long", "Stems"];
+        const batchHeaders = ["Variety", "Batch", "Long", "Stems", "Fecha"];
         batchSheet.addRow(batchHeaders).eachCell(cell => {
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center' };
@@ -1015,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const batchDataMap = {};
 
         dataByBatch.forEach(item => {
-            const key = `${item.Variety}_${item.Batch}_${item.Long}`;
+            const key = `${item.Variety}_${item.Batch}_${item.Long}_${item.Fecha}`;
             if (!batchDataMap[key]) {
                 batchDataMap[key] = { ...item };
             } else {
@@ -1029,7 +1062,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.Variety,
                 item.Batch,
                 item.Long,
-                item.Stems
+                item.Stems,
+                item.Fecha
             ]).eachCell(cell => {
                 cell.alignment = { horizontal: 'center' };
             });
@@ -1229,7 +1263,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     responsableInput.addEventListener('input', saveTableData);
-    fechaInput.addEventListener('input', saveTableData); // Guardar cambios en la fecha
     window.addEventListener('beforeunload', saveTableData);
 
     // ============================

@@ -58,12 +58,6 @@
                     <input type="text" class="form-control" id="responsable" placeholder="Ingrese el nombre del responsable">
                 </div>
 
-                <!-- Campo para la fecha -->
-                <div class="mb-3">
-                    <label for="fecha" class="form-label">Fecha:</label>
-                    <input type="date" class="form-control" id="fecha">
-                </div>
-
                 <!-- Tabla de datos -->
                 <div class="table-responsive">
                     <table id="dataTable" class="table table-bordered table-sm">
@@ -72,6 +66,7 @@
                                 <th data-col="Variety">Variety</th>
                                 <th data-col="Tipo">Tipo</th>
                                 <th data-col="Batch">Batch</th>
+                                <th data-col="Fecha">Fecha</th>
                                 <th data-col="TJ - REG">TJ - REG</th>
                                 <th data-col="Long">Long</th>
                                 <th data-col="P1">P1</th>
@@ -106,6 +101,30 @@
 
             </main>
         </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">        
+            <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+          </div>
+          <div class="modal-body">
+            <form id="loginForm">
+              <div class="mb-3">
+                <label for="username" class="form-label">Usuario</label>
+                <input type="text" class="form-control" id="username" required>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Ingresar</button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Incluir Bootstrap JS y sus dependencias -->
