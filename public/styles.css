@@ -1,4 +1,4 @@
-/* style.css */
+/* styles.css */
 
 /* Estilos generales para el menú lateral */
 #sidebarMenu {
@@ -6,7 +6,7 @@
     top: 0;
     left: 0;
     height: 100vh;
-    width: 200px;
+    width: 180px; /* Reducido de 200px a 180px para un diseño más compacto */
     background-color: #f8f9fa;
     transition: all 0.3s ease;
     z-index: 1000;
@@ -16,27 +16,29 @@
 #sidebarMenu .nav-link {
     display: flex;
     align-items: center;
-    padding: 10px 15px;
+    padding: 8px 12px; /* Reducido el padding */
 }
 
 #sidebarMenu .nav-link .link-text {
-    margin-left: 10px;
+    margin-left: 8px; /* Reducido el margen */
     transition: opacity 0.3s ease, width 0.3s ease;
 }
 
 #sidebarMenu .nav-link i {
-    font-size: 1.2rem;
-    width: 40px;
+    font-size: 1rem; /* Reducido el tamaño de la fuente */
+    width: 30px; /* Reducido el ancho */
     text-align: center;
 }
 
 #sidebarMenu .btn {
     width: 100%;
+    padding: 8px; /* Reducido el padding */
+    font-size: 0.9rem; /* Reducido el tamaño de la fuente */
 }
 
 /* Ajustar el contenido principal */
 .main-content {
-    margin-left: 200px;
+    margin-left: 180px; /* Ajustado al nuevo ancho del sidebar */
     transition: all 0.3s ease;
     position: relative;
     z-index: 1;
@@ -52,14 +54,15 @@
     background-color: #0d6efd;
     color: #fff;
     border: none;
-    padding: 10px;
+    padding: 8px; /* Reducido el padding */
     border-radius: 4px;
+    font-size: 1rem; /* Reducido el tamaño de la fuente */
 }
 
 @media (max-width: 768px) {
     #sidebarMenu {
-        width: 250px;
-        left: -250px;
+        width: 220px; /* Ajustado para pantallas más pequeñas */
+        left: -220px;
     }
 
     #sidebarMenu.show {
@@ -78,7 +81,72 @@
 /* Estilos para la tabla */
 .table-responsive {
     overflow: auto;
-    max-height: 70vh;
+    max-height: 60vh; /* Reducido para un diseño más compacto */
+}
+
+/* Ancho específico para cada columna */
+.col-variety {
+    width: 150px; /* Reducido de 200px a 150px */
+    min-width: 120px;
+    max-width: 180px;
+    white-space: nowrap; /* Evita el salto de línea */
+}
+
+.col-tipo {
+    width: 80px; /* Reducido de 100px a 80px */
+    min-width: 60px;
+    max-width: 100px;
+    text-align: center;
+}
+
+.col-bunches-procona {
+    width: 100px; /* Reducido de 120px a 100px */
+    min-width: 80px;
+    max-width: 120px;
+    text-align: center;
+}
+
+.col-acciones {
+    width: 60px; /* Reducido de 80px a 60px */
+    min-width: 50px;
+    max-width: 80px;
+    text-align: center; /* Centrar el contenido horizontalmente */
+    vertical-align: middle; /* Centrar el contenido verticalmente */
+    display: flex;
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+}
+
+/* Ancho para otras columnas */
+.col-batch,
+.col-fecha,
+.col-tj-reg,
+.col-long,
+.col-p1,
+.col-p2,
+.col-p3,
+.col-p4,
+.col-r1,
+.col-r2,
+.col-r3,
+.col-r4,
+.col-bunches-total,
+.col-stems,
+.col-stems-total,
+.col-notas {
+    width: 80px; /* Reducido de 100px a 80px */
+    min-width: 60px;
+    max-width: 100px;
+    text-align: center; /* Centrar el contenido horizontalmente */
+    white-space: nowrap; /* Evita el salto de línea */
+}
+
+/* Ajustar el ancho de las columnas */
+#dataTable th,
+#dataTable td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Colores para las columnas P */
@@ -114,6 +182,11 @@ th[data-col="Long"] {
     border: none;
     color: #dc3545;
     cursor: pointer;
+    width: 30px; /* Reducido el ancho */
+    height: 30px; /* Reducido la altura */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .delete-btn:hover {
@@ -128,5 +201,38 @@ th[data-col="Long"] {
 /* Estilos para el campo de fecha */
 td[data-col="Fecha"] input[type="date"],
 th[data-col="Fecha"] {
-    min-width: 120px;
+    min-width: 100px; /* Reducido de 120px a 100px */
+}
+
+/* Alternar colores de filas para mejor legibilidad */
+#dataTable tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+#dataTable tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+/* Ajustes de fuente y padding para mejorar la legibilidad y hacer la tabla más compacta */
+#dataTable th, 
+#dataTable td {
+    font-size: 12px; /* Reducido de 14px a 12px */
+    padding: 4px; /* Reducido de 8px a 4px */
+}
+
+/* Estilos para los inputs dentro de la tabla para mejor visualización */
+#dataTable input[type="date"] {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 12px; /* Reducido de 14px a 12px */
+    padding: 2px; /* Reducido de 4px a 2px */
+}
+
+/* Opcional: Mejorar la apariencia de los botones */
+.delete-btn {
+    color: #dc3545; /* Rojo para indicar peligro/acción */
+}
+
+.delete-btn:hover {
+    color: #a71d2a; /* Rojo oscuro al pasar el cursor */
 }

@@ -1,5 +1,3 @@
-// main.js
-
 document.addEventListener('DOMContentLoaded', () => {
     // ============================
     // Declaración de Variables
@@ -20,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let config = JSON.parse(localStorage.getItem('config')) || {};
 
     const longDefaults = []; // Longitudes predeterminadas vacías
-    const hypericumLongs = [70, 60, 55, 50, 40]; // Longitudes para Hypericum
+    const hypericumLongs = ['', '']; // Longitudes para Hypericum, establecidas a vacío por defecto
     const tjRegOptions = ["TJ", "REG", "WS10"];
     const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
     const varietyOptions = {
@@ -86,20 +84,40 @@ document.addEventListener('DOMContentLoaded', () => {
         // Event listener para actualizar "Tipo" al cambiar "Variety"
         selectVariety.addEventListener('change', () => {
             const row = getRowFromCell(selectVariety);
+            const groupId = row.getAttribute('data-group-id');
+            const selectedVariety = selectVariety.value;
+            const selectedTipo = getTipoForVariety(selectedVariety);
             const tipoCell = row.querySelector('td[data-col="Tipo"]');
-            const selectedTipo = getTipoForVariety(selectVariety.value);
             if (tipoCell) {
                 tipoCell.innerText = selectedTipo || '';
             }
 
             // Actualizar cálculos para todas las filas del grupo
-            const groupId = row.getAttribute('data-group-id');
             const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
             groupRows.forEach(groupRow => {
                 updateCalculations(groupRow);
             });
 
+            // Guardar los datos actuales
             saveTableData();
+
+            // Manejar la adición o eliminación de filas extra si la categoría es Hypericum
+            if (selectedTipo === 'HYPERICUM') { // Cambiado de selectedVariety a selectedTipo
+                // Verificar cuántas filas tiene actualmente el grupo
+                const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+                if (currentGroupRows.length < 5) {
+                    addExtraRows(groupId, 2); // Agregar 2 filas adicionales
+                }
+            } else {
+                // Si no es Hypericum, asegurarse de que solo haya 3 filas
+                const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+                if (currentGroupRows.length > 3) {
+                    removeExtraRows(groupId, currentGroupRows.length - 3); // Eliminar filas extra
+                }
+            }
+
+            // Actualizar el Gran Total
+            updateGrandTotal();
         });
 
         cell.appendChild(selectVariety);
@@ -165,20 +183,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 let text = cell.innerText.toUpperCase();
                 // Eliminar caracteres que no sean letras o números
                 text = text.replace(/[^A-Z0-9]/gi, '');
-                // Limitar a una letra y un número
+                // Limitar a dos caracteres
                 if (text.length > 2) {
                     text = text.substring(0, 2);
                 }
                 cell.innerText = text;
 
                 // Mover el cursor al final
-                const range = document.createRange();
-                range.selectNodeContents(cell);
-                range.collapse(false);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
+                moveCursorToEnd(cell);
 
+                saveTableData();
+            });
+        } else if (colName === 'Long') {
+            // Añadir evento para limitar a 2 dígitos numéricos y mantener el cursor al final
+            cell.addEventListener('input', () => {
+                let value = cell.innerText.trim();
+
+                // Eliminar cualquier carácter que no sea dígito
+                value = value.replace(/\D/g, '');
+
+                // Limitar a 2 dígitos
+                if (value.length > 2) {
+                    value = value.substring(0, 2);
+                }
+
+                if (cell.innerText.trim() !== value) {
+                    cell.innerText = value;
+
+                    // Mover el cursor al final
+                    moveCursorToEnd(cell);
+                }
+
+                updateCalculations(cell.parentElement);
                 saveTableData();
             });
         } else {
@@ -188,6 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return cell;
+    }
+
+    // Función para mover el cursor al final de una celda
+    function moveCursorToEnd(element) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(element);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
 
     // Función para crear una celda de fecha
@@ -245,10 +291,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.appendChild(select);
             } else if (field === "Long") {
                 cell.contentEditable = true;
-                cell.innerText = ''; // Campo vacío por defecto
+                cell.innerText = longsArray && longsArray[index] !== undefined ? longsArray[index] : ''; // Establecer vacío por defecto
                 cell.style.backgroundColor = '#FFFFCC'; // Color para 'Long'
                 cell.style.border = '1px solid black'; // Bordes negros
                 cell.addEventListener('input', () => {
+                    let value = cell.innerText.trim();
+
+                    // Eliminar cualquier carácter que no sea dígito
+                    value = value.replace(/\D/g, '');
+
+                    // Limitar a 2 dígitos
+                    if (value.length > 2) {
+                        value = value.substring(0, 2);
+                    }
+
+                    if (cell.innerText.trim() !== value) {
+                        cell.innerText = value;
+
+                        // Mover el cursor al final
+                        moveCursorToEnd(cell);
+                    }
+
                     updateCalculations(row);
                     saveTableData();
                 });
@@ -261,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else if (["Bunches/Procona", "Bunches Total", "Stems"].includes(field)) {
                 cell.contentEditable = false; // Campos calculados
-                cell.innerText = '0';
+                cell.innerText = '';
             } else {
                 cell.contentEditable = true;
                 cell.innerText = '';
@@ -274,11 +337,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Función para agregar un nuevo grupo
+    // Función para agregar un nuevo grupo con 3 líneas por defecto
     function addGroup() {
-        const isHypericum = confirm('¿Es Hypericum?');
-        const longsArray = isHypericum ? hypericumLongs : longDefaults;
-        const numRows = isHypericum ? longsArray.length : 3; // 3 filas por defecto
+        const longsArray = longDefaults; // Por defecto, usar longitudes vacías
+        const numRows = 3; // Número de filas por defecto
 
         const groupId = Date.now();
         const mainRow = dataTable.insertRow();
@@ -313,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stemsTotalCell.setAttribute('rowspan', numRows);
         stemsTotalCell.classList.add('text-center');
         stemsTotalCell.setAttribute('data-col', 'Stems Total');
-        stemsTotalCell.innerText = '0';
+        stemsTotalCell.innerText = '';
         stemsTotalCell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
 
         // Encontrar el índice de la celda "Notas"
@@ -361,7 +423,83 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
-    // Función para actualizar cálculos en una fila
+    // Función para agregar filas extra a un grupo
+    function addExtraRows(groupId, extraCount) {
+        const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+        const currentCount = groupRows.length;
+        const newTotal = currentCount + extraCount;
+
+        // Actualizar los atributos rowspan de las celdas que lo requieran
+        ['Variety', 'Tipo', 'Batch', 'Fecha', 'Stems Total', 'Acciones'].forEach(col => {
+            const cell = groupRows[0].querySelector(`td[data-col="${col}"]`) || groupRows[0].querySelector(`td[rowspan]`);
+            if (cell) {
+                const newRowspan = newTotal;
+                cell.setAttribute('rowspan', newRowspan);
+            }
+        });
+
+        // Insertar las filas adicionales inmediatamente después del último row del grupo actual
+        for (let i = currentCount; i < newTotal; i++) {
+            const subRow = dataTable.insertRow();
+            subRow.setAttribute('data-group-id', groupId);
+            addDataCellsToRow(subRow, i, groupId, false, hypericumLongs);
+        }
+
+        // Actualizar cálculos para todas las filas del grupo
+        const updatedGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+        updatedGroupRows.forEach(row => {
+            updateCalculations(row);
+        });
+
+        // Actualizar el almacenamiento y el Gran Total
+        saveTableData();
+        updateGrandTotal();
+        showAlert('Se han agregado filas adicionales para HYPERICUM.');
+    }
+
+    // Función para eliminar filas extra de un grupo
+    function removeExtraRows(groupId, extraCount) {
+        const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+        const currentCount = groupRows.length;
+        const newTotal = currentCount - extraCount;
+
+        if (newTotal < 3) {
+            showAlert('Un grupo debe tener al menos 3 filas.', 'danger');
+            return;
+        }
+
+        // Eliminar las últimas filas
+        for (let i = currentCount - 1; i >= newTotal; i--) {
+            const rowToRemove = groupRows[i];
+            if (rowToRemove) {
+                dataTable.removeChild(rowToRemove);
+            }
+        }
+
+        // Actualizar los atributos rowspan de las celdas que lo requieran
+        ['Variety', 'Tipo', 'Batch', 'Fecha', 'Stems Total', 'Acciones'].forEach(col => {
+            const cell = groupRows[0].querySelector(`td[data-col="${col}"]`) || groupRows[0].querySelector(`td[rowspan]`);
+            if (cell) {
+                const newRowspan = newTotal;
+                cell.setAttribute('rowspan', newRowspan);
+            }
+        });
+
+        // Actualizar cálculos para todas las filas del grupo
+        const updatedGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+        updatedGroupRows.forEach(row => {
+            updateCalculations(row);
+        });
+
+        // Actualizar el almacenamiento y el Gran Total
+        saveTableData();
+        updateGrandTotal();
+        showAlert('Se han eliminado filas adicionales del grupo.');
+    }
+
+    // ============================
+    // Función updateCalculations Corregida
+    // ============================
     function updateCalculations(row) {
         const groupId = row.getAttribute('data-group-id');
         if (!groupId) {
@@ -369,25 +507,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Encontrar la fila principal del grupo
-        const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
-        if (!mainRow) {
-            console.warn(`No se encontró la fila principal para el ID de grupo ${groupId}.`);
+        // Encontrar todas las filas del grupo
+        const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+        if (!groupRows.length) {
+            console.warn(`No se encontraron filas para el ID de grupo ${groupId}.`);
             return;
         }
 
+        // Asumimos que la primera fila del grupo es la fila principal
+        const mainRow = groupRows[0];
         const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
         const tipo = tipoCell ? tipoCell.innerText.trim() : '';
 
-        if (!tipo || !config[tipo]) {
-            console.warn(`Configuración para la categoría "${tipo}" no encontrada.`);
+        if (!tipo) {
+            console.warn(`La fila principal del grupo ${groupId} no tiene definido el "Tipo".`);
+            return;
+        }
+
+        if (!config[tipo]) {
+            console.warn(`Configuración para la categoría "${tipo}" no encontrada en config.`);
             return;
         }
 
         const tjRegCell = row.querySelector('td[data-col="TJ - REG"] select');
         const longCell = row.querySelector('td[data-col="Long"]');
         const tjRegValue = tjRegCell ? tjRegCell.value : '';
-        const longValue = parseInt(longCell ? longCell.innerText.trim() : '0');
+        const longValue = parseInt(longCell ? longCell.innerText.trim() : '') || 0;
 
         const pFields = ["P1", "P2", "P3", "P4"];
         const rFields = ["R1", "R2", "R3", "R4"];
@@ -397,28 +542,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Obtener valores de configuración basados en la categoría
         if (tjRegValue === "TJ" || tjRegValue === "WS10") {
-            bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona;
-            stemsPerBunch = config[tipo][tjRegValue].stemsPerBunch;
-            // En TJ y WS10, la longitud no importa para Bunches/Procona o StemsPerBunch
-        } else if (tjRegValue === "REG") {
-            // Para REG, la longitud puede afectar BunchesPerProcona y StemsPerBunch
-            const regConfig = config[tipo].REG;
-
-            // Obtener stemsPerBunch
-            if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].stemsPerBunch !== undefined) {
-                stemsPerBunch = regConfig.lengths[longValue].stemsPerBunch;
-            } else if (regConfig.stemsPerBunch !== undefined) {
-                stemsPerBunch = regConfig.stemsPerBunch;
+            if (config[tipo][tjRegValue]) {
+                bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona || 0;
+                stemsPerBunch = config[tipo][tjRegValue].stemsPerBunch || 0;
             } else {
-                stemsPerBunch = 0;
+                console.warn(`Configuración para tipo "${tipo}" y TJ - REG "${tjRegValue}" no encontrada en config.`);
             }
+        } else if (tjRegValue === "REG") {
+            if (config[tipo].REG) {
+                const regConfig = config[tipo].REG;
 
-            // Obtener bunchesPerProcona
-            if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].bunchesPerProcona !== undefined) {
-                bunchesPerProcona = regConfig.lengths[longValue].bunchesPerProcona;
+                // Obtener stemsPerBunch
+                if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].stemsPerBunch !== undefined) {
+                    stemsPerBunch = regConfig.lengths[longValue].stemsPerBunch;
+                } else if (regConfig.stemsPerBunch !== undefined) {
+                    stemsPerBunch = regConfig.stemsPerBunch;
+                } else {
+                    stemsPerBunch = 0;
+                    console.warn(`stemsPerBunch no está definido para tipo "${tipo}" en REG.`);
+                }
+
+                // Obtener bunchesPerProcona
+                if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].bunchesPerProcona !== undefined) {
+                    bunchesPerProcona = regConfig.lengths[longValue].bunchesPerProcona;
+                } else if (regConfig.bunchesPerProcona !== undefined) {
+                    bunchesPerProcona = regConfig.bunchesPerProcona;
+                } else {
+                    bunchesPerProcona = 0;
+                    console.warn(`bunchesPerProcona no está definido para tipo "${tipo}" en REG y longitud ${longValue}.`);
+                }
             } else {
-                bunchesPerProcona = 0;
-                console.warn(`Longitud ${longValue} no está definida en config.${tipo}.REG.lengths.`);
+                console.warn(`Configuración para tipo "${tipo}" y TJ - REG "REG" no encontrada en config.`);
             }
         } else {
             // Otros casos
@@ -438,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Calcular para P1-P4
         pFields.forEach(field => {
             const cell = row.querySelector(`td[data-col="${field}"]`);
-            const value = parseInt(cell ? cell.innerText.trim() : '0') || 0;
+            const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
             if (value > 0) {
                 bunchesTotal += value * bunchesPerProcona;
             }
@@ -447,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Calcular para R1-R4 (sumar directamente)
         rFields.forEach(field => {
             const cell = row.querySelector(`td[data-col="${field}"]`);
-            const value = parseInt(cell ? cell.innerText.trim() : '0') || 0;
+            const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
             if (value > 0) {
                 bunchesTotal += value; // En todos los casos, los R se suman directamente
             }
@@ -576,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const group = data[groupId];
                 if (group.rows.length > 0) {
                     const numRows = group.rows.length;
-                    const longsArray = group.rows.map(row => parseInt(row["Long"]));
+                    const longsArray = group.rows.map(row => row["Long"]);
 
                     const mainRow = dataTable.insertRow();
                     mainRow.setAttribute('data-group-id', groupId);
@@ -612,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     stemsTotalCell.setAttribute('rowspan', numRows);
                     stemsTotalCell.classList.add('text-center');
                     stemsTotalCell.setAttribute('data-col', 'Stems Total');
-                    stemsTotalCell.innerText = group.stemsTotal || '0';
+                    stemsTotalCell.innerText = group.stemsTotal || '';
                     stemsTotalCell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
 
                     // Encontrar el índice de la celda "Notas"
@@ -678,8 +832,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     // Actualizar cálculos basados en los valores cargados
-                    const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-                    groupRows.forEach(row => {
+                    const groupRowsLoaded = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+                    groupRowsLoaded.forEach(row => {
                         updateCalculations(row);
                     });
 
@@ -691,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Después de cargar los datos, actualizar todos los cálculos
             updateAllCalculations();
         }
-    }
+    } // <-- Cierre de la función loadTableData
 
     // Función para generar el archivo Excel utilizando ExcelJS
     async function generateExcelFile() {
@@ -790,7 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Obtener los demás datos
             const cells = row.querySelectorAll('td');
-            const startIndex = isMainRow ? 4 : 0; // Ajuste para las celdas "Variety", "Tipo", "Batch" y "Fecha"
+            const startIndex = isMainRow ? 4 : 0; // Ajuste por "Variety", "Tipo", "Batch" y "Fecha"
 
             let tjRegValue = '';
             let longValue = '';
@@ -952,7 +1106,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Encabezados para la hoja "Por Tipo de Ramo"
         const bouquetHeaders = ["Variety", "TJ - REG", "Long", "Bunches Total", "Stems"];
-        bouquetSheet.addRow(bouquetHeaders).eachCell(cell => {
+        const bouquetHeaderRow = bouquetSheet.addRow(bouquetHeaders);
+
+        // Aplicar estilos a los encabezados
+        bouquetHeaderRow.eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center' };
             cell.border = {
@@ -999,7 +1156,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Encabezados para la hoja "Por Longitud"
         const lengthHeaders = ["Variety", "Long", "Stems"];
-        lengthSheet.addRow(lengthHeaders).eachCell(cell => {
+        const lengthHeaderRow = lengthSheet.addRow(lengthHeaders);
+
+        // Aplicar estilos a los encabezados
+        lengthHeaderRow.eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center' };
             cell.border = {
@@ -1043,7 +1203,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Encabezados para la hoja "Por Batch"
         const batchHeaders = ["Variety", "Batch", "Long", "Stems", "Fecha"];
-        batchSheet.addRow(batchHeaders).eachCell(cell => {
+        const batchHeaderRow = batchSheet.addRow(batchHeaders);
+
+        // Aplicar estilos a los encabezados
+        batchHeaderRow.eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center' };
             cell.border = {
@@ -1163,7 +1326,30 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTableData();
     }
 
-    // Event Listener para las celdas editables
+    // Event Listener para cambios en las celdas
+    dataTable.addEventListener('input', (event) => {
+        const cell = event.target;
+        if (cell.classList.contains('editable')) {
+            const col = cell.getAttribute('data-col');
+            const row = getRowFromCell(cell);
+            const groupId = row.getAttribute('data-group-id');
+
+            if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Long"].includes(col)) {
+                updateCalculations(row);
+                updateStemsTotal(groupId);
+            }
+
+            saveTableData();
+
+            // Actualizar el Gran Total
+            updateGrandTotal();
+        }
+    });
+
+    responsableInput.addEventListener('input', saveTableData);
+    window.addEventListener('beforeunload', saveTableData);
+
+    // Event Listener para las celdas editables con navegación por teclado
     dataTable.addEventListener('keydown', (event) => {
         const cell = event.target;
         if (cell.classList.contains('editable')) {
@@ -1249,29 +1435,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return targetCell;
     }
-
-    // Event Listener para cambios en las celdas
-    dataTable.addEventListener('input', (event) => {
-        const cell = event.target;
-        if (cell.classList.contains('editable')) {
-            const col = cell.getAttribute('data-col');
-            const row = getRowFromCell(cell);
-            const groupId = row.getAttribute('data-group-id');
-
-            if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Long"].includes(col)) {
-                updateCalculations(row);
-                updateStemsTotal(groupId);
-            }
-
-            saveTableData();
-
-            // Actualizar el Gran Total
-            updateGrandTotal();
-        }
-    });
-
-    responsableInput.addEventListener('input', saveTableData);
-    window.addEventListener('beforeunload', saveTableData);
 
     // ============================
     // Exposición de Funciones Globales
