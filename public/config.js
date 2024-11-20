@@ -24,50 +24,50 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         HYPERICUM: {
             TJ: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 40,
+                stemsPerBunch: 7
             },
             REG: {
                 lengths: {
-                    70: { bunchesPerProcona: 0, stemsPerBunch: 10 },
-                    60: { bunchesPerProcona: 0, stemsPerBunch: 10 },
-                    55: { bunchesPerProcona: 0, stemsPerBunch: 10 },
-                    50: { bunchesPerProcona: 0, stemsPerBunch: 10 },
-                    40: { bunchesPerProcona: 0, stemsPerBunch: 10 }
+                    70: { bunchesPerProcona: 40, stemsPerBunch: 10 },
+                    60: { bunchesPerProcona: 40, stemsPerBunch: 10 },
+                    55: { bunchesPerProcona: 40, stemsPerBunch: 10 },
+                    50: { bunchesPerProcona: 40, stemsPerBunch: 10 },
+                    40: { bunchesPerProcona: 40, stemsPerBunch: 10 }
                 }
             },
             WS10: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 40,
+                stemsPerBunch: 10
             }
         },
         EUPATORIUM: {
             TJ: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
             },
             REG: {
                 lengths: {
-                    70: { bunchesPerProcona: 0, stemsPerBunch: 10 },
-                    60: { bunchesPerProcona: 0, stemsPerBunch: 10 },
+                    70: { bunchesPerProcona: 10, stemsPerBunch: 10 },
+                    60: { bunchesPerProcona: 10, stemsPerBunch: 10 },
                     55: { bunchesPerProcona: 0 },
                     50: { bunchesPerProcona: 0 },
                     40: { bunchesPerProcona: 0 }
                 }
             },
             WS10: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 10,
+                stemsPerBunch: 10
             }
         },
         PAPYRUS: {
             TJ: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
             },
             REG: {
                 lengths: {
-                    70: { bunchesPerProcona: 0, stemsPerBunch: 20 },
+                    70: { bunchesPerProcona: 8, stemsPerBunch: 20 },
                     60: { bunchesPerProcona: 0 },
                     55: { bunchesPerProcona: 0 },
                     50: { bunchesPerProcona: 0 },
@@ -75,46 +75,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             WS10: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 20,
+                stemsPerBunch: 10
             }
         },
         ORIGANUM: {
             TJ: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
             },
             REG: {
                 lengths: {
-                    70: { bunchesPerProcona: 0, stemsPerBunch: 25 },
-                    60: { bunchesPerProcona: 0, stemsPerBunch: 20 },
+                    70: { bunchesPerProcona: 10, stemsPerBunch: 25 },
+                    60: { bunchesPerProcona: 10, stemsPerBunch: 20 },
                     55: { bunchesPerProcona: 0 },
                     50: { bunchesPerProcona: 0 },
                     40: { bunchesPerProcona: 0 }
                 }
             },
             WS10: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 20,
+                stemsPerBunch: 10
             }
         },
         MENTHA: {
             TJ: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
             },
             REG: {
                 lengths: {
-                    70: { bunchesPerProcona: 0, stemsPerBunch: 20 },
-                    60: { bunchesPerProcona: 0, stemsPerBunch: 25 },
-                    55: { bunchesPerProcona: 0, stemsPerBunch: 25 },
-                    50: { bunchesPerProcona: 0, stemsPerBunch: 25 },
+                    70: { bunchesPerProcona: 8, stemsPerBunch: 20 },
+                    60: { bunchesPerProcona: 8, stemsPerBunch: 25 },
+                    55: { bunchesPerProcona: 8, stemsPerBunch: 25 },
+                    50: { bunchesPerProcona: 4, stemsPerBunch: 25 },
                     40: { bunchesPerProcona: 0 }
                 }
             },
             WS10: {
-                bunchesPerProcona: 0,
-                stemsPerBunch: 0
+                bunchesPerProcona: 20,
+                stemsPerBunch: 10
             }
         }
     };
