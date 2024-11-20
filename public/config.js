@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         EUPATORIUM: {
             TJ: {
-                bunchesPerProcona: 15,
+                bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
             REG: {

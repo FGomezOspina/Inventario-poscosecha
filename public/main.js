@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSidebarBtn = document.getElementById('closeSidebar');
 
     // Variables de configuración y datos
-    let config = JSON.parse(localStorage.getItem('config')) || {};
+    let config = JSON.parse(localStorage.getItem('config')) || defaultConfig;
 
     const longDefaults = []; // Longitudes predeterminadas vacías
     const hypericumLongs = ['', '']; // Longitudes para Hypericum, establecidas a vacío por defecto
