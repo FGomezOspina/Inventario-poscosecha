@@ -63,35 +63,38 @@
 
                 <!-- Tabla de datos -->
                 <div class="table-responsive">
-                    <table id="dataTable" class="table table-bordered table-sm">
+                    <table id="dataTable" class="table table-bordered">
                         <thead>
                             <tr>
-                                <th class="col-variety" data-col="Variety">Variety</th>
-                                <th class="col-tipo" data-col="Tipo">Tipo</th>
-                                <th class="col-batch" data-col="Batch">Batch</th>
-                                <th class="col-fecha" data-col="Fecha">Fecha</th>
-                                <th class="col-tj-reg" data-col="TJ - REG">TJ - REG</th>
-                                <th class="col-long" data-col="Long">Long</th>
-                                <th class="col-p1" data-col="P1">P1</th>
-                                <th class="col-p2" data-col="P2">P2</th>
-                                <th class="col-p3" data-col="P3">P3</th>
-                                <th class="col-p4" data-col="P4">P4</th>
-                                <th class="col-r1" data-col="R1">R1</th>
-                                <th class="col-r2" data-col="R2">R2</th>
-                                <th class="col-r3" data-col="R3">R3</th>
-                                <th class="col-r4" data-col="R4">R4</th>
-                                <th class="col-bunches-procona" data-col="Bunches/Procona">Bunches/Procona</th>
-                                <th class="col-bunches-total" data-col="Bunches Total">Bunches Total</th>
-                                <th class="col-stems" data-col="Stems">Stems</th>
-                                <th class="col-stems-total" data-col="Stems Total">Stems Total</th>
-                                <th class="col-notas" data-col="Notas">Notas</th>
-                                <th class="col-acciones" data-col="Acciones">Acciones</th>
+                                <th class="col-variety">Variety</th>
+                                <th class="col-tipo">Tipo</th>
+                                <th class="col-batch">Batch</th>
+                                <!-- Reemplazar el texto "Fecha" con un ícono de calendario -->
+                                <th class="col-fecha" title="Fecha">
+                                    <i class="fa fa-calendar" aria-hidden="false"></i>
+                                </th>
+                                <th class="col-tj-reg">Bunch</th>
+                                <th class="col-long">Lenght</th>
+                                <th class="col-p1">P1</th>
+                                <th class="col-p2">P2</th>
+                                <th class="col-p3">P3</th>
+                                <th class="col-p4">P4</th>
+                                <th class="col-r1">R1</th>
+                                <th class="col-r2">R2</th>
+                                <th class="col-r3">R3</th>
+                                <th class="col-r4">R4</th>
+                                <th class="col-bunches-procona">Bunches/Procona</th>
+                                <th class="col-bunches-total">Bunches Total</th>
+                                <th class="col-stems">Stems</th>
+                                <th class="col-stems-total">Stems Total</th>
+                                <th class="col-notas">Notas</th>
+                                <th class="col-acciones">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Aquí se insertarán dinámicamente las filas de datos -->
+                            <!-- Filas de la tabla -->
                         </tbody>
-                    </table>
+                    </table>                    
                 </div>
 
                 <!-- Contenedor para el Gran Total -->

@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sel.addRange(range);
     }
 
-    // Función para crear una celda de fecha
+    // Función para crear una celda de fecha con input visible
     function createDateCell(colName, value = '', rowspan = 1) {
         const cell = document.createElement('td');
         cell.setAttribute('data-col', colName);
@@ -245,26 +245,37 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.setAttribute('rowspan', rowspan);
         }
 
-        const input = document.createElement('input');
-        input.type = 'date';
+        // Crear el input de tipo date visible
+        const dateInput = document.createElement('input');
+        dateInput.type = 'date';
+        dateInput.classList.add('form-control', 'form-control-sm');
+        dateInput.value = value || new Date().toISOString().split('T')[0]; // Fecha actual si no se proporciona
 
-        // Establecer fecha actual si no se proporciona un valor
-        if (value) {
-            input.value = value;
-        } else {
-            input.value = new Date().toISOString().split('T')[0]; // Fecha actual
-        }
+        dateInput.addEventListener('change', () => updateFecha(dateInput));
 
-        input.classList.add('form-control', 'form-control-sm');
-        input.style.minWidth = '120px';
-
-        input.addEventListener('change', () => {
-            saveTableData();
-        });
-
-        cell.appendChild(input);
+        // Agregar el input al cell
+        cell.appendChild(dateInput);
 
         return cell;
+    }
+
+    // Función para activar el selector de fecha
+    function triggerDatePicker(btn) {
+        // Encontrar el input de tipo date dentro de la misma celda
+        const input = btn.parentElement.querySelector('input[type="date"]');
+        if (input) {
+            input.classList.remove('d-none'); // Mostrar el input
+            input.focus(); // Enfocar el input para abrir el selector
+        }
+    }
+
+    // Función para manejar la selección de fecha
+    function updateFecha(input) {
+        // Obtener la fecha seleccionada
+        const selectedDate = input.value;
+        // Aquí puedes realizar acciones adicionales si es necesario
+        // Por ejemplo, actualizar algún campo o almacenar la fecha en una variable
+        // Actualmente, la fecha ya se guarda en localStorage a través de saveTableData()
     }
 
     // Función para agregar celdas de datos a una fila
@@ -919,7 +930,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 variety = row.cells[0].querySelector('select').value;
                 const tipo = row.cells[1].innerText.trim();
                 batch = row.cells[2].innerText.trim();
-                const fechaInput = row.cells[3].querySelector('input');
+                // Obtener "Fecha"
+                const fechaCell = row.querySelector('td[data-col="Fecha"]');
+                const fechaInput = fechaCell ? fechaCell.querySelector('input') : null;
                 fechaValue = fechaInput ? fechaInput.value : '';
 
                 excelRowData.push(variety); // "Variety"
@@ -1346,6 +1359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Event Listener para el input de "Responsable"
     responsableInput.addEventListener('input', saveTableData);
     window.addEventListener('beforeunload', saveTableData);
 

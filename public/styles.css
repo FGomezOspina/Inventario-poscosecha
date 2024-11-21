@@ -84,43 +84,61 @@
     max-height: 60vh; /* Reducido para un diseño más compacto */
 }
 
-/* Ancho específico para cada columna */
+#dataTable {
+    table-layout: auto; /* Permitir que las celdas se adapten automáticamente */
+    width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
+}
+
+#dataTable .col-fecha {
+    width: 40px; /* Reducido el ancho */
+    min-width: 40px;
+    max-width: 50px;
+}
+
+#dataTable .col-tj-reg {
+    width: 30px; /* Reducido el ancho */
+    min-width: 30px;
+    max-width: 40px;
+}
+
+/* Ajustar el ancho de las columnas */
+#dataTable th, 
+#dataTable td {
+    padding: 4px; /* Reducido de 8px a 4px */
+    font-size: 12px; /* Reducido de 14px a 12px */
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Establecer una altura mínima para las celdas del encabezado */
+#dataTable th {
+    min-height: 50px; /* Ajusta este valor según tus necesidades */
+    vertical-align: middle; /* Centrar verticalmente el contenido */
+    padding-top: 12px; /* Aumenta el padding superior */
+    padding-bottom: 12px; /* Aumenta el padding inferior */
+    overflow: hidden;
+}
+
+
+/* Ajustes específicos para cada columna */
 .col-variety {
-    width: 150px; /* Reducido de 200px a 150px */
-    min-width: 120px;
-    max-width: 180px;
-    white-space: nowrap; /* Evita el salto de línea */
+    width: 180px; /* Más ancho para ver el contenido */
+    min-width: 160px;
+    max-width: 200px;
 }
 
 .col-tipo {
-    width: 80px; /* Reducido de 100px a 80px */
-    min-width: 60px;
-    max-width: 100px;
-    text-align: center;
+    width: 30px; /* Más pequeño, solo se verá una letra */
+    min-width: 30px;
+    max-width: 50px;
 }
 
-.col-bunches-procona {
-    width: 100px; /* Reducido de 120px a 100px */
-    min-width: 80px;
-    max-width: 120px;
-    text-align: center;
-}
-
-.col-acciones {
-    width: 60px; /* Reducido de 80px a 60px */
+.col-fecha {
+    width: 50px; /* Más pequeño */
     min-width: 50px;
-    max-width: 80px;
-    text-align: center; /* Centrar el contenido horizontalmente */
-    vertical-align: middle; /* Centrar el contenido verticalmente */
-    display: flex;
-    align-items: center; /* Centrar verticalmente */
-    justify-content: center; /* Centrar horizontalmente */
+    max-width: 60px;
 }
 
-/* Ancho para otras columnas */
-.col-batch,
-.col-fecha,
-.col-tj-reg,
 .col-long,
 .col-p1,
 .col-p2,
@@ -129,24 +147,22 @@
 .col-r1,
 .col-r2,
 .col-r3,
-.col-r4,
-.col-bunches-total,
-.col-stems,
-.col-stems-total,
-.col-notas {
-    width: 80px; /* Reducido de 100px a 80px */
-    min-width: 60px;
-    max-width: 100px;
-    text-align: center; /* Centrar el contenido horizontalmente */
-    white-space: nowrap; /* Evita el salto de línea */
+.col-r4 {
+    width: 60px; /* Aumentado unos pocos px */
+    min-width: 30px;
+    max-width: 70px;
 }
 
-/* Ajustar el ancho de las columnas */
-#dataTable th,
-#dataTable td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.col-bunches-procona {
+    width: 40px; /* Más pequeño */
+    min-width: 40px;
+    max-width: 50px;
+}
+
+.col-bunches-total {
+    width: 50px; /* Más pequeño */
+    min-width: 50px;
+    max-width: 60px;
 }
 
 /* Colores para las columnas P */
@@ -164,8 +180,15 @@ th[data-col^="R"] {
 }
 
 /* Colores para la columna 'Long' */
-td[data-col="Long"],
-th[data-col="Long"] {
+td[data-col="Lenght"],
+th[data-col="Lenght"] {
+    background-color: #FFFFCC;
+    border: 1px solid black !important;
+}
+
+/* Colores para la columna 'Batch' */
+td[data-col="Batch"],
+th[data-col="Batch"] {
     background-color: #FFFFCC;
     border: 1px solid black !important;
 }
@@ -182,8 +205,8 @@ th[data-col="Long"] {
     border: none;
     color: #dc3545;
     cursor: pointer;
-    width: 30px; /* Reducido el ancho */
-    height: 30px; /* Reducido la altura */
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -198,13 +221,18 @@ th[data-col="Long"] {
     outline: 2px solid #0d6efd;
 }
 
-/* Estilos para el campo de fecha */
+/* Ajustar los inputs de tipo date */
 td[data-col="Fecha"] input[type="date"],
 th[data-col="Fecha"] {
-    min-width: 100px; /* Reducido de 120px a 100px */
+    width: 100%; /* Ocupa todo el ancho de la celda */
+    box-sizing: border-box; /* Incluye padding y border en el cálculo del ancho */
+    font-size: 12px; /* Tamaño de fuente reducido */
+    padding: 2px; /* Padding reducido */
+    border: 1px solid #ced4da; /* Borde consistente */
+    border-radius: 4px; /* Bordes redondeados */
 }
 
-/* Alternar colores de filas para mejor legibilidad */
+/* Alternar colores de filas */
 #dataTable tbody tr:nth-child(odd) {
     background-color: #f9f9f9;
 }
@@ -213,26 +241,33 @@ th[data-col="Fecha"] {
     background-color: #ffffff;
 }
 
-/* Ajustes de fuente y padding para mejorar la legibilidad y hacer la tabla más compacta */
-#dataTable th, 
-#dataTable td {
-    font-size: 12px; /* Reducido de 14px a 12px */
-    padding: 4px; /* Reducido de 8px a 4px */
-}
+/* Estilos dinámicos para pantallas pequeñas */
+@media (max-width: 768px) {
+    #dataTable {
+        font-size: 10px; /* Reducir tamaño de la fuente */
+    }
 
-/* Estilos para los inputs dentro de la tabla para mejor visualización */
-#dataTable input[type="date"] {
-    width: 100%;
-    box-sizing: border-box;
-    font-size: 12px; /* Reducido de 14px a 12px */
-    padding: 2px; /* Reducido de 4px a 2px */
-}
+    #dataTable th, 
+    #dataTable td {
+        padding: 2px; /* Reducir el padding */
+        font-size: 10px; /* Ajustar el tamaño de la fuente */
+    }
 
-/* Opcional: Mejorar la apariencia de los botones */
-.delete-btn {
-    color: #dc3545; /* Rojo para indicar peligro/acción */
-}
+    /* Asegurar que "Acciones" y "Notas" sean visibles */
+    .col-acciones,
+    td[data-col="Acciones"],
+    th[data-col="Acciones"],
+    .col-notas,
+    td[data-col="Notas"],
+    th[data-col="Notas"] {
+        display: table-cell; /* Asegura visibilidad */
+        white-space: normal; /* Permitir saltos de línea */
+    }
 
-.delete-btn:hover {
-    color: #a71d2a; /* Rojo oscuro al pasar el cursor */
+    /* Ajustar botones en "Acciones" */
+    .delete-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+    }
 }
