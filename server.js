@@ -16,6 +16,7 @@ app.get('/', (req, res) => {
 });
 
 // Inicia el servidor
-app.listen(PORT, () => {
-    console.log(`Servidor iniciado en el puerto ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor disponible en http://localhost:${PORT} o en http://<TU-IP-LOCAL>:${PORT}`);
 });
+

@@ -404,7 +404,9 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
         deleteBtn.classList.add('delete-btn');
         deleteBtn.title = 'Eliminar grupo';
-        deleteBtn.addEventListener('click', () => {
+
+        // Agregar eventos para soportar mouse y táctil
+        const handleDelete = () => {
             if (confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
                 const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
                 groupRows.forEach(row => dataTable.removeChild(row));
@@ -414,7 +416,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Actualizar el Gran Total
                 updateGrandTotal();
             }
+        };
+
+        deleteBtn.addEventListener('click', handleDelete); // Soporte para clic
+        deleteBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevenir el comportamiento predeterminado en táctiles
+            handleDelete();
         });
+
         actionCell.appendChild(deleteBtn);
         mainRow.appendChild(actionCell);
 
@@ -433,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizar el Gran Total
         updateGrandTotal();
     }
+
 
     // Función para agregar filas extra a un grupo
     function addExtraRows(groupId, extraCount) {
