@@ -82,6 +82,7 @@
 .table-responsive {
     overflow: auto;
     max-height: 60vh; /* Reducido para un diseño más compacto */
+    position: relative; /* Necesario para que el posicionamiento sticky funcione */
 }
 
 #dataTable {
@@ -89,16 +90,18 @@
     width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
 }
 
-#dataTable .col-fecha {
-    width: 40px; /* Reducido el ancho */
-    min-width: 40px;
-    max-width: 50px;
-}
-
-#dataTable .col-tj-reg {
-    width: 30px; /* Reducido el ancho */
-    min-width: 30px;
-    max-width: 40px;
+/* Hacer que el encabezado de la tabla sea sticky */
+#dataTable thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* Fondo del encabezado */
+    z-index: 2; /* Asegura que el encabezado esté por encima de las celdas */
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4); /* Añade una sombra para mayor claridad */
+    min-height: 50px; /* Ajusta este valor según tus necesidades */
+    vertical-align: middle; /* Centrar verticalmente el contenido */
+    padding-top: 12px; /* Aumenta el padding superior */
+    padding-bottom: 12px; /* Aumenta el padding inferior */
+    overflow: hidden;
 }
 
 /* Ajustar el ancho de las columnas */
@@ -108,17 +111,8 @@
     font-size: 12px; /* Reducido de 14px a 12px */
     text-align: center;
     white-space: nowrap;
+    border: 1px solid black; /* Asegura que los bordes sean consistentes */
 }
-
-/* Establecer una altura mínima para las celdas del encabezado */
-#dataTable th {
-    min-height: 50px; /* Ajusta este valor según tus necesidades */
-    vertical-align: middle; /* Centrar verticalmente el contenido */
-    padding-top: 12px; /* Aumenta el padding superior */
-    padding-bottom: 12px; /* Aumenta el padding inferior */
-    overflow: hidden;
-}
-
 
 /* Ajustes específicos para cada columna */
 .col-variety {
@@ -180,8 +174,8 @@ th[data-col^="R"] {
 }
 
 /* Colores para la columna 'Long' */
-td[data-col="Lenght"],
-th[data-col="Lenght"] {
+td[data-col="Long"],
+th[data-col="Long"] {
     background-color: #FFFFCC;
     border: 1px solid black !important;
 }
