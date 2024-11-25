@@ -1,3 +1,5 @@
+// main.js
+
 document.addEventListener('DOMContentLoaded', () => {
     // ============================
     // Declaración de Variables
@@ -5,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addGroupBtn = document.getElementById('addGroupBtn');
     const resetTableBtn = document.getElementById('resetTableBtn'); // Botón de reset
     const generateExcelBtn = document.getElementById('generateExcelBtn');
+    const sendMailBtn = document.getElementById('sendMailBtn'); // Nuevo botón para enviar correo
     const dataTable = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
     const responsableInput = document.getElementById('responsable');
     const alertPlaceholder = document.getElementById('alertPlaceholder');
@@ -101,15 +104,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Guardar los datos actuales
             saveTableData();
 
-            // Manejar la adición o eliminación de filas extra si la categoría es Hypericum
-            if (selectedTipo === 'HYPERICUM') { // Cambiado de selectedVariety a selectedTipo
+            // Manejar la adición o eliminación de filas extra si la categoría es HYPERICUM
+            if (selectedTipo === 'HYPERICUM') {
                 // Verificar cuántas filas tiene actualmente el grupo
                 const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
                 if (currentGroupRows.length < 5) {
                     addExtraRows(groupId, 2); // Agregar 2 filas adicionales
                 }
             } else {
-                // Si no es Hypericum, asegurarse de que solo haya 3 filas
+                // Si no es HYPERICUM, asegurarse de que solo haya 3 filas
                 const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
                 if (currentGroupRows.length > 3) {
                     removeExtraRows(groupId, currentGroupRows.length - 3); // Eliminar filas extra
@@ -442,7 +445,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizar el Gran Total
         updateGrandTotal();
     }
-
 
     // Función para agregar filas extra a un grupo
     function addExtraRows(groupId, extraCount) {
@@ -866,10 +868,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Después de cargar los datos, actualizar todos los cálculos
             updateAllCalculations();
         }
-    } // <-- Cierre de la función loadTableData
+    }
 
-    // Función para generar el archivo Excel utilizando ExcelJS
-    async function generateExcelFile() {
+    // Modificación de la función generateExcelFile para separar la generación del workbook
+    async function generateExcelWorkbook() {
         const workbook = new ExcelJS.Workbook();
 
         // Generar la hoja principal
@@ -1268,10 +1270,55 @@ document.addEventListener('DOMContentLoaded', () => {
             column.width = 20; // Ajusta según tus necesidades
         });
 
-        // Descargar el archivo Excel
+        // Retornamos el workbook en lugar de descargar el archivo
+        return workbook;
+    }
+
+    // Modificación de generateExcelFile para usar generateExcelWorkbook
+    async function generateExcelFile() {
+        const workbook = await generateExcelWorkbook();
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         saveAs(blob, 'Inventario.xlsx');
+    }
+
+    // Función para enviar el correo electrónico con el archivo adjunto
+    async function sendEmail() {
+        // Verificar si hay datos en la tabla
+        const data = JSON.parse(localStorage.getItem('tableData'));
+        if (!data || Object.keys(data).length === 0) {
+            showAlert('No hay datos para enviar.', 'warning');
+            return;
+        }
+
+        // Generar el archivo Excel
+        const workbook = await generateExcelWorkbook();
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        // Pedir al usuario que ingrese el correo electrónico de destino
+        const emailTo = prompt('Ingrese el correo electrónico de destino:');
+        if (!emailTo) {
+            showAlert('Correo electrónico no especificado.', 'warning');
+            return;
+        }
+
+        // Enviar los datos al backend
+        const formData = new FormData();
+        formData.append('file', new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'Inventario.xlsx');
+        formData.append('toEmail', emailTo);
+
+        fetch('/send-email', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            showAlert('Correo enviado exitosamente.', 'success');
+        })
+        .catch(error => {
+            console.error('Error al enviar el correo:', error);
+            showAlert('Error al enviar el correo.', 'danger');
+        });
     }
 
     // Función para actualizar todas las calculaciones (usada después de cargar datos o cambiar configuración)
@@ -1329,6 +1376,11 @@ document.addEventListener('DOMContentLoaded', () => {
         generateExcelBtn.addEventListener('click', () => {
             generateExcelFile();
         });
+    }
+
+    // Event listener para el botón "Enviar Correo"
+    if (sendMailBtn) {
+        sendMailBtn.addEventListener('click', sendEmail);
     }
 
     // Mostrar el menú lateral al hacer clic en el botón de toggle
