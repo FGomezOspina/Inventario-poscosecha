@@ -265,3 +265,184 @@ th[data-col="Fecha"] {
         font-size: 0.8rem;
     }
 }
+
+/* ============================
+   Estilos para las Tablas Resumidas
+   ============================ */
+
+#summaryTables {
+    margin-top: 30px;
+}
+
+#summaryTables h3 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #0d6efd; /* Azul principal para destacar el título */
+}
+
+#summaryTables h4 {
+    margin-bottom: 10px;
+    color: #0d6efd; /* Azul principal para los subtítulos */
+}
+
+#summaryTables .table-responsive {
+    overflow: auto;
+    max-height: 50vh; /* Ajusta según tus necesidades */
+    margin-bottom: 20px;
+}
+
+#summaryTables table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#summaryTables table th,
+#summaryTables table td {
+    font-size: 12px; /* Tamaño de fuente para las tablas resumidas */
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+}
+
+#summaryTables table th {
+    background-color: #e9ecef; /* Fondo de encabezados */
+    font-weight: bold;
+}
+
+#summaryTables table tbody tr:nth-child(even) {
+    background-color: #f2f2f2; /* Filas pares con fondo gris claro */
+}
+
+#summaryTables table tbody tr:hover {
+    background-color: #e2e6ea; /* Fondo al pasar el cursor */
+}
+
+/* Estilos específicos para las tablas individuales */
+
+/* Tabla Por Longitud */
+#summaryByLength th,
+#summaryByLength td {
+    background-color: #ffffff;
+}
+
+#summaryByLength th {
+    background-color: #e9ecef; /* Fondo para encabezados */
+}
+
+/* Tabla Por Tipo de Ramo */
+#summaryByBouquetType th,
+#summaryByBouquetType td {
+    background-color: #ffffff;
+}
+
+#summaryByBouquetType th {
+    background-color: #e9ecef; /* Fondo para encabezados */
+}
+
+/* Tabla Por Batch */
+#summaryByBatch th,
+#summaryByBatch td {
+    background-color: #ffffff;
+}
+
+#summaryByBatch th {
+    background-color: #e9ecef; /* Fondo para encabezados */
+}
+
+/* Responsividad Adicional para Tablas Resumidas */
+@media (max-width: 768px) {
+    #summaryTables table th,
+    #summaryTables table td {
+        font-size: 10px;
+        padding: 4px;
+    }
+
+    /* Ajustar el tamaño de los títulos */
+    #summaryTables h3 {
+        font-size: 1.2em;
+    }
+
+    #summaryTables h4 {
+        font-size: 1em;
+    }
+}
+
+/* Resaltar celdas enfocadas en las tablas resumidas */
+#summaryTables table td:focus {
+    outline: none;
+    border: 2px solid #0d6efd;
+    background-color: #e7f1ff;
+}
+
+/* Estilos para las celdas de "Bunches/Procona" y "Bunches Total" en las tablas resumidas */
+#summaryTables #summaryByBouquetType th:nth-child(4),
+#summaryTables #summaryByBouquetType td:nth-child(4),
+#summaryTables #summaryByBatch th:nth-child(2),
+#summaryTables #summaryByBatch td:nth-child(2) {
+    background-color: #FFEFD5; /* Beige claro */
+}
+
+/* Estilos para las celdas de "Stems" en las tablas resumidas */
+#summaryTables #summaryByLength th:nth-child(3),
+#summaryTables #summaryByLength td:nth-child(3),
+#summaryTables #summaryByBouquetType th:nth-child(5),
+#summaryTables #summaryByBouquetType td:nth-child(5),
+#summaryTables #summaryByBatch th:nth-child(4),
+#summaryTables #summaryByBatch td:nth-child(4) {
+    background-color: #E0FFFF; /* Aqua claro */
+}
+
+/* ============================
+   Gran Total (.grand-total-container)
+   ============================ */
+
+.grand-total-container {
+    margin-top: 20px;
+    font-size: 1.2em;
+    text-align: right;
+}
+
+/* ============================
+   Mejoras Adicionales
+   ============================ */
+
+/* Resaltar celdas enfocadas */
+#dataTable td:focus,
+#summaryTables table td:focus {
+    outline: none;
+    border: 2px solid #0d6efd;
+    background-color: #e7f1ff;
+}
+
+/* Estilos para inputs de tipo date */
+#dataTable td[data-col="Fecha"] input[type="date"],
+th[data-col="Fecha"] {
+    width: 100%; /* Ocupa todo el ancho de la celda */
+    box-sizing: border-box; /* Incluye padding y border en el cálculo del ancho */
+    font-size: 12px; /* Tamaño de fuente reducido */
+    padding: 2px; /* Padding reducido */
+    border: 1px solid #ced4da; /* Borde consistente */
+    border-radius: 4px; /* Bordes redondeados */
+}
+
+/* Alternar colores de filas */
+#dataTable tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+#dataTable tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+/* Estilos dinámicos para pantallas pequeñas */
+@media (max-width: 576px) {
+    /* Ocultar columnas menos importantes en la tabla principal en pantallas muy pequeñas */
+    .col-notas,
+    td[data-col="Notas"],
+    th[data-col="Notas"],
+    .col-acciones,
+    td[data-col="Acciones"],
+    th[data-col="Acciones"] {
+        display: none;
+    }
+}

@@ -17,6 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleSidebarBtn = document.getElementById('toggleSidebar');
     const closeSidebarBtn = document.getElementById('closeSidebar');
 
+    // Elementos para las tablas resumidas
+    const toggleSummaryBtn = document.getElementById('toggleSummaryBtn');
+    const summaryTablesContainer = document.getElementById('summaryTables');
+    const summaryByLength = document.getElementById('summaryByLength').getElementsByTagName('tbody')[0];
+    const summaryByBouquetType = document.getElementById('summaryByBouquetType').getElementsByTagName('tbody')[0];
+    const summaryByBatch = document.getElementById('summaryByBatch').getElementsByTagName('tbody')[0];
+
     // Variables de configuración y datos
     let config = JSON.parse(localStorage.getItem('config')) || defaultConfig;
 
@@ -119,6 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // Actualizar las tablas resumidas
+            populateSummaryTables();
+
             // Actualizar el Gran Total
             updateGrandTotal();
         });
@@ -158,6 +168,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = getRowFromCell(select);
             updateCalculations(row);
             saveTableData();
+
+            // Actualizar las tablas resumidas
+            populateSummaryTables();
+
+            // Actualizar el Gran Total
+            updateGrandTotal();
         });
 
         return select;
@@ -196,6 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 moveCursorToEnd(cell);
 
                 saveTableData();
+
+                // Actualizar las tablas resumidas
+                populateSummaryTables();
             });
         } else if (colName === 'Long') {
             // Añadir evento para limitar a 2 dígitos numéricos y mantener el cursor al final
@@ -219,10 +238,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 updateCalculations(cell.parentElement);
                 saveTableData();
+
+                // Actualizar las tablas resumidas
+                populateSummaryTables();
+
+                // Actualizar el Gran Total
+                updateGrandTotal();
             });
         } else {
             cell.addEventListener('input', () => {
                 saveTableData();
+
+                // Actualizar las tablas resumidas
+                populateSummaryTables();
+
+                // Actualizar el Gran Total
+                updateGrandTotal();
             });
         }
 
@@ -258,6 +289,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Agregar el input al cell
         cell.appendChild(dateInput);
+
+        // Event Listener para actualizar tablas resumidas al cambiar la fecha
+        dateInput.addEventListener('change', () => {
+            populateSummaryTables();
+            saveTableData();
+        });
 
         return cell;
     }
@@ -328,6 +365,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     updateCalculations(row);
                     saveTableData();
+
+                    // Actualizar las tablas resumidas
+                    populateSummaryTables();
+
+                    // Actualizar el Gran Total
+                    updateGrandTotal();
                 });
             } else if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4"].includes(field)) {
                 cell.contentEditable = true;
@@ -335,6 +378,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.addEventListener('input', () => {
                     updateCalculations(row);
                     saveTableData();
+
+                    // Actualizar las tablas resumidas
+                    populateSummaryTables();
+
+                    // Actualizar el Gran Total
+                    updateGrandTotal();
                 });
             } else if (["Bunches/Procona", "Bunches Total", "Stems"].includes(field)) {
                 cell.contentEditable = false; // Campos calculados
@@ -344,6 +393,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.innerText = '';
                 cell.addEventListener('input', () => {
                     saveTableData();
+
+                    // Actualizar las tablas resumidas
+                    populateSummaryTables();
                 });
             }
 
@@ -416,6 +468,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveTableData();
                 showAlert('Grupo eliminado correctamente.', 'warning');
 
+                // Actualizar las tablas resumidas
+                populateSummaryTables();
+
                 // Actualizar el Gran Total
                 updateGrandTotal();
             }
@@ -441,6 +496,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStemsTotal(groupId);
         saveTableData();
         showAlert('Grupo agregado correctamente.');
+
+        // Actualizar las tablas resumidas
+        populateSummaryTables();
 
         // Actualizar el Gran Total
         updateGrandTotal();
@@ -474,8 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCalculations(row);
         });
 
-        // Actualizar el almacenamiento y el Gran Total
+        // Actualizar el almacenamiento y las tablas resumidas
         saveTableData();
+        populateSummaryTables();
         updateGrandTotal();
         showAlert('Se han agregado filas adicionales para HYPERICUM.');
     }
@@ -514,8 +573,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCalculations(row);
         });
 
-        // Actualizar el almacenamiento y el Gran Total
+        // Actualizar el almacenamiento y las tablas resumidas
         saveTableData();
+        populateSummaryTables();
         updateGrandTotal();
         showAlert('Se han eliminado filas adicionales del grupo.');
     }
@@ -814,6 +874,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             saveTableData();
                             showAlert('Grupo eliminado correctamente.', 'warning');
 
+                            // Actualizar las tablas resumidas
+                            populateSummaryTables();
+
                             // Actualizar el Gran Total
                             updateGrandTotal();
                         }
@@ -865,12 +928,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Después de cargar los datos, actualizar todos los cálculos
+            // Después de cargar los datos, actualizar todas las calculaciones
             updateAllCalculations();
+
+            // Actualizar las tablas resumidas
+            populateSummaryTables();
         }
     }
 
-    // Modificación de la función generateExcelFile para separar la generación del workbook
+    // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
         const workbook = new ExcelJS.Workbook();
 
@@ -1349,7 +1415,103 @@ document.addEventListener('DOMContentLoaded', () => {
             // Resetear el Gran Total
             updateGrandTotal();
             showAlert('Todos los grupos han sido eliminados.', 'warning');
+
+            // Vaciar las tablas resumidas
+            summaryByLength.innerHTML = '';
+            summaryByBouquetType.innerHTML = '';
+            summaryByBatch.innerHTML = '';
         }
+    }
+
+    // ============================
+    // Función para poblar las tablas resumidas
+    // ============================
+    function populateSummaryTables() {
+        // Limpiar las tablas resumidas existentes
+        summaryByLength.innerHTML = '';
+        summaryByBouquetType.innerHTML = '';
+        summaryByBatch.innerHTML = '';
+
+        const data = JSON.parse(localStorage.getItem('tableData'));
+        if (!data || Object.keys(data).length === 0) {
+            return;
+        }
+
+        // Variables para almacenar los datos resumidos
+        const summaryDataByLength = {};
+        const summaryDataByBouquetType = {};
+        const summaryDataByBatch = {};
+
+        // Recorrer todos los grupos y sus filas
+        Object.values(data).forEach(group => {
+            const variety = group.variety;
+            const tipo = group.tipo;
+            const batch = group.batch;
+            const fecha = group.fecha;
+
+            group.rows.forEach(row => {
+                const tjReg = row["TJ - REG"];
+                const long = row["Long"];
+                const bunchesTotal = parseInt(row["Bunches Total"]) || 0;
+                const stems = parseInt(row["Stems"]) || 0;
+
+                // Resumen por Longitud
+                const lengthKey = `${variety}_${long}`;
+                if (!summaryDataByLength[lengthKey]) {
+                    summaryDataByLength[lengthKey] = { Variety: variety, Long: long, Stems: 0 };
+                }
+                summaryDataByLength[lengthKey].Stems += stems;
+
+                // Resumen por Tipo de Ramo
+                const bouquetKey = `${variety}_${tjReg}_${long}`;
+                if (!summaryDataByBouquetType[bouquetKey]) {
+                    summaryDataByBouquetType[bouquetKey] = { Variety: variety, "TJ - REG": tjReg, Long: long, "Bunches Total": 0, Stems: 0 };
+                }
+                summaryDataByBouquetType[bouquetKey]["Bunches Total"] += bunchesTotal;
+                summaryDataByBouquetType[bouquetKey].Stems += stems;
+
+                // Resumen por Batch
+                const batchKey = `${variety}_${batch}_${long}_${fecha}`;
+                if (!summaryDataByBatch[batchKey]) {
+                    summaryDataByBatch[batchKey] = { Variety: variety, Batch: batch, Long: long, Stems: 0, Fecha: fecha };
+                }
+                summaryDataByBatch[batchKey].Stems += stems;
+            });
+        });
+
+        // Poblar la tabla "Por Longitud"
+        Object.values(summaryDataByLength).forEach(item => {
+            const row = summaryByLength.insertRow();
+            row.innerHTML = `
+                <td>${item.Variety}</td>
+                <td>${item.Long}</td>
+                <td>${item.Stems}</td>
+            `;
+        });
+
+        // Poblar la tabla "Por Tipo de Ramo"
+        Object.values(summaryDataByBouquetType).forEach(item => {
+            const row = summaryByBouquetType.insertRow();
+            row.innerHTML = `
+                <td>${item.Variety}</td>
+                <td>${item["TJ - REG"]}</td>
+                <td>${item.Long}</td>
+                <td>${item["Bunches Total"]}</td>
+                <td>${item.Stems}</td>
+            `;
+        });
+
+        // Poblar la tabla "Por Batch"
+        Object.values(summaryDataByBatch).forEach(item => {
+            const row = summaryByBatch.insertRow();
+            row.innerHTML = `
+                <td>${item.Variety}</td>
+                <td>${item.Batch}</td>
+                <td>${item.Long}</td>
+                <td>${item.Stems}</td>
+                <td>${item.Fecha}</td>
+            `;
+        });
     }
 
     // ============================
@@ -1381,6 +1543,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener para el botón "Enviar Correo"
     if (sendMailBtn) {
         sendMailBtn.addEventListener('click', sendEmail);
+    }
+
+    // Event listener para el botón "Toggle Summary"
+    if (toggleSummaryBtn && summaryTablesContainer) {
+        toggleSummaryBtn.addEventListener('click', () => {
+            if (summaryTablesContainer.style.display === 'none' || summaryTablesContainer.style.display === '') {
+                summaryTablesContainer.style.display = 'block';
+                toggleSummaryBtn.innerText = 'Ocultar Resúmenes';
+            } else {
+                summaryTablesContainer.style.display = 'none';
+                toggleSummaryBtn.innerText = 'Mostrar Resúmenes';
+            }
+        });
     }
 
     // Mostrar el menú lateral al hacer clic en el botón de toggle
@@ -1415,6 +1590,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             saveTableData();
+
+            // Actualizar las tablas resumidas
+            populateSummaryTables();
 
             // Actualizar el Gran Total
             updateGrandTotal();

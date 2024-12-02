@@ -20,7 +20,7 @@
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
                         <!-- Botón de cerrar menú lateral (visible en móviles) -->
-                        <button id="closeSidebar" class="btn btn-link d-md-none"><i class="fas fa-times"></i></button>
+                        <button id="closeSidebar" class="btn btn-link d-md-none" aria-label="Cerrar menú lateral"><i class="fas fa-times"></i></button>
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="configBtn">
                                 <i class="fas fa-cog"></i>
@@ -38,7 +38,7 @@
             </nav>
 
             <!-- Botón de toggle para el menú lateral (visible en móviles) -->
-            <button id="toggleSidebar" class="btn btn-primary toggle-btn d-md-none"><i class="fas fa-bars"></i></button>
+            <button id="toggleSidebar" class="btn btn-primary toggle-btn d-md-none" aria-label="Abrir menú lateral"><i class="fas fa-bars"></i></button>
 
             <!-- Contenido principal -->
             <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -50,6 +50,7 @@
                         <button class="btn btn-danger" id="resetTableBtn">Resetear Tabla</button>
                         <button class="btn btn-success" id="generateExcelBtn">Generar Excel</button>
                         <button class="btn btn-info" id="sendMailBtn">Enviar Correo</button>
+                        <button class="btn btn-secondary" id="toggleSummaryBtn">Mostrar Resúmenes</button> <!-- Nuevo Botón -->
                     </div>
                 </div>
 
@@ -58,9 +59,6 @@
                     <label for="responsable" class="form-label">Responsable del Conteo:</label>
                     <input type="text" class="form-control" id="responsable" placeholder="Ingrese el nombre del responsable">
                 </div>
-
-                <!-- Contenedor para el encabezado fijo de la tabla -->
-                <div id="fixedHeader" class="fixed-table-header"></div>
 
                 <!-- Tabla de datos -->
                 <div class="table-responsive">
@@ -74,8 +72,8 @@
                                 <th class="col-fecha" title="Fecha">
                                     <i class="fa fa-calendar" aria-hidden="false"></i>
                                 </th>
-                                <th class="col-tj-reg">Bunch</th>
-                                <th class="col-long">Lenght</th>
+                                <th class="col-tj-reg">TJ - REG</th>
+                                <th class="col-long">Long</th>
                                 <th class="col-p1">P1</th>
                                 <th class="col-p2">P2</th>
                                 <th class="col-p3">P3</th>
@@ -98,8 +96,74 @@
                     </table>                    
                 </div>
 
+                <!-- Contenedor para las tablas resumidas -->
+                <div id="summaryTables" class="mt-4" style="display: none;">
+                    <h3>Resúmenes</h3>
+                    
+                    <!-- Tabla Por Longitud -->
+                    <div class="mb-4">
+                        <h4>Por Longitud</h4>
+                        <div class="table-responsive">
+                            <table id="summaryByLength" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Variety</th>
+                                        <th>Long</th>
+                                        <th>Stems</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Filas generadas dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla Por Tipo de Ramo -->
+                    <div class="mb-4">
+                        <h4>Por Tipo de Ramo</h4>
+                        <div class="table-responsive">
+                            <table id="summaryByBouquetType" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Variety</th>
+                                        <th>TJ - REG</th>
+                                        <th>Long</th>
+                                        <th>Bunches Total</th>
+                                        <th>Stems</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Filas generadas dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla Por Batch -->
+                    <div class="mb-4">
+                        <h4>Por Batch</h4>
+                        <div class="table-responsive">
+                            <table id="summaryByBatch" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Variety</th>
+                                        <th>Batch</th>
+                                        <th>Long</th>
+                                        <th>Stems</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Filas generadas dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Contenedor para el Gran Total -->
-                <div class="grand-total-container" style="margin-top: 20px; font-size: 1.2em; text-align: right;">
+                <div class="grand-total-container">
                     <strong>Gran Total de Stems:</strong> <span id="grandTotalValue">0</span>
                 </div>
 
@@ -110,7 +174,7 @@
         </div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- Login Modal (opcional) -->
     <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -142,7 +206,7 @@
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <!-- Incluir tus archivos JavaScript -->
     <script src="auth.js"></script>
-    <script src="main.js"></script> <!-- Cargar main.js antes que config.js -->
-    <script src="config.js"></script>
+    <script src="config.js"></script> <!-- Asegúrate de cargar config.js antes -->
+    <script src="main.js"></script>
 </body>
 </html>
