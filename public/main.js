@@ -1,5 +1,3 @@
-// main.js
-
 document.addEventListener('DOMContentLoaded', () => {
     // ============================
     // Declaración de Variables
@@ -12,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const responsableInput = document.getElementById('responsable');
     const alertPlaceholder = document.getElementById('alertPlaceholder');
 
-    // Elementos del menú lateral
+    // Elementos del menú lateral (si existen)
     const sidebarMenu = document.getElementById('sidebarMenu');
     const toggleSidebarBtn = document.getElementById('toggleSidebar');
     const closeSidebarBtn = document.getElementById('closeSidebar');
@@ -119,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Verificar cuántas filas tiene actualmente el grupo
                 const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
                 if (currentGroupRows.length < 5) {
-                    addExtraRows(groupId, 2); // Agregar 2 filas adicionales
+                    addExtraRows(groupId, 2, true); // Agregar 2 filas adicionales para HYPERICUM
                 }
             } else {
                 // Si no es HYPERICUM, asegurarse de que solo haya 3 filas
@@ -270,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.setAttribute('rowspan', rowspan);
         }
 
-        // Crear el input de tipo date visible
+        // Crear el input de tipo date
         const dateInput = document.createElement('input');
         dateInput.type = 'date';
         dateInput.classList.add('form-control', 'form-control-sm');
@@ -289,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return cell;
     }
 
-    // Función para activar el selector de fecha
+    // Función para activar el selector de fecha (no se elimina aunque no se use)
     function triggerDatePicker(btn) {
         const input = btn.parentElement.querySelector('input[type="date"]');
         if (input) {
@@ -357,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateGrandTotal();
                 });
             } else if (["Bunches/Procona", "Bunches Total", "Stems"].includes(field)) {
+                // Estas celdas se calculan automáticamente, así que no son editables
                 cell.contentEditable = false; 
                 cell.innerText = '';
             } else {
@@ -422,6 +421,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionCell = document.createElement('td');
         actionCell.setAttribute('rowspan', numRows);
         actionCell.classList.add('text-center');
+
+        // Botón Eliminar Grupo
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
         deleteBtn.classList.add('delete-btn');
@@ -442,11 +443,34 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             handleDelete();
         });
-
         actionCell.appendChild(deleteBtn);
+
+        // Botón Agregar Línea (para grupos que NO sean HYPERICUM)
+        const addLineBtn = document.createElement('button');
+        addLineBtn.innerHTML = '<i class="fa fa-plus"></i>';
+        addLineBtn.classList.add('add-line-btn');
+        addLineBtn.title = 'Agregar línea';
+        
+        addLineBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
+            const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
+            const tipo = tipoCell ? tipoCell.innerText.trim() : '';
+
+            // Respetar la condición de NO agregar línea si es HYPERICUM
+            if (tipo === 'HYPERICUM') {
+                showAlert('No se pueden agregar líneas adicionales para el grupo HYPERICUM.', 'warning');
+                return;
+            }
+            // Para cualquier otro tipo, agregamos 1 fila más
+            addExtraRows(groupId, 1, false);
+            showAlert('Se agregó una nueva línea al grupo.', 'success');
+        });
+        actionCell.appendChild(addLineBtn);
+
         mainRow.appendChild(actionCell);
 
-        // Agregar subfilas
+        // Agregar subfilas para completar las 3 filas por defecto
         for (let i = 1; i < numRows; i++) {
             const subRow = dataTable.insertRow();
             subRow.setAttribute('data-group-id', groupId);
@@ -461,8 +485,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
-    // Función para agregar filas extra a un grupo (HYPERICUM)
-    function addExtraRows(groupId, extraCount) {
+    // Función para agregar filas extra a un grupo
+    // Si isHypericum = true, usamos hypericumLongs, de lo contrario longDefaults.
+    function addExtraRows(groupId, extraCount, isHypericum = true) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         const currentCount = groupRows.length;
         const newTotal = currentCount + extraCount;
@@ -477,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = currentCount; i < newTotal; i++) {
             const subRow = dataTable.insertRow();
             subRow.setAttribute('data-group-id', groupId);
-            addDataCellsToRow(subRow, i, groupId, false, hypericumLongs);
+            addDataCellsToRow(subRow, i, groupId, false, isHypericum ? hypericumLongs : longDefaults);
         }
 
         const updatedGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
@@ -488,7 +513,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saveTableData();
         populateSummaryTables();
         updateGrandTotal();
-        showAlert('Se han agregado filas adicionales para HYPERICUM.');
     }
 
     // Función para eliminar filas extra de un grupo
@@ -781,13 +805,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
                     mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
 
+                    // Celda de Acciones (borrar grupo + agregar línea)
                     const actionCell = document.createElement('td');
                     actionCell.setAttribute('rowspan', numRows);
                     actionCell.classList.add('text-center');
+
+                    // Botón Eliminar Grupo
                     const deleteBtn = document.createElement('button');
                     deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
                     deleteBtn.classList.add('delete-btn');
                     deleteBtn.title = 'Eliminar grupo';
+
                     deleteBtn.addEventListener('click', () => {
                         if (confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
                             const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
@@ -799,6 +827,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                     actionCell.appendChild(deleteBtn);
+
+                    // Botón Agregar Línea (no para HYPERICUM)
+                    const addLineBtn = document.createElement('button');
+                    addLineBtn.innerHTML = '<i class="fa fa-plus"></i>';
+                    addLineBtn.classList.add('add-line-btn');
+                    addLineBtn.title = 'Agregar línea';
+
+                    addLineBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
+                        const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
+                        const tipo = tipoCell ? tipoCell.innerText.trim() : '';
+
+                        if (tipo === 'HYPERICUM') {
+                            showAlert('No se pueden agregar líneas adicionales para el grupo HYPERICUM.', 'warning');
+                            return;
+                        }
+                        addExtraRows(groupId, 1, false);
+                        showAlert('Se agregó una nueva línea al grupo.', 'success');
+                    });
+                    actionCell.appendChild(addLineBtn);
+
                     mainRow.appendChild(actionCell);
 
                     const fieldsToUse = fields;
@@ -847,6 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
+        // Asegúrate de tener la librería ExcelJS cargada
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Inventario');
 
@@ -1349,6 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Eventos del sidebar si existen
     if (closeSidebarBtn && sidebarMenu) {
         closeSidebarBtn.addEventListener('click', () => {
             sidebarMenu.classList.remove('show');
@@ -1389,12 +1441,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Cargar datos o crear un grupo por defecto
     if (!localStorage.getItem('tableData')) {
         addGroup();
     } else {
         loadTableData();
     }
 
+    // Listener para recalcular todo cuando cambie el contenido editable
     dataTable.addEventListener('input', (event) => {
         const cell = event.target;
         if (cell.classList.contains('editable')) {
@@ -1413,9 +1467,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Guardar responsable inmediatamente al cambiar
     responsableInput.addEventListener('input', saveTableData);
+
+    // Guardar datos antes de salir
     window.addEventListener('beforeunload', saveTableData);
 
+    // Manejo de teclas (Enter, flechas) en celdas editables
     dataTable.addEventListener('keydown', (event) => {
         const cell = event.target;
         if (cell.classList.contains('editable')) {
@@ -1499,6 +1557,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return targetCell;
     }
 
+    // Dejamos accesibles estas funciones en window por si se requieren en consola
     window.saveTableData = saveTableData;
     window.updateAllCalculations = updateAllCalculations;
     window.reloadConfigAndRecalculate = reloadConfigAndRecalculate;
