@@ -29,7 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const longDefaults = []; // Longitudes predeterminadas vacías
     const hypericumLongs = ['', '']; // Longitudes para Hypericum, establecidas a vacío por defecto
-    const tjRegOptions = ["TJ", "REG", "WS10"];
+
+    // === Se agrega NF a las opciones existentes ===
+    const tjRegOptions = ["TJ", "REG", "WS10", "NF"];
+
     const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
     const varietyOptions = {
         "VERONICA": ["ARTIST", "BIZARRE", "CAYA", "JUNE", "NAVY", "ROSWITHA"],
@@ -128,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Actualizar las tablas resumidas
             populateSummaryTables();
-
             // Actualizar el Gran Total
             updateGrandTotal();
         });
@@ -147,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return '';
     }
 
-    // Función para crear el select de TJ/REG
+    // Función para crear el select de TJ - REG - WS10 - NF
     function createTJRegSelect(selectedValue = 'REG') { // 'REG' por defecto
         const select = document.createElement('select');
         select.classList.add('form-select', 'form-select-sm');
@@ -171,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Actualizar las tablas resumidas
             populateSummaryTables();
-
             // Actualizar el Gran Total
             updateGrandTotal();
         });
@@ -212,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 moveCursorToEnd(cell);
 
                 saveTableData();
-
                 // Actualizar las tablas resumidas
                 populateSummaryTables();
             });
@@ -220,38 +220,29 @@ document.addEventListener('DOMContentLoaded', () => {
             // Añadir evento para limitar a 2 dígitos numéricos y mantener el cursor al final
             cell.addEventListener('input', () => {
                 let value = cell.innerText.trim();
-
                 // Eliminar cualquier carácter que no sea dígito
                 value = value.replace(/\D/g, '');
-
                 // Limitar a 2 dígitos
                 if (value.length > 2) {
                     value = value.substring(0, 2);
                 }
-
                 if (cell.innerText.trim() !== value) {
                     cell.innerText = value;
-
-                    // Mover el cursor al final
                     moveCursorToEnd(cell);
                 }
 
                 updateCalculations(cell.parentElement);
                 saveTableData();
-
                 // Actualizar las tablas resumidas
                 populateSummaryTables();
-
                 // Actualizar el Gran Total
                 updateGrandTotal();
             });
         } else {
             cell.addEventListener('input', () => {
                 saveTableData();
-
                 // Actualizar las tablas resumidas
                 populateSummaryTables();
-
                 // Actualizar el Gran Total
                 updateGrandTotal();
             });
@@ -284,7 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dateInput.type = 'date';
         dateInput.classList.add('form-control', 'form-control-sm');
         dateInput.value = value || new Date().toISOString().split('T')[0]; // Fecha actual si no se proporciona
-
         dateInput.addEventListener('change', () => updateFecha(dateInput));
 
         // Agregar el input al cell
@@ -301,21 +291,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para activar el selector de fecha
     function triggerDatePicker(btn) {
-        // Encontrar el input de tipo date dentro de la misma celda
         const input = btn.parentElement.querySelector('input[type="date"]');
         if (input) {
-            input.classList.remove('d-none'); // Mostrar el input
-            input.focus(); // Enfocar el input para abrir el selector
+            input.classList.remove('d-none'); 
+            input.focus(); 
         }
     }
 
     // Función para manejar la selección de fecha
     function updateFecha(input) {
-        // Obtener la fecha seleccionada
+        // La fecha ya se guarda en localStorage con saveTableData()
         const selectedDate = input.value;
-        // Aquí puedes realizar acciones adicionales si es necesario
-        // Por ejemplo, actualizar algún campo o almacenar la fecha en una variable
-        // Actualmente, la fecha ya se guarda en localStorage a través de saveTableData()
+        // Lógica adicional si fuera necesaria
     }
 
     // Función para agregar celdas de datos a una fila
@@ -331,10 +318,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Aplicar estilos a las columnas P y R
             if (["P1", "P2", "P3", "P4"].includes(field)) {
                 cell.style.backgroundColor = '#D9E1F2'; // Color para P
-                cell.style.border = '1px solid black'; // Bordes negros
+                cell.style.border = '1px solid black'; 
             } else if (["R1", "R2", "R3", "R4"].includes(field)) {
                 cell.style.backgroundColor = '#FCE4D6'; // Color para R
-                cell.style.border = '1px solid black'; // Bordes negros
+                cell.style.border = '1px solid black'; 
             }
 
             if (field === "TJ - REG") {
@@ -342,59 +329,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.appendChild(select);
             } else if (field === "Long") {
                 cell.contentEditable = true;
-                cell.innerText = longsArray && longsArray[index] !== undefined ? longsArray[index] : ''; // Establecer vacío por defecto
-                cell.style.backgroundColor = '#FFFFCC'; // Color para 'Long'
-                cell.style.border = '1px solid black'; // Bordes negros
+                cell.innerText = longsArray && longsArray[index] !== undefined ? longsArray[index] : '';
+                cell.style.backgroundColor = '#FFFFCC';
+                cell.style.border = '1px solid black';
                 cell.addEventListener('input', () => {
                     let value = cell.innerText.trim();
-
-                    // Eliminar cualquier carácter que no sea dígito
                     value = value.replace(/\D/g, '');
-
-                    // Limitar a 2 dígitos
                     if (value.length > 2) {
                         value = value.substring(0, 2);
                     }
-
                     if (cell.innerText.trim() !== value) {
                         cell.innerText = value;
-
-                        // Mover el cursor al final
                         moveCursorToEnd(cell);
                     }
-
                     updateCalculations(row);
                     saveTableData();
-
-                    // Actualizar las tablas resumidas
                     populateSummaryTables();
-
-                    // Actualizar el Gran Total
                     updateGrandTotal();
                 });
             } else if (["P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4"].includes(field)) {
                 cell.contentEditable = true;
-                cell.innerText = ''; // Cambiado de '0' a ''
+                cell.innerText = '';
                 cell.addEventListener('input', () => {
                     updateCalculations(row);
                     saveTableData();
-
-                    // Actualizar las tablas resumidas
                     populateSummaryTables();
-
-                    // Actualizar el Gran Total
                     updateGrandTotal();
                 });
             } else if (["Bunches/Procona", "Bunches Total", "Stems"].includes(field)) {
-                cell.contentEditable = false; // Campos calculados
+                cell.contentEditable = false; 
                 cell.innerText = '';
             } else {
                 cell.contentEditable = true;
                 cell.innerText = '';
                 cell.addEventListener('input', () => {
                     saveTableData();
-
-                    // Actualizar las tablas resumidas
                     populateSummaryTables();
                 });
             }
@@ -405,8 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para agregar un nuevo grupo con 3 líneas por defecto
     function addGroup() {
-        const longsArray = longDefaults; // Por defecto, usar longitudes vacías
-        const numRows = 3; // Número de filas por defecto
+        const longsArray = longDefaults; 
+        const numRows = 3;
 
         const groupId = Date.now();
         const mainRow = dataTable.insertRow();
@@ -420,8 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const tipoCell = document.createElement('td');
         tipoCell.setAttribute('data-col', 'Tipo');
         tipoCell.setAttribute('rowspan', numRows);
-        tipoCell.innerText = ''; // Inicialmente vacío
-        tipoCell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
+        tipoCell.innerText = ''; 
+        tipoCell.setAttribute('tabindex', '0'); 
         mainRow.appendChild(tipoCell);
 
         // Crear celda "Batch"
@@ -429,29 +398,27 @@ document.addEventListener('DOMContentLoaded', () => {
         mainRow.appendChild(batchCell);
 
         // Crear celda "Fecha" con fecha actual
-        const today = new Date().toISOString().split('T')[0]; // Fecha actual
+        const today = new Date().toISOString().split('T')[0]; 
         const fechaCell = createDateCell('Fecha', today, numRows);
         mainRow.appendChild(fechaCell);
 
         // Agregar celdas de datos para la primera fila
         addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
 
-        // Agregar la celda de "Stems Total" con rowspan dinámico en la primera fila
+        // Agregar la celda de "Stems Total" con rowspan dinámico
         const stemsTotalCell = document.createElement('td');
         stemsTotalCell.setAttribute('rowspan', numRows);
         stemsTotalCell.classList.add('text-center');
         stemsTotalCell.setAttribute('data-col', 'Stems Total');
         stemsTotalCell.innerText = '';
-        stemsTotalCell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
+        stemsTotalCell.setAttribute('tabindex', '0');
 
         // Encontrar el índice de la celda "Notas"
         const notasCell = mainRow.querySelector('td[data-col="Notas"]');
         const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
-
-        // Insertar "Stems Total" antes de la celda "Notas"
         mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
 
-        // Agregar la celda de "Acciones" con rowspan dinámico en la primera fila
+        // Agregar la celda de "Acciones" con rowspan dinámico
         const actionCell = document.createElement('td');
         actionCell.setAttribute('rowspan', numRows);
         actionCell.classList.add('text-center');
@@ -460,32 +427,26 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.classList.add('delete-btn');
         deleteBtn.title = 'Eliminar grupo';
 
-        // Agregar eventos para soportar mouse y táctil
         const handleDelete = () => {
             if (confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
                 const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
                 groupRows.forEach(row => dataTable.removeChild(row));
                 saveTableData();
                 showAlert('Grupo eliminado correctamente.', 'warning');
-
-                // Actualizar las tablas resumidas
                 populateSummaryTables();
-
-                // Actualizar el Gran Total
                 updateGrandTotal();
             }
         };
-
-        deleteBtn.addEventListener('click', handleDelete); // Soporte para clic
+        deleteBtn.addEventListener('click', handleDelete);
         deleteBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevenir el comportamiento predeterminado en táctiles
+            e.preventDefault();
             handleDelete();
         });
 
         actionCell.appendChild(deleteBtn);
         mainRow.appendChild(actionCell);
 
-        // Agregar subfilas según la cantidad de longitudes
+        // Agregar subfilas
         for (let i = 1; i < numRows; i++) {
             const subRow = dataTable.insertRow();
             subRow.setAttribute('data-group-id', groupId);
@@ -496,43 +457,34 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStemsTotal(groupId);
         saveTableData();
         showAlert('Grupo agregado correctamente.');
-
-        // Actualizar las tablas resumidas
         populateSummaryTables();
-
-        // Actualizar el Gran Total
         updateGrandTotal();
     }
 
-    // Función para agregar filas extra a un grupo
+    // Función para agregar filas extra a un grupo (HYPERICUM)
     function addExtraRows(groupId, extraCount) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         const currentCount = groupRows.length;
         const newTotal = currentCount + extraCount;
 
-        // Actualizar los atributos rowspan de las celdas que lo requieran
         ['Variety', 'Tipo', 'Batch', 'Fecha', 'Stems Total', 'Acciones'].forEach(col => {
             const cell = groupRows[0].querySelector(`td[data-col="${col}"]`) || groupRows[0].querySelector(`td[rowspan]`);
             if (cell) {
-                const newRowspan = newTotal;
-                cell.setAttribute('rowspan', newRowspan);
+                cell.setAttribute('rowspan', newTotal);
             }
         });
 
-        // Insertar las filas adicionales inmediatamente después del último row del grupo actual
         for (let i = currentCount; i < newTotal; i++) {
             const subRow = dataTable.insertRow();
             subRow.setAttribute('data-group-id', groupId);
             addDataCellsToRow(subRow, i, groupId, false, hypericumLongs);
         }
 
-        // Actualizar cálculos para todas las filas del grupo
         const updatedGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         updatedGroupRows.forEach(row => {
             updateCalculations(row);
         });
 
-        // Actualizar el almacenamiento y las tablas resumidas
         saveTableData();
         populateSummaryTables();
         updateGrandTotal();
@@ -550,7 +502,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Eliminar las últimas filas
         for (let i = currentCount - 1; i >= newTotal; i--) {
             const rowToRemove = groupRows[i];
             if (rowToRemove) {
@@ -558,22 +509,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Actualizar los atributos rowspan de las celdas que lo requieran
         ['Variety', 'Tipo', 'Batch', 'Fecha', 'Stems Total', 'Acciones'].forEach(col => {
             const cell = groupRows[0].querySelector(`td[data-col="${col}"]`) || groupRows[0].querySelector(`td[rowspan]`);
             if (cell) {
-                const newRowspan = newTotal;
-                cell.setAttribute('rowspan', newRowspan);
+                cell.setAttribute('rowspan', newTotal);
             }
         });
 
-        // Actualizar cálculos para todas las filas del grupo
         const updatedGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         updatedGroupRows.forEach(row => {
             updateCalculations(row);
         });
 
-        // Actualizar el almacenamiento y las tablas resumidas
         saveTableData();
         populateSummaryTables();
         updateGrandTotal();
@@ -590,14 +537,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Encontrar todas las filas del grupo
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         if (!groupRows.length) {
             console.warn(`No se encontraron filas para el ID de grupo ${groupId}.`);
             return;
         }
 
-        // Asumimos que la primera fila del grupo es la fila principal
         const mainRow = groupRows[0];
         const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
         const tipo = tipoCell ? tipoCell.innerText.trim() : '';
@@ -623,8 +568,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let bunchesPerProcona = 0;
         let stemsPerBunch = 0;
 
-        // Obtener valores de configuración basados en la categoría
-        if (tjRegValue === "TJ" || tjRegValue === "WS10") {
+        // Se agrega "NF" igual que "TJ" y "WS10"
+        if (tjRegValue === "TJ" || tjRegValue === "WS10" || tjRegValue === "NF") {
             if (config[tipo][tjRegValue]) {
                 bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona || 0;
                 stemsPerBunch = config[tipo][tjRegValue].stemsPerBunch || 0;
@@ -663,16 +608,12 @@ document.addEventListener('DOMContentLoaded', () => {
             stemsPerBunch = 0;
         }
 
-        // Actualizar "Bunches/Procona"
         const bunchesPerProconaCell = row.querySelector('td[data-col="Bunches/Procona"]');
         if (bunchesPerProconaCell) {
             bunchesPerProconaCell.innerText = bunchesPerProcona;
         }
 
-        // Calcular "Bunches Total"
         let bunchesTotal = 0;
-
-        // Calcular para P1-P4
         pFields.forEach(field => {
             const cell = row.querySelector(`td[data-col="${field}"]`);
             const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
@@ -681,29 +622,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Calcular para R1-R4 (sumar directamente)
         rFields.forEach(field => {
             const cell = row.querySelector(`td[data-col="${field}"]`);
             const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
             if (value > 0) {
-                bunchesTotal += value; // En todos los casos, los R se suman directamente
+                bunchesTotal += value; 
             }
         });
 
-        // Actualizar "Bunches Total"
         const bunchesTotalCell = row.querySelector('td[data-col="Bunches Total"]');
         if (bunchesTotalCell) {
             bunchesTotalCell.innerText = bunchesTotal;
         }
 
-        // Calcular "Stems"
         const stemsCell = row.querySelector('td[data-col="Stems"]');
         if (stemsCell) {
             const stems = bunchesTotal * stemsPerBunch;
             stemsCell.innerText = stems;
         }
 
-        // Actualizar "Stems Total"
         updateStemsTotal(groupId);
     }
 
@@ -720,14 +657,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Actualizar la celda "Stems Total" en la primera fila del grupo
         const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
         const stemsTotalCell = mainRow.querySelector('td[data-col="Stems Total"]');
         if (stemsTotalCell) {
             stemsTotalCell.innerText = totalStems;
         }
 
-        // Actualizar el Gran Total
         updateGrandTotal();
     }
 
@@ -736,14 +671,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const grandTotalValue = document.getElementById('grandTotalValue');
         let grandTotal = 0;
 
-        // Obtener todos los "Stems Total" de los grupos
         const stemsTotalCells = dataTable.querySelectorAll('td[data-col="Stems Total"]');
         stemsTotalCells.forEach(cell => {
             const value = parseInt(cell.innerText.trim()) || 0;
             grandTotal += value;
         });
 
-        // Actualizar el valor en la tabla
         if (grandTotalValue) {
             grandTotalValue.innerText = grandTotal;
         }
@@ -756,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         table.querySelectorAll('tbody tr').forEach(row => {
             const groupId = row.getAttribute('data-group-id');
-            if (!groupId) return; // Ignorar filas sin groupId
+            if (!groupId) return;
 
             if (!groups[groupId]) {
                 groups[groupId] = {
@@ -776,19 +709,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 group.variety = row.cells[0].querySelector('select').value;
                 group.tipo = row.querySelector('td[data-col="Tipo"]').innerText.trim();
                 group.batch = row.cells[2].innerText.trim();
-                // Obtener "Fecha"
                 const fechaCell = row.querySelector('td[data-col="Fecha"]');
                 const fechaInput = fechaCell ? fechaCell.querySelector('input') : null;
                 group.fecha = fechaInput ? fechaInput.value : '';
-                // Obtener "Stems Total"
                 const stemsTotalCell = row.querySelector('td[data-col="Stems Total"]');
                 group.stemsTotal = stemsTotalCell ? parseInt(stemsTotalCell.innerText.trim()) : 0;
             }
 
-            // Solo guardar datos de filas que contienen datos (excluye las celdas con rowspan y acciones)
             const rowData = {};
-            const startIndex = isMainRow ? 4 : 0; // Ajuste por "Variety", "Tipo", "Batch" y "Fecha"
-            const endIndex = isMainRow ? row.cells.length - 2 : row.cells.length - 1; // Ignorar "Acciones" en filas
+            const startIndex = isMainRow ? 4 : 0;
+            const endIndex = isMainRow ? row.cells.length - 2 : row.cells.length - 1;
 
             for (let i = startIndex; i < endIndex; i++) {
                 const field = row.cells[i].getAttribute('data-col');
@@ -818,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const mainRow = dataTable.insertRow();
                     mainRow.setAttribute('data-group-id', groupId);
 
-                    // Crear celdas "Variety" y "Tipo" con rowspan igual al número de filas
+                    // Crear celdas "Variety" y "Tipo" con rowspan
                     const varietyCell = createVarietySelect(group.variety);
                     varietyCell.setAttribute('rowspan', numRows);
                     mainRow.appendChild(varietyCell);
@@ -826,40 +756,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tipoCell = document.createElement('td');
                     tipoCell.setAttribute('data-col', 'Tipo');
                     tipoCell.setAttribute('rowspan', numRows);
-                    // Obtener el tipo basado en la variedad
                     const selectedTipo = getTipoForVariety(group.variety);
                     tipoCell.innerText = selectedTipo || '';
-                    tipoCell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
+                    tipoCell.setAttribute('tabindex', '0');
                     mainRow.appendChild(tipoCell);
 
-                    // Crear celda "Batch"
                     const batchCell = createEditableCell('Batch', group.batch, numRows);
                     mainRow.appendChild(batchCell);
 
-                    // Crear celda "Fecha"
-                    const fechaValue = group.fecha || new Date().toISOString().split('T')[0]; // Fecha actual si no está definida
+                    const fechaValue = group.fecha || new Date().toISOString().split('T')[0];
                     const fechaCell = createDateCell('Fecha', fechaValue, numRows);
                     mainRow.appendChild(fechaCell);
 
-                    // Agregar celdas de datos para la primera fila
                     addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
 
-                    // Agregar la celda de "Stems Total" con rowspan
                     const stemsTotalCell = document.createElement('td');
                     stemsTotalCell.setAttribute('rowspan', numRows);
                     stemsTotalCell.classList.add('text-center');
                     stemsTotalCell.setAttribute('data-col', 'Stems Total');
                     stemsTotalCell.innerText = group.stemsTotal || '';
-                    stemsTotalCell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
+                    stemsTotalCell.setAttribute('tabindex', '0');
 
-                    // Encontrar el índice de la celda "Notas"
                     const notasCell = mainRow.querySelector('td[data-col="Notas"]');
                     const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
-
-                    // Insertar "Stems Total" antes de la celda "Notas"
                     mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
 
-                    // Agregar la celda de "Acciones" con rowspan
                     const actionCell = document.createElement('td');
                     actionCell.setAttribute('rowspan', numRows);
                     actionCell.classList.add('text-center');
@@ -870,24 +791,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     deleteBtn.addEventListener('click', () => {
                         if (confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
                             const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-                            groupRows.forEach(row => dataTable.removeChild(row));
+                            groupRows.forEach(r => dataTable.removeChild(r));
                             saveTableData();
                             showAlert('Grupo eliminado correctamente.', 'warning');
-
-                            // Actualizar las tablas resumidas
                             populateSummaryTables();
-
-                            // Actualizar el Gran Total
                             updateGrandTotal();
                         }
                     });
                     actionCell.appendChild(deleteBtn);
                     mainRow.appendChild(actionCell);
 
-                    // Actualizar celdas con datos en la primera fila
                     const fieldsToUse = fields;
                     fieldsToUse.forEach((field, idx) => {
-                        const cellIndex = idx + 4; // Ajuste por "Variety", "Tipo", "Batch" y "Fecha"
+                        const cellIndex = idx + 4;
                         const cell = mainRow.cells[cellIndex];
                         if (cell) {
                             if (field === "TJ - REG") {
@@ -898,13 +814,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
-                    // Agregar subfilas y actualizar celdas con datos
                     for (let i = 1; i < numRows; i++) {
                         const subRow = dataTable.insertRow();
                         subRow.setAttribute('data-group-id', groupId);
                         addDataCellsToRow(subRow, i, groupId, false, longsArray);
 
-                        // Actualizar celdas con datos
                         fieldsToUse.forEach((field, idx) => {
                             const cell = subRow.cells[idx];
                             if (cell) {
@@ -917,21 +831,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
 
-                    // Actualizar cálculos basados en los valores cargados
                     const groupRowsLoaded = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-                    groupRowsLoaded.forEach(row => {
-                        updateCalculations(row);
+                    groupRowsLoaded.forEach(r => {
+                        updateCalculations(r);
                     });
 
-                    // Actualizar "Stems Total" basado en los valores cargados
                     updateStemsTotal(groupId);
                 }
             });
 
-            // Después de cargar los datos, actualizar todas las calculaciones
             updateAllCalculations();
-
-            // Actualizar las tablas resumidas
             populateSummaryTables();
         }
     }
@@ -939,11 +848,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
         const workbook = new ExcelJS.Workbook();
-
-        // Generar la hoja principal
         const worksheet = workbook.addWorksheet('Inventario');
 
-        // Añadir el Responsable del Conteo y la Fecha/Hora de generación
         const responsable = responsableInput.value.trim() || "Desconocido";
         const fechaHora = new Date().toLocaleString();
 
@@ -955,19 +861,16 @@ document.addEventListener('DOMContentLoaded', () => {
         worksheet.getCell('A2').value = `Fecha y Hora de Generación: ${fechaHora}`;
         worksheet.getCell('A2').font = { bold: true };
 
-        // Espacio en blanco
         worksheet.addRow([]);
 
-        // Encabezados
         const headers = ["Variety", "Tipo", "Batch", "Fecha", "TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Stems Total", "Notas"];
         const headerRow = worksheet.addRow(headers);
 
-        // Aplicar estilos a los encabezados
         headerRow.eachCell((cell, colNumber) => {
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'FFDDEBF7' } // Azul suave
+                fgColor: { argb: 'FFDDEBF7' }
             };
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -979,14 +882,12 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Recopilar datos de la tabla
         const rows = dataTable.querySelectorAll('tr');
-        let rowIndex = worksheet.rowCount + 1; // Siguiente fila disponible en el worksheet
+        let rowIndex = worksheet.rowCount + 1;
 
-        // Datos para las hojas adicionales
         let dataByBouquetType = [];
         let dataByLength = [];
-        let dataByBatch = []; // Nueva variable para la hoja "Por Batch"
+        let dataByBatch = [];
 
         let variety = '';
         let batch = '';
@@ -994,48 +895,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            const rowData = {};
-            const excelRowData = [];
             const groupId = row.getAttribute('data-group-id');
-            if (!groupId) continue; // Ignorar filas sin groupId
+            if (!groupId) continue;
 
             const isMainRow = row.cells[0].getAttribute('data-col') === 'Variety';
+            const excelRowData = [];
 
             if (isMainRow) {
                 const rowspan = parseInt(row.cells[0].getAttribute('rowspan')) || 1;
-
-                // Agregar los datos de "Variety", "Tipo", "Batch", "Fecha"
                 variety = row.cells[0].querySelector('select').value;
                 const tipo = row.cells[1].innerText.trim();
                 batch = row.cells[2].innerText.trim();
-                // Obtener "Fecha"
                 const fechaCell = row.querySelector('td[data-col="Fecha"]');
                 const fechaInput = fechaCell ? fechaCell.querySelector('input') : null;
                 fechaValue = fechaInput ? fechaInput.value : '';
 
-                excelRowData.push(variety); // "Variety"
-                excelRowData.push(tipo); // "Tipo"
-                excelRowData.push(batch); // "Batch"
-                excelRowData.push(fechaValue); // "Fecha"
+                excelRowData.push(variety);
+                excelRowData.push(tipo);
+                excelRowData.push(batch);
+                excelRowData.push(fechaValue);
 
-                // Registrar las celdas combinadas para "Variety", "Tipo", "Batch", "Fecha"
                 if (rowspan > 1) {
-                    worksheet.mergeCells(rowIndex, 1, rowIndex + rowspan - 1, 1); // "Variety"
-                    worksheet.mergeCells(rowIndex, 2, rowIndex + rowspan - 1, 2); // "Tipo"
-                    worksheet.mergeCells(rowIndex, 3, rowIndex + rowspan - 1, 3); // "Batch"
-                    worksheet.mergeCells(rowIndex, 4, rowIndex + rowspan - 1, 4); // "Fecha"
+                    worksheet.mergeCells(rowIndex, 1, rowIndex + rowspan - 1, 1);
+                    worksheet.mergeCells(rowIndex, 2, rowIndex + rowspan - 1, 2);
+                    worksheet.mergeCells(rowIndex, 3, rowIndex + rowspan - 1, 3);
+                    worksheet.mergeCells(rowIndex, 4, rowIndex + rowspan - 1, 4);
                 }
             } else {
-                // Para subfilas, usamos el último valor de variety y batch
-                excelRowData.push(""); // "Variety"
-                excelRowData.push(""); // "Tipo"
-                excelRowData.push(""); // "Batch"
-                excelRowData.push(""); // "Fecha"
+                excelRowData.push("");
+                excelRowData.push("");
+                excelRowData.push("");
+                excelRowData.push("");
             }
 
-            // Obtener los demás datos
             const cells = row.querySelectorAll('td');
-            const startIndex = isMainRow ? 4 : 0; // Ajuste por "Variety", "Tipo", "Batch" y "Fecha"
+            const startIndex = isMainRow ? 4 : 0;
 
             let tjRegValue = '';
             let longValue = '';
@@ -1045,51 +939,40 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let j = startIndex; j < cells.length; j++) {
                 const cell = cells[j];
                 const dataCol = cell.getAttribute('data-col');
+                if (!dataCol) continue;
 
-                if (dataCol) {
-                    if (dataCol === "TJ - REG") {
-                        const select = cell.querySelector('select');
-                        const value = select ? select.value : '';
-                        excelRowData.push(value);
-                        rowData['TJ - REG'] = value;
-                        tjRegValue = value;
-                    } else if (dataCol === "Long") {
-                        const value = cell.innerText.trim();
-                        excelRowData.push(value);
-                        rowData['Long'] = value;
-                        longValue = value;
-                    } else if (dataCol === "Stems") {
-                        const value = parseInt(cell.innerText.trim()) || 0;
-                        excelRowData.push(value);
-                        rowData['Stems'] = value;
-                        stemsValue = value;
-                    } else if (dataCol === "Bunches Total") {
-                        const value = parseInt(cell.innerText.trim()) || 0;
-                        excelRowData.push(value);
-                        rowData['Bunches Total'] = value;
-                        bunchesTotalValue = value;
-                    } else if (dataCol === "Stems Total" && isMainRow) {
-                        const rowspan = parseInt(cell.getAttribute('rowspan')) || 1;
-                        excelRowData.push(cell.innerText.trim());
-
-                        // Registrar la celda combinada para "Stems Total"
-                        if (rowspan > 1) {
-                            const colIndex = headers.indexOf("Stems Total") + 1;
-                            worksheet.mergeCells(rowIndex, colIndex, rowIndex + rowspan - 1, colIndex);
-                        }
-                    } else if (dataCol === "Notas") {
-                        excelRowData.push(cell.innerText.trim());
-                    } else if (dataCol === "Acciones" && isMainRow) {
-                        // Ignorar la columna "Acciones" en el Excel
-                    } else if (dataCol !== "Acciones") {
-                        excelRowData.push(cell.innerText.trim());
+                if (dataCol === "TJ - REG") {
+                    const select = cell.querySelector('select');
+                    const value = select ? select.value : '';
+                    excelRowData.push(value);
+                    tjRegValue = value;
+                } else if (dataCol === "Long") {
+                    const value = cell.innerText.trim();
+                    excelRowData.push(value);
+                    longValue = value;
+                } else if (dataCol === "Stems") {
+                    const value = parseInt(cell.innerText.trim()) || 0;
+                    excelRowData.push(value);
+                    stemsValue = value;
+                } else if (dataCol === "Bunches Total") {
+                    const value = parseInt(cell.innerText.trim()) || 0;
+                    excelRowData.push(value);
+                    bunchesTotalValue = value;
+                } else if (dataCol === "Stems Total" && isMainRow) {
+                    const rowspan = parseInt(cell.getAttribute('rowspan')) || 1;
+                    excelRowData.push(cell.innerText.trim());
+                    if (rowspan > 1) {
+                        const colIndex = headers.indexOf("Stems Total") + 1;
+                        worksheet.mergeCells(rowIndex, colIndex, rowIndex + rowspan - 1, colIndex);
                     }
+                } else if (dataCol === "Notas") {
+                    excelRowData.push(cell.innerText.trim());
+                } else if (dataCol !== "Acciones") {
+                    excelRowData.push(cell.innerText.trim());
                 }
             }
 
             const excelRow = worksheet.addRow(excelRowData);
-
-            // Aplicar estilos a las celdas
             excelRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
                 cell.border = {
@@ -1100,31 +983,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             });
 
-            // Aplicar colores a columnas específicas
             const bunchesTotalColIndex = headers.indexOf("Bunches Total") + 1;
             const stemsTotalColIndex = headers.indexOf("Stems Total") + 1;
 
-            // Color naranja suave para "Bunches Total"
             if (bunchesTotalColIndex > 0) {
                 excelRow.getCell(bunchesTotalColIndex).fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: 'FFFCE4D6' } // Naranja suave
+                    fgColor: { argb: 'FFFCE4D6' }
                 };
             }
-
-            // Color azul suave para "Stems Total"
             if (stemsTotalColIndex > 0) {
                 excelRow.getCell(stemsTotalColIndex).fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: 'FFDDEBF7' } // Azul suave
+                    fgColor: { argb: 'FFDDEBF7' }
                 };
             }
 
-            // Agregar datos para las hojas adicionales
+            // Datos para hojas adicionales
             if (tjRegValue && longValue && stemsValue > 0) {
-                // Para la hoja "Por Tipo de Ramo"
                 dataByBouquetType.push({
                     Variety: variety,
                     'TJ - REG': tjRegValue,
@@ -1133,49 +1011,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     Stems: stemsValue
                 });
             }
-
             if (longValue && stemsValue > 0) {
-                // Para la hoja "Por Longitud"
                 dataByLength.push({
                     Variety: variety,
                     Long: longValue,
                     Stems: stemsValue
                 });
             }
-
             if (variety && batch && longValue && stemsValue > 0) {
-                // Para la hoja "Por Batch"
                 dataByBatch.push({
                     Variety: variety,
                     Batch: batch,
                     Long: longValue,
                     Stems: stemsValue,
-                    Fecha: fechaValue // Agregamos la fecha
+                    Fecha: fechaValue
                 });
             }
 
             rowIndex++;
         }
 
-        // Añadir la fila del Gran Total al final
+        // Fila del Gran Total
         const grandTotalValueElement = document.getElementById('grandTotalValue');
         const grandTotalValue = grandTotalValueElement ? grandTotalValueElement.innerText.trim() : '0';
         const grandTotalRow = worksheet.addRow([]);
 
-        // Combinar celdas para el texto del Gran Total
         const totalLabelCell = grandTotalRow.getCell(1);
         totalLabelCell.value = "Gran Total de Stems:";
         totalLabelCell.font = { bold: true };
         totalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
         worksheet.mergeCells(grandTotalRow.number, 1, grandTotalRow.number, headers.length - 1);
 
-        // Celda para el valor del Gran Total
         const totalValueCell = grandTotalRow.getCell(headers.length);
         totalValueCell.value = parseInt(grandTotalValue) || 0;
         totalValueCell.font = { bold: true };
         totalValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-        // Aplicar estilos a la fila del Gran Total
         grandTotalRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
             cell.border = {
                 top: { style: 'double' },
@@ -1185,21 +1056,17 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Ajustar el ancho de las columnas
         worksheet.columns.forEach(column => {
-            column.width = 15; // Puedes ajustar este valor según tus necesidades
+            column.width = 15;
         });
 
         // ============================
-        // Generar la hoja "Por Tipo de Ramo"
+        // Hoja "Por Tipo de Ramo"
         // ============================
         const bouquetSheet = workbook.addWorksheet('Por Tipo de Ramo');
-
-        // Encabezados para la hoja "Por Tipo de Ramo"
         const bouquetHeaders = ["Variety", "TJ - REG", "Long", "Bunches Total", "Stems"];
         const bouquetHeaderRow = bouquetSheet.addRow(bouquetHeaders);
 
-        // Aplicar estilos a los encabezados
         bouquetHeaderRow.eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center' };
@@ -1209,9 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Agrupar y sumar los datos
         const bouquetDataMap = {};
-
         dataByBouquetType.forEach(item => {
             const key = `${item.Variety}_${item['TJ - REG']}_${item.Long}`;
             if (!bouquetDataMap[key]) {
@@ -1222,7 +1087,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Agregar los datos agrupados a la hoja
         Object.values(bouquetDataMap).forEach(item => {
             bouquetSheet.addRow([
                 item.Variety,
@@ -1235,21 +1099,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Ajustar el ancho de las columnas
         bouquetSheet.columns.forEach(column => {
-            column.width = 20; // Ajusta según tus necesidades
+            column.width = 20;
         });
 
         // ============================
-        // Generar la hoja "Por Longitud"
+        // Hoja "Por Longitud"
         // ============================
         const lengthSheet = workbook.addWorksheet('Por Longitud');
-
-        // Encabezados para la hoja "Por Longitud"
         const lengthHeaders = ["Variety", "Long", "Stems"];
         const lengthHeaderRow = lengthSheet.addRow(lengthHeaders);
 
-        // Aplicar estilos a los encabezados
         lengthHeaderRow.eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center' };
@@ -1259,9 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Agrupar y sumar los datos
         const lengthDataMap = {};
-
         dataByLength.forEach(item => {
             const key = `${item.Variety}_${item.Long}`;
             if (!lengthDataMap[key]) {
@@ -1271,7 +1129,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Agregar los datos agrupados a la hoja
         Object.values(lengthDataMap).forEach(item => {
             lengthSheet.addRow([
                 item.Variety,
@@ -1282,21 +1139,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Ajustar el ancho de las columnas
         lengthSheet.columns.forEach(column => {
-            column.width = 20; // Ajusta según tus necesidades
+            column.width = 20;
         });
 
         // ============================
-        // Generar la hoja "Por Batch"
+        // Hoja "Por Batch"
         // ============================
         const batchSheet = workbook.addWorksheet('Por Batch');
-
-        // Encabezados para la hoja "Por Batch"
         const batchHeaders = ["Variety", "Batch", "Long", "Stems", "Fecha"];
         const batchHeaderRow = batchSheet.addRow(batchHeaders);
 
-        // Aplicar estilos a los encabezados
         batchHeaderRow.eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.alignment = { horizontal: 'center' };
@@ -1306,9 +1159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Agrupar y sumar los datos
         const batchDataMap = {};
-
         dataByBatch.forEach(item => {
             const key = `${item.Variety}_${item.Batch}_${item.Long}_${item.Fecha}`;
             if (!batchDataMap[key]) {
@@ -1318,7 +1169,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Agregar los datos agrupados a la hoja
         Object.values(batchDataMap).forEach(item => {
             batchSheet.addRow([
                 item.Variety,
@@ -1331,16 +1181,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Ajustar el ancho de las columnas
         batchSheet.columns.forEach(column => {
-            column.width = 20; // Ajusta según tus necesidades
+            column.width = 20;
         });
 
-        // Retornamos el workbook en lugar de descargar el archivo
         return workbook;
     }
 
-    // Modificación de generateExcelFile para usar generateExcelWorkbook
     async function generateExcelFile() {
         const workbook = await generateExcelWorkbook();
         const buffer = await workbook.xlsx.writeBuffer();
@@ -1348,27 +1195,22 @@ document.addEventListener('DOMContentLoaded', () => {
         saveAs(blob, 'Inventario.xlsx');
     }
 
-    // Función para enviar el correo electrónico con el archivo adjunto
     async function sendEmail() {
-        // Verificar si hay datos en la tabla
         const data = JSON.parse(localStorage.getItem('tableData'));
         if (!data || Object.keys(data).length === 0) {
             showAlert('No hay datos para enviar.', 'warning');
             return;
         }
 
-        // Generar el archivo Excel
         const workbook = await generateExcelWorkbook();
         const buffer = await workbook.xlsx.writeBuffer();
 
-        // Pedir al usuario que ingrese el correo electrónico de destino
         const emailTo = prompt('Ingrese el correo electrónico de destino:');
         if (!emailTo) {
             showAlert('Correo electrónico no especificado.', 'warning');
             return;
         }
 
-        // Enviar los datos al backend
         const formData = new FormData();
         formData.append('file', new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'Inventario.xlsx');
         formData.append('toEmail', emailTo);
@@ -1387,11 +1229,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Función para actualizar todas las calculaciones (usada después de cargar datos o cambiar configuración)
     function updateAllCalculations() {
-        // Recargar la configuración
         config = JSON.parse(localStorage.getItem('config')) || {};
-
         const allRows = dataTable.querySelectorAll('tr');
         allRows.forEach(row => {
             updateCalculations(row);
@@ -1399,35 +1238,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
-    // Función para recargar la configuración y recalcular todo
     function reloadConfigAndRecalculate() {
         config = JSON.parse(localStorage.getItem('config')) || {};
         updateAllCalculations();
     }
 
-    // Función para resetear la tabla
     function resetTable() {
         if (confirm('¿Estás seguro de que deseas eliminar todos los grupos?')) {
-            // Eliminar todas las filas de la tabla
             dataTable.innerHTML = '';
-            // Limpiar el almacenamiento local
             localStorage.removeItem('tableData');
-            // Resetear el Gran Total
             updateGrandTotal();
             showAlert('Todos los grupos han sido eliminados.', 'warning');
-
-            // Vaciar las tablas resumidas
             summaryByLength.innerHTML = '';
             summaryByBouquetType.innerHTML = '';
             summaryByBatch.innerHTML = '';
         }
     }
 
-    // ============================
-    // Función para poblar las tablas resumidas
-    // ============================
     function populateSummaryTables() {
-        // Limpiar las tablas resumidas existentes
         summaryByLength.innerHTML = '';
         summaryByBouquetType.innerHTML = '';
         summaryByBatch.innerHTML = '';
@@ -1437,12 +1265,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Variables para almacenar los datos resumidos
         const summaryDataByLength = {};
         const summaryDataByBouquetType = {};
         const summaryDataByBatch = {};
 
-        // Recorrer todos los grupos y sus filas
         Object.values(data).forEach(group => {
             const variety = group.variety;
             const tipo = group.tipo;
@@ -1455,31 +1281,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bunchesTotal = parseInt(row["Bunches Total"]) || 0;
                 const stems = parseInt(row["Stems"]) || 0;
 
-                // Resumen por Longitud
+                // Por Longitud
                 const lengthKey = `${variety}_${long}`;
                 if (!summaryDataByLength[lengthKey]) {
                     summaryDataByLength[lengthKey] = { Variety: variety, Long: long, Stems: 0 };
                 }
                 summaryDataByLength[lengthKey].Stems += stems;
 
-                // Resumen por Tipo de Ramo
+                // Por Tipo de Ramo
                 const bouquetKey = `${variety}_${tjReg}_${long}`;
                 if (!summaryDataByBouquetType[bouquetKey]) {
-                    summaryDataByBouquetType[bouquetKey] = { Variety: variety, "TJ - REG": tjReg, Long: long, "Bunches Total": 0, Stems: 0 };
+                    summaryDataByBouquetType[bouquetKey] = {
+                        Variety: variety,
+                        "TJ - REG": tjReg,
+                        Long: long,
+                        "Bunches Total": 0,
+                        Stems: 0
+                    };
                 }
                 summaryDataByBouquetType[bouquetKey]["Bunches Total"] += bunchesTotal;
                 summaryDataByBouquetType[bouquetKey].Stems += stems;
 
-                // Resumen por Batch
+                // Por Batch
                 const batchKey = `${variety}_${batch}_${long}_${fecha}`;
                 if (!summaryDataByBatch[batchKey]) {
-                    summaryDataByBatch[batchKey] = { Variety: variety, Batch: batch, Long: long, Stems: 0, Fecha: fecha };
+                    summaryDataByBatch[batchKey] = {
+                        Variety: variety,
+                        Batch: batch,
+                        Long: long,
+                        Stems: 0,
+                        Fecha: fecha
+                    };
                 }
                 summaryDataByBatch[batchKey].Stems += stems;
             });
         });
 
-        // Poblar la tabla "Por Longitud"
         Object.values(summaryDataByLength).forEach(item => {
             const row = summaryByLength.insertRow();
             row.innerHTML = `
@@ -1489,7 +1326,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         });
 
-        // Poblar la tabla "Por Tipo de Ramo"
         Object.values(summaryDataByBouquetType).forEach(item => {
             const row = summaryByBouquetType.insertRow();
             row.innerHTML = `
@@ -1501,7 +1337,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         });
 
-        // Poblar la tabla "Por Batch"
         Object.values(summaryDataByBatch).forEach(item => {
             const row = summaryByBatch.insertRow();
             row.innerHTML = `
@@ -1514,38 +1349,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ============================
-    // Event Listeners
-    // ============================
-
-    // Manejo del botón para cerrar el sidebar
     if (closeSidebarBtn && sidebarMenu) {
         closeSidebarBtn.addEventListener('click', () => {
             sidebarMenu.classList.remove('show');
         });
     }
 
-    // Event listener para el botón "Agregar Grupo"
     addGroupBtn.addEventListener('click', addGroup);
 
-    // Event listener para el botón "Resetear Tabla"
     if (resetTableBtn) {
         resetTableBtn.addEventListener('click', resetTable);
     }
 
-    // Event listener para el botón "Generar Excel"
     if (generateExcelBtn) {
         generateExcelBtn.addEventListener('click', () => {
             generateExcelFile();
         });
     }
 
-    // Event listener para el botón "Enviar Correo"
     if (sendMailBtn) {
         sendMailBtn.addEventListener('click', sendEmail);
     }
 
-    // Event listener para el botón "Toggle Summary"
     if (toggleSummaryBtn && summaryTablesContainer) {
         toggleSummaryBtn.addEventListener('click', () => {
             if (summaryTablesContainer.style.display === 'none' || summaryTablesContainer.style.display === '') {
@@ -1558,25 +1383,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Mostrar el menú lateral al hacer clic en el botón de toggle
     if (toggleSidebarBtn && sidebarMenu) {
         toggleSidebarBtn.addEventListener('click', () => {
             sidebarMenu.classList.add('show');
         });
     }
 
-    // ============================
-    // Inicializaciones
-    // ============================
-
-    // Cargar datos existentes o agregar un nuevo grupo si no existen
     if (!localStorage.getItem('tableData')) {
         addGroup();
     } else {
         loadTableData();
     }
 
-    // Event Listener para cambios en las celdas
     dataTable.addEventListener('input', (event) => {
         const cell = event.target;
         if (cell.classList.contains('editable')) {
@@ -1590,25 +1408,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             saveTableData();
-
-            // Actualizar las tablas resumidas
             populateSummaryTables();
-
-            // Actualizar el Gran Total
             updateGrandTotal();
         }
     });
 
-    // Event Listener para el input de "Responsable"
     responsableInput.addEventListener('input', saveTableData);
     window.addEventListener('beforeunload', saveTableData);
 
-    // Event Listener para las celdas editables con navegación por teclado
     dataTable.addEventListener('keydown', (event) => {
         const cell = event.target;
         if (cell.classList.contains('editable')) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Evitar salto de línea
+                event.preventDefault();
                 const nextCell = getNextEditableCell(cell);
                 if (nextCell) {
                     nextCell.focus();
@@ -1641,7 +1453,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Función para obtener la siguiente celda editable
     function getNextEditableCell(currentCell) {
         const cells = dataTable.querySelectorAll('.editable');
         const cellArray = Array.from(cells);
@@ -1650,12 +1461,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentIndex >= 0 && currentIndex < cellArray.length - 1) {
             return cellArray[currentIndex + 1];
         } else {
-            // Si es la última celda, volver al inicio
             return cellArray[0];
         }
     }
 
-    // Función para obtener la celda adyacente en una dirección específica
     function getAdjacentCell(currentCell, direction) {
         const cellIndex = currentCell.cellIndex;
         const row = currentCell.parentElement;
@@ -1690,9 +1499,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return targetCell;
     }
 
-    // ============================
-    // Exposición de Funciones Globales
-    // ============================
     window.saveTableData = saveTableData;
     window.updateAllCalculations = updateAllCalculations;
     window.reloadConfigAndRecalculate = reloadConfigAndRecalculate;

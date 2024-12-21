@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
+            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
+            NF: {
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
+            },
             REG: {
                 stemsPerBunch: 25, // Valor predeterminado para REG
                 lengths: {
@@ -24,6 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         HYPERICUM: {
             TJ: {
+                bunchesPerProcona: 40,
+                stemsPerBunch: 7
+            },
+            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
+            NF: {
                 bunchesPerProcona: 40,
                 stemsPerBunch: 7
             },
@@ -46,6 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
+            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
+            NF: {
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
+            },
             REG: {
                 lengths: {
                     70: { bunchesPerProcona: 10, stemsPerBunch: 10 },
@@ -62,6 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         PAPYRUS: {
             TJ: {
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
+            },
+            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
+            NF: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
@@ -84,6 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
+            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
+            NF: {
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
+            },
             REG: {
                 lengths: {
                     70: { bunchesPerProcona: 10, stemsPerBunch: 25 },
@@ -100,6 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         MENTHA: {
             TJ: {
+                bunchesPerProcona: 20,
+                stemsPerBunch: 7
+            },
+            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
+            NF: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
@@ -211,7 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let formHtml = '';
 
-            ['TJ', 'REG', 'WS10'].forEach(tipo => {
+            // Se agrega NF al array de tipos
+            ['TJ', 'REG', 'WS10', 'NF'].forEach(tipo => {
                 const tipoConfig = config[category][tipo] || {};
 
                 formHtml += `<h5>${tipo}</h5>`;
@@ -268,7 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            ['TJ', 'REG', 'WS10'].forEach(tipo => {
+            // Se agrega NF al array de tipos
+            ['TJ', 'REG', 'WS10', 'NF'].forEach(tipo => {
                 if (!config[selectedCategory][tipo]) {
                     config[selectedCategory][tipo] = {};
                 }
