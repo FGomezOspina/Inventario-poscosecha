@@ -117,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Verificar cuántas filas tiene actualmente el grupo
                 const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
                 if (currentGroupRows.length < 5) {
-                    addExtraRows(groupId, 2, true); // Agregar 2 filas adicionales para HYPERICUM
+                    // === Aquí se agregan automáticamente 2 filas extra para HYPERICUM ===
+                    addExtraRows(groupId, 2, true);
                 }
             } else {
                 // Si no es HYPERICUM, asegurarse de que solo haya 3 filas
@@ -136,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cell.appendChild(selectVariety);
         return cell;
     }
+
 
     // Función para obtener el Tipo basado en el Variety seleccionado
     function getTipoForVariety(selectedVariety) {
@@ -306,13 +308,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para agregar celdas de datos a una fila
     function addDataCellsToRow(row, index, groupId, isMainRow = true, longsArray) {
         const fieldsToUse = fields;
-
+    
         fieldsToUse.forEach((field) => {
+            // === [Código original] ===
             const cell = document.createElement('td');
             cell.classList.add('editable');
             cell.setAttribute('data-col', field);
             cell.setAttribute('tabindex', '0'); // Permitir que la celda reciba el foco
-
+    
             // Aplicar estilos a las columnas P y R
             if (["P1", "P2", "P3", "P4"].includes(field)) {
                 cell.style.backgroundColor = '#D9E1F2'; // Color para P
@@ -321,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.style.backgroundColor = '#FCE4D6'; // Color para R
                 cell.style.border = '1px solid black'; 
             }
-
+    
             if (field === "TJ - REG") {
                 const select = createTJRegSelect();
                 cell.appendChild(select);
@@ -366,10 +369,58 @@ document.addEventListener('DOMContentLoaded', () => {
                     populateSummaryTables();
                 });
             }
-
+    
             row.appendChild(cell);
+            // === [Fin código original] ===
         });
+    
+        // === NUEVO: Añadir botón de eliminación SÓLO para subfilas (isMainRow = false) ===
+        if (!isMainRow) {
+            const deleteLineCell = document.createElement('td');
+            deleteLineCell.classList.add('text-center');
+    
+            const deleteLineBtn = document.createElement('button');
+            deleteLineBtn.innerHTML = '<i class="fa fa-trash"></i>';
+            deleteLineBtn.classList.add('delete-line-btn');
+            deleteLineBtn.title = 'Eliminar esta línea';
+    
+            deleteLineBtn.addEventListener('click', () => {
+                removeSingleRow(row);
+            });
+    
+            deleteLineCell.appendChild(deleteLineBtn);
+            row.appendChild(deleteLineCell);
+        }
+    }    
+
+    function removeSingleRow(row) {
+        // Identificar el grupo al que pertenece la fila
+        const groupId = row.getAttribute('data-group-id');
+        const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+    
+        // Verificar si el grupo tiene al menos 4 filas (3 mínimas + esta extra)
+        if (groupRows.length <= 3) {
+            showAlert('No se puede eliminar esta línea. El grupo debe tener al menos 3 filas.', 'warning');
+            return;
+        }
+    
+        // Eliminar la fila extra
+        row.remove();
+    
+        // Ajustar el rowspan de la primera fila (Variety, Tipo, Batch, etc.)
+        const newRowSpan = parseInt(groupRows[0].querySelector('[rowspan]').getAttribute('rowspan')) - 1;
+        groupRows[0].querySelectorAll('[rowspan]').forEach(cell => {
+            cell.setAttribute('rowspan', newRowSpan);
+        });
+    
+        // Guardar y recalcular todo
+        saveTableData();
+        updateAllCalculations();  // Recorre todas las filas y llama a updateCalculations(row)
+        populateSummaryTables();
+    
+        showAlert('Línea eliminada correctamente.', 'success');
     }
+    
 
     // Función para agregar un nuevo grupo con 3 líneas por defecto
     function addGroup() {
@@ -487,24 +538,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para agregar filas extra a un grupo
     // Si isHypericum = true, usamos hypericumLongs, de lo contrario longDefaults.
+    // ============================
+// Función addExtraRows CORREGIDA
+// ============================
     function addExtraRows(groupId, extraCount, isHypericum = true) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         const currentCount = groupRows.length;
         const newTotal = currentCount + extraCount;
 
+        // Ajustar el rowspan de la primera fila
         ['Variety', 'Tipo', 'Batch', 'Fecha', 'Stems Total', 'Acciones'].forEach(col => {
-            const cell = groupRows[0].querySelector(`td[data-col="${col}"]`) || groupRows[0].querySelector(`td[rowspan]`);
+            const cell = groupRows[0].querySelector(`td[data-col="${col}"]`) ||
+                        groupRows[0].querySelector(`td[rowspan]`);
             if (cell) {
                 cell.setAttribute('rowspan', newTotal);
             }
         });
 
+        // Tomar todas las filas del <tbody> como array
+        const allRows = Array.from(dataTable.rows);
+
+        // Ubicar la última fila actual de este grupo en ese array
+        const lastRowOfGroup = groupRows[groupRows.length - 1];
+        let lastRowIndexInTbody = allRows.indexOf(lastRowOfGroup);
+
+        // Insertar extraCount filas inmediatamente después de la última fila del grupo
         for (let i = currentCount; i < newTotal; i++) {
-            const subRow = dataTable.insertRow();
+            // Calculamos el índice donde insertar la siguiente fila
+            let insertIndex = lastRowIndexInTbody + 1;
+
+            // Si el insertIndex excede la cantidad de filas, insertamos al final con -1
+            if (insertIndex > allRows.length) {
+                insertIndex = -1;
+            }
+
+            // Insertar la nueva fila en esa posición
+            const subRow = dataTable.insertRow(insertIndex);
             subRow.setAttribute('data-group-id', groupId);
-            addDataCellsToRow(subRow, i, groupId, false, isHypericum ? hypericumLongs : longDefaults);
+
+            // Como acabamos de insertar una fila, debemos actualizar el array `allRows`
+            if (insertIndex === -1) {
+                // Se insertó “al final”
+                allRows.push(subRow);
+                lastRowIndexInTbody = allRows.length - 1;
+            } else {
+                // Se insertó en medio
+                allRows.splice(insertIndex, 0, subRow);
+                lastRowIndexInTbody++;
+            }
+
+            // Agregar las celdas a la nueva fila
+            addDataCellsToRow(
+                subRow,
+                i,
+                groupId,
+                false,
+                isHypericum ? hypericumLongs : longDefaults
+            );
         }
 
+        // Recalcular todo en las filas del grupo
         const updatedGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         updatedGroupRows.forEach(row => {
             updateCalculations(row);
@@ -514,6 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateSummaryTables();
         updateGrandTotal();
     }
+   
 
     // Función para eliminar filas extra de un grupo
     function removeExtraRows(groupId, extraCount) {
