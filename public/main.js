@@ -200,22 +200,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Validación específica para el campo "Batch"
         if (colName === 'Batch') {
             cell.addEventListener('input', () => {
+                // Convertir todo a mayúsculas
                 let text = cell.innerText.toUpperCase();
                 // Eliminar caracteres que no sean letras o números
                 text = text.replace(/[^A-Z0-9]/gi, '');
-                // Limitar a dos caracteres
-                if (text.length > 2) {
-                    text = text.substring(0, 2);
+                // Limitar a 3 caracteres
+                if (text.length > 3) {
+                    text = text.substring(0, 3);
                 }
                 cell.innerText = text;
-
-                // Mover el cursor al final
+        
+                // Mover el cursor al final de la celda
                 moveCursorToEnd(cell);
-
+        
+                // Guardar y actualizar todo lo demás
                 saveTableData();
-                // Actualizar las tablas resumidas
                 populateSummaryTables();
-            });
+            });        
         } else if (colName === 'Long') {
             // Añadir evento para limitar a 2 dígitos numéricos y mantener el cursor al final
             cell.addEventListener('input', () => {
