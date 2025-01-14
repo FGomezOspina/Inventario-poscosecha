@@ -446,3 +446,15 @@ th[data-col="Fecha"] {
         display: none;
     }
 }
+
+/* Al final de styles.css */
+
+/* Colores por variedad (ejemplo) */
+.var-artist   td { background-color: #ffe5e5; }
+.var-bizarre  td { background-color: #e5ffe5; }
+.var-caya     td { background-color: #e5f7ff; }
+.var-june     td { background-color: #fff5e5; }
+.var-navy     td { background-color: #e5e5ff; }
+.var-roswitha td { background-color: #ffe5f7; }
+
+/* y así sucesivamente, o haz un color distinto para cada "tipo" de variedad */

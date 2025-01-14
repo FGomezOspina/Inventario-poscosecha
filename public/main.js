@@ -3,16 +3,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Declaración de Variables
     // ============================
     const addGroupBtn = document.getElementById('addGroupBtn');
-    const resetTableBtn = document.getElementById('resetTableBtn'); // Botón de reset
+    const resetTableBtn = document.getElementById('resetTableBtn');
     const generateExcelBtn = document.getElementById('generateExcelBtn');
-    const sendMailBtn = document.getElementById('sendMailBtn'); // Nuevo botón para enviar correo
+    const sendMailBtn = document.getElementById('sendMailBtn');
     const dataTable = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
     const responsableInput = document.getElementById('responsable');
     const alertPlaceholder = document.getElementById('alertPlaceholder');
     const inventarioSection = document.getElementById('inventarioSection');
     const packrateSection = document.getElementById('packrateSection');
 
-    // Elementos del menú lateral (si existen)
+    // Elementos del menú lateral
     const sidebarMenu = document.getElementById('sidebarMenu');
     const toggleSidebarBtn = document.getElementById('toggleSidebar');
     const closeSidebarBtn = document.getElementById('closeSidebar');
@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let config = JSON.parse(localStorage.getItem('config')) || defaultConfig;
 
     const longDefaults = []; // Longitudes predeterminadas vacías
-    const hypericumLongs = ['', '']; // Longitudes para Hypericum, establecidas a vacío por defecto
-
-    // === Se agrega NF a las opciones existentes ===
+    const hypericumLongs = ['', '']; // Longitudes para Hypericum
     const tjRegOptions = ["TJ", "REG", "WS10", "NF"];
 
     const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
+
+    // Variedades
     const varietyOptions = {
         "VERONICA": ["ARTIST", "BIZARRE", "CAYA", "JUNE", "NAVY", "ROSWITHA"],
         "MENTHA": ["MENTHA", "MENTHA SPRAY"],
@@ -43,20 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
         "ORIGANUM": ["ORIGANUM"]
     };
 
-    // Botón en el menú lateral para mostrar la sección de Empaque (pero ahora regresa a Inventario)
+    // ============================
+    // Lógica de Menú Lateral
+    // ============================
     const empaqueBtn = document.getElementById('empaqueBtn');
     if (empaqueBtn) {
         empaqueBtn.addEventListener('click', (e) => {
             e.preventDefault();
-
-            // Ocultar packrate, si estuviera visible
+            // Ocultar Pack Rate
             if (packrateSection) packrateSection.style.display = 'none';
-
-            // Ocultar la sección de Empaque, si quieres dejar de verla
+            // Ocultar (o mostrar) la sección de Empaque
             const empaqueSection = document.getElementById('empaqueSection');
             empaqueSection.style.display = 'none';
-
-            // Mostrar la sección principal de Inventario
+            // Mostrar la sección Inventario
             if (inventarioSection) inventarioSection.style.display = 'block';
         });
     }
@@ -65,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleEmpaqueBtn) {
         toggleEmpaqueBtn.addEventListener('click', () => {
             const empaqueSection = document.getElementById('empaqueSection');
-            
             if (empaqueSection.style.display === 'none' || empaqueSection.style.display === '') {
                 empaqueSection.style.display = 'block';
                 toggleEmpaqueBtn.innerText = 'Ocultar Empaque';
@@ -76,13 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Nuevo botón para mostrar/ocultar Empaque desde la sección principal
     const toggleEmpaqueBtn2 = document.getElementById('toggleEmpaqueBtn2');
     if (toggleEmpaqueBtn2) {
         toggleEmpaqueBtn2.addEventListener('click', () => {
             const empaqueSection = document.getElementById('empaqueSection');
-            if (!empaqueSection) return; // Por seguridad, en caso no exista
-
+            if (!empaqueSection) return;
             if (empaqueSection.style.display === 'none' || empaqueSection.style.display === '') {
                 empaqueSection.style.display = 'block';
                 toggleEmpaqueBtn2.innerText = 'Ocultar Empaque';
@@ -97,14 +93,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if (packrateBtn) {
         packrateBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Mostrar Pack Rate, ocultar Inventario
+            // Ocultar Inventario
             if (inventarioSection) inventarioSection.style.display = 'none';
+            // Mostrar Pack Rate
             if (packrateSection) {
                 packrateSection.style.display = 'block';
-                // Llamamos a la nueva función para generar la tabla de Pack Rate
+                // Generar la tabla de Pack Rate
                 generatePackRateTable();
             }
         });
+    }
+
+    // ============================
+    // Funciones de ayuda
+    // ============================
+    function showAlert(message, type = 'success') {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show mt-2" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+        alertPlaceholder.append(wrapper);
+        setTimeout(() => {
+            wrapper.remove();
+        }, 3000);
     }
 
     // ============================
@@ -1936,46 +1949,75 @@ document.addEventListener('DOMContentLoaded', () => {
     // NUEVA FUNCIÓN: generatePackRateTable
     // ==============================
     function generatePackRateTable() {
-      const packrateTable = document.getElementById("packrateTable"); 
-      if (!packrateTable) {
-        console.warn("No se encontró la tabla con id='packrateTable'");
-        return;
-      }
-      const tBody = packrateTable.querySelector("tbody");
-      if (!tBody) {
-        console.warn("No se encontró <tbody> dentro de #packrateTable");
-        return;
-      }
+        const packrateTable = document.getElementById("packrateTable"); 
+        if (!packrateTable) {
+          console.warn("No se encontró la tabla con id='packrateTable'");
+          return;
+        }
+        const tBody = packrateTable.querySelector("tbody");
+        if (!tBody) {
+          console.warn("No se encontró <tbody> dentro de #packrateTable");
+          return;
+        }
 
-      // Limpiar cualquier contenido anterior
-      tBody.innerHTML = "";
+        // Limpiar cualquier contenido anterior
+        tBody.innerHTML = "";
 
-      // Obtener todas las variedades
-      let allVarieties = [];
-      Object.keys(varietyOptions).forEach(tipo => {
-        allVarieties = allVarieties.concat(varietyOptions[tipo]);
-      });
+        // Mapa de colores (varName -> color). Ajusta a tu gusto.
+        const varietyColors = {
+            "ARTIST":    "#ffe5e5",
+            "BIZARRE":   "#e5ffe5",
+            "CAYA":      "#e5f7ff",
+            "JUNE":      "#fff5e5",
+            "NAVY":      "#e5e5ff",
+            "ROSWITHA":  "#ffe5f7",
+            // Para las demás variedades, un color genérico
+            "DEFAULT":   "#ffffff"
+        };
 
-      // Generar una fila por cada variedad
-      // Columnas: [STEMS, Variety, 70, 60, 55, 50] (ajusta según tu tabla)
-      allVarieties.forEach(varName => {
-        const row = tBody.insertRow();
-
-        // 1) Celda "STEMS" (editable)
-        const cellStems = row.insertCell();
-        cellStems.contentEditable = true;
-        cellStems.innerText = "25";  // Ejemplo de valor inicial
-
-        // 2) Celda "Variety" (texto fijo)
-        const cellVariety = row.insertCell();
-        cellVariety.innerText = varName;
-
-        // 3) Celdas para longitudes (70, 60, 55, 50) – ajusta si necesitas 40, HB, etc.
-        [70, 60, 55, 50].forEach(len => {
-          const cellLen = row.insertCell();
-          cellLen.contentEditable = true;
-          cellLen.innerText = "0"; 
+        // Paso 1: Obtener todas las variedades
+        let allVarieties = [];
+        Object.keys(varietyOptions).forEach(tipo => {
+            allVarieties = allVarieties.concat(varietyOptions[tipo]);
         });
-      });
+
+        // Paso 2: Definir las 6 filas "internas"
+        const combos = ["HB", "STEMS", "QB", "STEMS", "EB", "STEMS"];
+        // Las 4 columnas que deseas (70, 60, 55, 50)
+        const columns = [70, 60, 55, 50];
+
+        // Paso 3: Por cada variedad
+        allVarieties.forEach((varName) => {
+            // Creamos 6 subfilas, pero las 2 primeras columnas (25 y varName) tendrán rowSpan=6
+
+            combos.forEach((lineLabel, index) => {
+                const row = tBody.insertRow();
+
+                if (index === 0) {
+                    // Col 1 (25) con rowSpan=6
+                    const cell1 = row.insertCell();
+                    cell1.rowSpan = combos.length; // 6
+                    cell1.contentEditable = true; // Si quieres permitir editar el "25"
+                    cell1.innerText = "25";
+
+                    // Col 2 (varName) con rowSpan=6
+                    const cell2 = row.insertCell();
+                    cell2.rowSpan = combos.length; // 6
+                    cell2.innerText = varName;
+                }
+
+                // Col 3: combos => "HB", "STEMS", "QB", ...
+                const cell3 = row.insertCell();
+                cell3.innerText = lineLabel;
+                cell3.style.fontWeight = "bold";
+
+                // Las 4 columnas para 70, 60, 55, 50 => celdas editables
+                columns.forEach(() => {
+                    const cell = row.insertCell();
+                    cell.contentEditable = true;
+                    cell.innerText = "0";
+                });
+            });
+        });
     }
 });
