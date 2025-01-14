@@ -43,9 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "ORIGANUM": ["ORIGANUM"]
     };
 
-
-
-    // Botón en el menú lateral para mostrar la sección de Empaque
+    // Botón en el menú lateral para mostrar la sección de Empaque (pero ahora regresa a Inventario)
     const empaqueBtn = document.getElementById('empaqueBtn');
     if (empaqueBtn) {
         empaqueBtn.addEventListener('click', (e) => {
@@ -62,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inventarioSection) inventarioSection.style.display = 'block';
         });
     }
-
 
     const toggleEmpaqueBtn = document.getElementById('toggleEmpaqueBtn');
     if (toggleEmpaqueBtn) {
@@ -96,14 +93,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     const packrateBtn = document.getElementById('packrateBtn');
     if (packrateBtn) {
         packrateBtn.addEventListener('click', (e) => {
             e.preventDefault();
             // Mostrar Pack Rate, ocultar Inventario
             if (inventarioSection) inventarioSection.style.display = 'none';
-            if (packrateSection) packrateSection.style.display = 'block';
+            if (packrateSection) {
+                packrateSection.style.display = 'block';
+                // Llamamos a la nueva función para generar la tabla de Pack Rate
+                generatePackRateTable();
+            }
         });
     }
 
@@ -203,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cell.appendChild(selectVariety);
         return cell;
     }
-
 
     // Función para obtener el Tipo basado en el Variety seleccionado
     function getTipoForVariety(selectedVariety) {
@@ -377,7 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const fieldsToUse = fields;
     
         fieldsToUse.forEach((field) => {
-            // === [Código original] ===
             const cell = document.createElement('td');
             cell.classList.add('editable');
             cell.setAttribute('data-col', field);
@@ -438,10 +436,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             row.appendChild(cell);
-            // === [Fin código original] ===
         });
     
-        // === NUEVO: Añadir botón de eliminación SÓLO para subfilas (isMainRow = false) ===
+        // Añadir botón de eliminación SÓLO para subfilas (isMainRow = false)
         if (!isMainRow) {
             const deleteLineCell = document.createElement('td');
             deleteLineCell.classList.add('text-center');
@@ -458,10 +455,9 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteLineCell.appendChild(deleteLineBtn);
             row.appendChild(deleteLineCell);
         }
-    }    
+    }
 
     function removeSingleRow(row) {
-        // Identificar el grupo al que pertenece la fila
         const groupId = row.getAttribute('data-group-id');
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
     
@@ -471,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
     
-        // Eliminar la fila extra
         row.remove();
     
         // Ajustar el rowspan de la primera fila (Variety, Tipo, Batch, etc.)
@@ -480,14 +475,13 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.setAttribute('rowspan', newRowSpan);
         });
     
-        // Guardar y recalcular todo
+        // Guardar y recalcular
         saveTableData();
-        updateAllCalculations();  // Recorre todas las filas y llama a updateCalculations(row)
+        updateAllCalculations(); 
         populateSummaryTables();
     
         showAlert('Línea eliminada correctamente.', 'success');
     }
-    
 
     // Función para agregar un nuevo grupo con 3 líneas por defecto
     function addGroup() {
@@ -498,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainRow = dataTable.insertRow();
         mainRow.setAttribute('data-group-id', groupId);
 
-        // Crear celdas "Variety" y "Tipo" con rowspan dinámico
+        // Crear celdas "Variety" y "Tipo" con rowspan
         const varietyCell = createVarietySelect();
         varietyCell.setAttribute('rowspan', numRows);
         mainRow.appendChild(varietyCell);
@@ -510,11 +504,11 @@ document.addEventListener('DOMContentLoaded', () => {
         tipoCell.setAttribute('tabindex', '0'); 
         mainRow.appendChild(tipoCell);
 
-        // Crear celda "Batch"
+        // Celda "Batch"
         const batchCell = createEditableCell('Batch', '', numRows);
         mainRow.appendChild(batchCell);
 
-        // Crear celda "Fecha" con fecha actual
+        // Celda "Fecha" con fecha actual
         const today = new Date().toISOString().split('T')[0]; 
         const fechaCell = createDateCell('Fecha', today, numRows);
         mainRow.appendChild(fechaCell);
@@ -522,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Agregar celdas de datos para la primera fila
         addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
 
-        // Agregar la celda de "Stems Total" con rowspan dinámico
+        // Celda "Stems Total" con rowspan
         const stemsTotalCell = document.createElement('td');
         stemsTotalCell.setAttribute('rowspan', numRows);
         stemsTotalCell.classList.add('text-center');
@@ -530,12 +524,12 @@ document.addEventListener('DOMContentLoaded', () => {
         stemsTotalCell.innerText = '';
         stemsTotalCell.setAttribute('tabindex', '0');
 
-        // Encontrar el índice de la celda "Notas"
+        // Insertar la celda de Stems Total antes de "Notas"
         const notasCell = mainRow.querySelector('td[data-col="Notas"]');
         const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
         mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
 
-        // Agregar la celda de "Acciones" con rowspan dinámico
+        // Celda de Acciones con rowspan
         const actionCell = document.createElement('td');
         actionCell.setAttribute('rowspan', numRows);
         actionCell.classList.add('text-center');
@@ -575,12 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
             const tipo = tipoCell ? tipoCell.innerText.trim() : '';
 
-            // Respetar la condición de NO agregar línea si es HYPERICUM
             if (tipo === 'HYPERICUM') {
                 showAlert('No se pueden agregar líneas adicionales para el grupo HYPERICUM.', 'warning');
                 return;
             }
-            // Para cualquier otro tipo, agregamos 1 fila más
             addExtraRows(groupId, 1, false);
             showAlert('Se agregó una nueva línea al grupo.', 'success');
         });
@@ -588,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mainRow.appendChild(actionCell);
 
-        // Agregar subfilas para completar las 3 filas por defecto
+        // Agregar subfilas para completar las 3 filas
         for (let i = 1; i < numRows; i++) {
             const subRow = dataTable.insertRow();
             subRow.setAttribute('data-group-id', groupId);
@@ -679,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         deleteCell.appendChild(deleteBtn);
     
-        // Escuchar eventos para recalcular en celdas clave (#Cajas, Sobrante, Proceso, etc.)
+        // Escuchar eventos para recalcular (#Cajas, Sobrante, etc.)
         row.addEventListener('input', () => {
             calculateEmpaqueRow(row);
             saveEmpaqueTableData();
@@ -694,8 +686,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saveEmpaqueTableData();
         showAlert('Fila de Empaque eliminada.', 'success');
     }
-    
-    
 
     const addEmpaqueRowBtn = document.getElementById('addEmpaqueRowBtn');
     if (addEmpaqueRowBtn) {
@@ -704,13 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    
-
-    // Función para agregar filas extra a un grupo
-    // Si isHypericum = true, usamos hypericumLongs, de lo contrario longDefaults.
-    // ============================
-// Función addExtraRows CORREGIDA
-// ============================
+    // Función addExtraRows CORREGIDA
     function addExtraRows(groupId, extraCount, isHypericum = true) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         const currentCount = groupRows.length;
@@ -725,39 +709,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Tomar todas las filas del <tbody> como array
         const allRows = Array.from(dataTable.rows);
-
-        // Ubicar la última fila actual de este grupo en ese array
         const lastRowOfGroup = groupRows[groupRows.length - 1];
         let lastRowIndexInTbody = allRows.indexOf(lastRowOfGroup);
 
-        // Insertar extraCount filas inmediatamente después de la última fila del grupo
         for (let i = currentCount; i < newTotal; i++) {
-            // Calculamos el índice donde insertar la siguiente fila
             let insertIndex = lastRowIndexInTbody + 1;
 
-            // Si el insertIndex excede la cantidad de filas, insertamos al final con -1
             if (insertIndex > allRows.length) {
                 insertIndex = -1;
             }
 
-            // Insertar la nueva fila en esa posición
             const subRow = dataTable.insertRow(insertIndex);
             subRow.setAttribute('data-group-id', groupId);
 
-            // Como acabamos de insertar una fila, debemos actualizar el array `allRows`
             if (insertIndex === -1) {
-                // Se insertó “al final”
                 allRows.push(subRow);
                 lastRowIndexInTbody = allRows.length - 1;
             } else {
-                // Se insertó en medio
                 allRows.splice(insertIndex, 0, subRow);
                 lastRowIndexInTbody++;
             }
 
-            // Agregar las celdas a la nueva fila
             addDataCellsToRow(
                 subRow,
                 i,
@@ -767,7 +740,6 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
 
-        // Recalcular todo en las filas del grupo
         const updatedGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         updatedGroupRows.forEach(row => {
             updateCalculations(row);
@@ -777,9 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateSummaryTables();
         updateGrandTotal();
     }
-   
 
-    // Función para eliminar filas extra de un grupo
     function removeExtraRows(groupId, extraCount) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         const currentCount = groupRows.length;
@@ -933,7 +903,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateEmpaqueRow(row) {
-        // Obtenemos los valores de #Cajas, Sobrante y Proceso
         const numCajasCell = row.querySelector('td[data-col="NumCajas"]');
         const sobranteCell = row.querySelector('td[data-col="Sobrante"]');
         const procesoCell = row.querySelector('td[data-col="Proceso"]');
@@ -944,19 +913,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const sobrante = parseInt(sobranteCell?.innerText.trim()) || 0;
         const proceso = parseInt(procesoCell?.innerText.trim()) || 0;
     
-        // Ejemplo de cómo podrías calcular (ajusta según tus reglas):
-        // totalEmpaque = #Cajas * 10 (o la lógica que quieras)
-        const totalEmpaque = numCajas * 10; // EJEMPLO
-    
-        // total sobrante futuro = sobrante - proceso (o la fórmula que tú decidas)
-        const totalSobranteFuturo = sobrante - proceso; // EJEMPLO
+        // EJEMPLO de cálculo
+        const totalEmpaque = numCajas * 10; 
+        const totalSobranteFuturo = sobrante - proceso; 
     
         totalEmpaqueCell.innerText = totalEmpaque.toString();
         totalSobranteFCell.innerText = totalSobranteFuturo.toString();
     }
-    
 
-    // Función para actualizar el total de stems de un grupo
     function updateStemsTotal(groupId) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         let totalStems = 0;
@@ -978,7 +942,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
-    // Función para calcular y actualizar el Gran Total
     function updateGrandTotal() {
         const grandTotalValue = document.getElementById('grandTotalValue');
         let grandTotal = 0;
@@ -994,7 +957,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Función para guardar los datos de la tabla en el almacenamiento local
     function saveTableData() {
         const table = document.getElementById('dataTable');
         const groups = {};
@@ -1044,7 +1006,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('responsable', responsableInput.value.trim());
     }
 
-    // Función para cargar los datos de la tabla desde el almacenamiento local
     function loadTableData() {
         const data = JSON.parse(localStorage.getItem('tableData'));
         const responsable = localStorage.getItem('responsable') || '';
@@ -1219,7 +1180,6 @@ document.addEventListener('DOMContentLoaded', () => {
         empaqueTableBody.innerHTML = '';
     
         data.forEach((item) => {
-            // Inserta una nueva fila
             const row = empaqueTableBody.insertRow();
     
             // 1. Variety
@@ -1289,7 +1249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             totalSobranteFCell.setAttribute('data-col', 'TotalSobranteFuturo');
             totalSobranteFCell.innerText = item.totalSobranteFuturo || '0';
             
-            // 10. Celda para el botón Eliminar
+            // 10. Botón Eliminar
             const deleteCell = row.insertCell();
             deleteCell.classList.add('text-center');
             const deleteBtn = document.createElement('button');
@@ -1301,21 +1261,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             deleteCell.appendChild(deleteBtn);
 
-            // Listener de recalculo
             row.addEventListener('input', () => {
                 calculateEmpaqueRow(row);
                 saveEmpaqueTableData();
             });
     
-            // Recalcula para asegurar que todo esté al día
             calculateEmpaqueRow(row);
         });
     }
-    
 
     // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
-        // Asegúrate de tener la librería ExcelJS cargada
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Inventario');
 
@@ -1529,9 +1485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             column.width = 15;
         });
 
-        // ============================
         // Hoja "Por Tipo de Ramo"
-        // ============================
         const bouquetSheet = workbook.addWorksheet('Por Tipo de Ramo');
         const bouquetHeaders = ["Variety", "TJ - REG", "Long", "Bunches Total", "Stems"];
         const bouquetHeaderRow = bouquetSheet.addRow(bouquetHeaders);
@@ -1572,9 +1526,7 @@ document.addEventListener('DOMContentLoaded', () => {
             column.width = 20;
         });
 
-        // ============================
         // Hoja "Por Longitud"
-        // ============================
         const lengthSheet = workbook.addWorksheet('Por Longitud');
         const lengthHeaders = ["Variety", "Long", "Stems"];
         const lengthHeaderRow = lengthSheet.addRow(lengthHeaders);
@@ -1612,9 +1564,7 @@ document.addEventListener('DOMContentLoaded', () => {
             column.width = 20;
         });
 
-        // ============================
         // Hoja "Por Batch"
-        // ============================
         const batchSheet = workbook.addWorksheet('Por Batch');
         const batchHeaders = ["Variety", "Batch", "Long", "Stems", "Fecha"];
         const batchHeaderRow = batchSheet.addRow(batchHeaders);
@@ -1982,4 +1932,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cargar datos de Empaque al iniciar
     loadEmpaqueTableData();
 
+    // ==============================
+    // NUEVA FUNCIÓN: generatePackRateTable
+    // ==============================
+    function generatePackRateTable() {
+      const packrateTable = document.getElementById("packrateTable"); 
+      if (!packrateTable) {
+        console.warn("No se encontró la tabla con id='packrateTable'");
+        return;
+      }
+      const tBody = packrateTable.querySelector("tbody");
+      if (!tBody) {
+        console.warn("No se encontró <tbody> dentro de #packrateTable");
+        return;
+      }
+
+      // Limpiar cualquier contenido anterior
+      tBody.innerHTML = "";
+
+      // Obtener todas las variedades
+      let allVarieties = [];
+      Object.keys(varietyOptions).forEach(tipo => {
+        allVarieties = allVarieties.concat(varietyOptions[tipo]);
+      });
+
+      // Generar una fila por cada variedad
+      // Columnas: [STEMS, Variety, 70, 60, 55, 50] (ajusta según tu tabla)
+      allVarieties.forEach(varName => {
+        const row = tBody.insertRow();
+
+        // 1) Celda "STEMS" (editable)
+        const cellStems = row.insertCell();
+        cellStems.contentEditable = true;
+        cellStems.innerText = "25";  // Ejemplo de valor inicial
+
+        // 2) Celda "Variety" (texto fijo)
+        const cellVariety = row.insertCell();
+        cellVariety.innerText = varName;
+
+        // 3) Celdas para longitudes (70, 60, 55, 50) – ajusta si necesitas 40, HB, etc.
+        [70, 60, 55, 50].forEach(len => {
+          const cellLen = row.insertCell();
+          cellLen.contentEditable = true;
+          cellLen.innerText = "0"; 
+        });
+      });
+    }
 });

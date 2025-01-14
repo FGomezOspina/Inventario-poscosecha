@@ -373,7 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para mostrar alertas (similar a la de main.js)
     function showAlert(message, type = 'success') {
-        // Obtén el contenedor de alertas o crea uno si no existe
         let alertContainer = document.getElementById('alertContainer');
         if (!alertContainer) {
             alertContainer = document.createElement('div');
@@ -381,7 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.prepend(alertContainer);
         }
 
-        // Crea el elemento de alerta
         const alert = document.createElement('div');
         alert.className = `alert alert-${type} alert-dismissible fade show`;
         alert.role = 'alert';
@@ -390,15 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
 
-        // Añade la alerta al contenedor
         alertContainer.appendChild(alert);
 
-        // Configura un temporizador para cerrar la alerta después de unos segundos
+        // Cierra la alerta tras 3 segundos (puedes cambiar este tiempo)
         setTimeout(() => {
             alert.classList.remove('show');
             alert.classList.add('hide');
-            setTimeout(() => alert.remove(), 500); // Permite que la animación de cierre termine
-        }, 3000); // Cambia este valor si quieres que dure más o menos tiempo
+            setTimeout(() => alert.remove(), 500);
+        }, 3000);
     }
 
     // Event listener para el botón de configuración
@@ -406,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (configBtn) {
         configBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Asegúrate de que 'currentUser' esté definido globalmente y tenga una propiedad 'role'
+            // Ejemplo de control de permisos
             if (window.currentUser && window.currentUser.role === 'admin') { 
                 openConfigModal();
             } else {
