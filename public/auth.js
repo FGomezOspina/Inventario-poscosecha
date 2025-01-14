@@ -3,7 +3,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const users = [
         { username: 'admin', password: 'admin123', role: 'admin' },
-        { username: 'user', password: 'user123', role: 'user' }
+        { username: 'inventario', password: 'inventario123', role: 'inventario' },
+        { username: 'empaque', password: 'empaque123', role: 'empaque'}
     ];
     
     // Definir currentUser globalmente
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
+            // Solo se ejecuta una vez para evitar múltiples "submit" event listeners
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const username = document.getElementById('username').value.trim();
@@ -36,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showAlert(message, type = 'success') {
-        // Obtén el contenedor de alertas o crea uno si no existe
         let alertContainer = document.getElementById('alertContainer');
         if (!alertContainer) {
             alertContainer = document.createElement('div');
@@ -44,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.prepend(alertContainer);
         }
     
-        // Crea el elemento de alerta
         const alert = document.createElement('div');
         alert.className = `alert alert-${type} alert-dismissible fade show`;
         alert.role = 'alert';
@@ -53,25 +53,50 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
     
-        // Añade la alerta al contenedor
         alertContainer.appendChild(alert);
     
-        // Configura un temporizador para cerrar la alerta después de unos segundos
         setTimeout(() => {
             alert.classList.remove('show');
             alert.classList.add('hide');
-            setTimeout(() => alert.remove(), 500); // Permite que la animación de cierre termine
-        }, 3000); // Cambia este valor si quieres que dure más o menos tiempo
+            setTimeout(() => alert.remove(), 500);
+        }, 3000);
     }
     
     function updateUIForRole() {
-        const configBtn = document.getElementById('configBtn');
-        if (configBtn) {
-            if (window.currentUser && window.currentUser.role === 'admin') {
-                configBtn.style.display = 'block';
-            } else {
-                configBtn.style.display = 'none';
-            }
+        // Referencias a los elementos del sidebar
+        const configNavItem = document.getElementById('configNavItem');      // <li> de Configuración
+        const inventarioNavItem = document.getElementById('inventarioNavItem'); // <li> de Inventario
+        const soloEmpaqueNavItem = document.getElementById('soloEmpaqueNavItem'); // <li> de Empaque
+      
+        // Si no hay usuario logueado, ocultar todo (salvo "Cerrar Sesión" si quieres mantenerlo)
+        if (!window.currentUser) {
+            if (configNavItem) configNavItem.style.display = 'none';
+            if (inventarioNavItem) inventarioNavItem.style.display = 'none';
+            if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'none';
+            return;
+        }
+      
+        const role = window.currentUser.role;
+      
+        // Ocultar todo por defecto
+        if (configNavItem) configNavItem.style.display = 'none';
+        if (inventarioNavItem) inventarioNavItem.style.display = 'none';
+        if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'none';
+      
+        // Reglas por rol
+        if (role === 'admin') {
+            // Admin ve todo
+            if (configNavItem) configNavItem.style.display = 'block';
+            if (inventarioNavItem) inventarioNavItem.style.display = 'block';
+            if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'block';
+        } 
+        else if (role === 'inventario') {
+            // Solo inventario
+            if (inventarioNavItem) inventarioNavItem.style.display = 'block';
+        }
+        else if (role === 'empaque') {
+            // Solo empaque
+            if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'block';
         }
     }
 

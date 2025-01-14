@@ -9,13 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataTable = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
     const responsableInput = document.getElementById('responsable');
     const alertPlaceholder = document.getElementById('alertPlaceholder');
+
+    // Secciones principales
     const inventarioSection = document.getElementById('inventarioSection');
+    const empaqueSection = document.getElementById('empaqueSection');
     const packrateSection = document.getElementById('packrateSection');
 
     // Elementos del menú lateral
     const sidebarMenu = document.getElementById('sidebarMenu');
     const toggleSidebarBtn = document.getElementById('toggleSidebar');
     const closeSidebarBtn = document.getElementById('closeSidebar');
+
+    // Botones del sidebar
+    const inventarioBtn = document.getElementById('inventarioBtn');
+    const empaqueBtn = document.getElementById('empaqueBtn');
+    const packrateBtn = document.getElementById('packrateBtn');
 
     // Elementos para las tablas resumidas
     const toggleSummaryBtn = document.getElementById('toggleSummaryBtn');
@@ -24,13 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryByBouquetType = document.getElementById('summaryByBouquetType').getElementsByTagName('tbody')[0];
     const summaryByBatch = document.getElementById('summaryByBatch').getElementsByTagName('tbody')[0];
 
-    // Variables de configuración y datos
+    // Cargar config (si no existe, usa defaultConfig)
     let config = JSON.parse(localStorage.getItem('config')) || defaultConfig;
 
-    const longDefaults = []; // Longitudes predeterminadas vacías
-    const hypericumLongs = ['', '']; // Longitudes para Hypericum
+    // Opciones
+    const longDefaults = [];
+    const hypericumLongs = ['', ''];
     const tjRegOptions = ["TJ", "REG", "WS10", "NF"];
 
+    // Campos de la tabla principal
     const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
 
     // Variedades
@@ -46,85 +56,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================
     // Lógica de Menú Lateral
     // ============================
-    const empaqueBtn = document.getElementById('empaqueBtn');
+
+    // Botón para mostrar Inventario
+    if (inventarioBtn) {
+        inventarioBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Mostrar inventario
+            if (inventarioSection) inventarioSection.style.display = 'block';
+            // Ocultar empaque
+            if (empaqueSection) empaqueSection.style.display = 'none';
+            // Ocultar packrate
+            if (packrateSection) packrateSection.style.display = 'none';
+        });
+    }
+
+    // Botón para mostrar Empaque
     if (empaqueBtn) {
         empaqueBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Ocultar Pack Rate
+            // Mostrar empaque
+            if (empaqueSection) empaqueSection.style.display = 'block';
+            // Ocultar inventario
+            if (inventarioSection) inventarioSection.style.display = 'none';
+            // Ocultar packrate
             if (packrateSection) packrateSection.style.display = 'none';
-            // Ocultar (o mostrar) la sección de Empaque
-            const empaqueSection = document.getElementById('empaqueSection');
-            empaqueSection.style.display = 'none';
-            // Mostrar la sección Inventario
-            if (inventarioSection) inventarioSection.style.display = 'block';
         });
     }
 
-    const toggleEmpaqueBtn = document.getElementById('toggleEmpaqueBtn');
-    if (toggleEmpaqueBtn) {
-        toggleEmpaqueBtn.addEventListener('click', () => {
-            const empaqueSection = document.getElementById('empaqueSection');
-            if (empaqueSection.style.display === 'none' || empaqueSection.style.display === '') {
-                empaqueSection.style.display = 'block';
-                toggleEmpaqueBtn.innerText = 'Ocultar Empaque';
-            } else {
-                empaqueSection.style.display = 'none';
-                toggleEmpaqueBtn.innerText = 'Mostrar Empaque';
-            }
-        });
-    }
-
-    const toggleEmpaqueBtn2 = document.getElementById('toggleEmpaqueBtn2');
-    if (toggleEmpaqueBtn2) {
-        toggleEmpaqueBtn2.addEventListener('click', () => {
-            const empaqueSection = document.getElementById('empaqueSection');
-            if (!empaqueSection) return;
-            if (empaqueSection.style.display === 'none' || empaqueSection.style.display === '') {
-                empaqueSection.style.display = 'block';
-                toggleEmpaqueBtn2.innerText = 'Ocultar Empaque';
-            } else {
-                empaqueSection.style.display = 'none';
-                toggleEmpaqueBtn2.innerText = 'Mostrar Empaque';
-            }
-        });
-    }
-
-    const packrateBtn = document.getElementById('packrateBtn');
+    // Botón para mostrar Pack Rate
     if (packrateBtn) {
         packrateBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Ocultar Inventario
-            if (inventarioSection) inventarioSection.style.display = 'none';
-            // Mostrar Pack Rate
+            // Mostrar packrate
             if (packrateSection) {
                 packrateSection.style.display = 'block';
                 // Generar la tabla de Pack Rate
                 generatePackRateTable();
             }
+            // Ocultar inventario
+            if (inventarioSection) inventarioSection.style.display = 'none';
+            // Ocultar empaque
+            if (empaqueSection) empaqueSection.style.display = 'none';
         });
     }
 
     // ============================
-    // Funciones de ayuda
-    // ============================
-    function showAlert(message, type = 'success') {
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show mt-2" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>`;
-        alertPlaceholder.append(wrapper);
-        setTimeout(() => {
-            wrapper.remove();
-        }, 3000);
-    }
-
-    // ============================
-    // Declaración de Funciones
-    // ============================
-
     // Función para mostrar alertas
+    // ============================
     function showAlert(message, type = 'success') {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = `

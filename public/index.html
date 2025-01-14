@@ -25,7 +25,8 @@
                         </button>
 
                         <!-- Submenú de Configuración -->
-                        <li class="nav-item">
+                        <!-- AÑADIMOS id="configNavItem" A LA <li> para control de visibilidad -->
+                        <li class="nav-item" id="configNavItem">
                             <!-- Enlace que despliega/colapsa el submenú -->
                             <a class="nav-link collapsed" data-bs-toggle="collapse" href="#configSubmenu" 
                                aria-expanded="false" aria-controls="configSubmenu">
@@ -41,7 +42,6 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <!-- Ahora Pack Rate no abre otra página, sino esta misma -->
                                     <a class="nav-link" href="#" id="packrateBtn">
                                         <i class="fas fa-box-open"></i>
                                         <span class="link-text">Pack Rate</span>
@@ -51,12 +51,23 @@
                         </li>
 
                         <!-- Inventario -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" id="empaqueBtn">
+                        <!-- AÑADIMOS id="inventarioNavItem" A LA <li> para control de visibilidad -->
+                        <li class="nav-item" id="inventarioNavItem">
+                            <a class="nav-link" href="#" id="inventarioBtn">
                                 <i class="fas fa-box"></i>
                                 <span class="link-text">Inventario</span>
                             </a>
                         </li>
+
+                        <!-- Empaque -->
+                        <!-- AÑADIMOS id="soloEmpaqueNavItem" A LA <li> para control de visibilidad -->
+                        <li class="nav-item" id="soloEmpaqueNavItem">
+                            <a class="nav-link" href="#" id="empaqueBtn">
+                                <i class="fas fa-boxes"></i>
+                                <span class="link-text">Empaque</span>
+                            </a>
+                        </li>
+
                         <!-- Cerrar Sesión -->
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
@@ -75,10 +86,11 @@
 
             <!-- Contenido principal -->
             <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+
                 <!-- =========================
                      SECCIÓN DE INVENTARIO
                      ========================= -->
-                <div id="inventarioSection" class="pt-3 pb-2 mb-3 border-bottom">
+                <div id="inventarioSection" class="pt-3 pb-2 mb-3 border-bottom" style="display: none;">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
                         <h1 class="h2">Inventario</h1>
                         <!-- Botones de acción -->
@@ -88,38 +100,6 @@
                             <button class="btn btn-success" id="generateExcelBtn">Generar Excel</button>
                             <button class="btn btn-info" id="sendMailBtn">Enviar Correo</button>
                             <button class="btn btn-secondary" id="toggleSummaryBtn">Mostrar Resúmenes</button>
-                            <!-- Nuevo botón para mostrar/ocultar Empaque -->
-                            <button class="btn btn-warning" id="toggleEmpaqueBtn2">Mostrar Empaque</button>
-                        </div>
-                    </div>
-
-                    <!-- Sección para la tabla de Empaque (inicialmente oculta) -->
-                    <div id="empaqueSection" style="display:none; margin-top: 2rem;">
-                        <h2>Empaque</h2>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <button class="btn btn-primary" id="addEmpaqueRowBtn">Agregar Fila de Empaque</button>
-                            <!-- Aquí podrías agregar más botones, por ejemplo, para generar Excel de Empaque -->
-                        </div>
-                        <div class="table-responsive">
-                            <table id="empaqueTable" class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Variety</th>
-                                        <th>Tipo de Ramo</th>
-                                        <th>Long</th>
-                                        <th>Caja</th>
-                                        <th>#Cajas</th>
-                                        <th>Total Empaque</th>
-                                        <th>Sobrante</th>
-                                        <th>Proceso</th>
-                                        <th>TOTAL Sobrante Futuro</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Filas generadas dinámicamente -->
-                                </tbody>
-                            </table>
                         </div>
                     </div>
 
@@ -137,7 +117,6 @@
                                     <th class="col-variety">Variety</th>
                                     <th class="col-tipo">Tipo</th>
                                     <th class="col-batch">Batch</th>
-                                    <!-- Reemplazar el texto "Fecha" con un ícono de calendario -->
                                     <th class="col-fecha" title="Fecha">
                                         <i class="fa fa-calendar" aria-hidden="false"></i>
                                     </th>
@@ -243,13 +222,44 @@
 
 
                 <!-- =========================
+                     SECCIÓN DE EMPAQUE
+                     ========================= -->
+                <div id="empaqueSection" style="display: none; margin-top: 2rem;">
+                    <h2>Empaque</h2>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <button class="btn btn-primary" id="addEmpaqueRowBtn">Agregar Fila de Empaque</button>
+                        <!-- Otros botones específicos de Empaque si los necesitas -->
+                    </div>
+                    <div class="table-responsive">
+                        <table id="empaqueTable" class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Variety</th>
+                                    <th>Tipo de Ramo</th>
+                                    <th>Long</th>
+                                    <th>Caja</th>
+                                    <th>#Cajas</th>
+                                    <th>Total Empaque</th>
+                                    <th>Sobrante</th>
+                                    <th>Proceso</th>
+                                    <th>TOTAL Sobrante Futuro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Filas generadas dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Fin de empaqueSection -->
+
+
+                <!-- =========================
                      SECCIÓN DE PACK RATE
                      ========================= -->
-                <!-- SECCIÓN DE PACK RATE -->
                 <div id="packrateSection" style="display: none;">
                     <h2 class="mt-4">Pack Rate</h2>
-                    
-                    <!-- Tabla de Pack Rate con clases de Bootstrap -->
                     <div class="table-responsive">
                         <table id="packrateTable" class="table table-bordered table-striped table-hover">
                             <thead>
@@ -269,6 +279,7 @@
                         </table>
                     </div>
                 </div>
+                <!-- Fin de packrateSection -->
 
             </main>
         </div>
