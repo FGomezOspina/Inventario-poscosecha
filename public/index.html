@@ -23,12 +23,41 @@
                         <button id="closeSidebar" class="btn btn-link d-md-none" aria-label="Cerrar menú lateral">
                             <i class="fas fa-times"></i>
                         </button>
+
+                        <!-- Submenú de Configuración -->
                         <li class="nav-item">
-                            <a class="nav-link" href="#" id="configBtn">
+                            <!-- Enlace que despliega/colapsa el submenú -->
+                            <a class="nav-link collapsed" data-bs-toggle="collapse" href="#configSubmenu" 
+                               aria-expanded="false" aria-controls="configSubmenu">
                                 <i class="fas fa-cog"></i>
                                 <span class="link-text">Configuración</span>
                             </a>
+                            <!-- Contenedor del submenú -->
+                            <ul class="collapse list-unstyled ms-3" id="configSubmenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" id="configBtn">
+                                        <i class="fas fa-list"></i>
+                                        <span class="link-text">Categoría</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <!-- Ahora Pack Rate no abre otra página, sino esta misma -->
+                                    <a class="nav-link" href="#" id="packrateBtn">
+                                        <i class="fas fa-box-open"></i>
+                                        <span class="link-text">Pack Rate</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
+
+                        <!-- Empaque -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="empaqueBtn">
+                                <i class="fas fa-box"></i>
+                                <span class="link-text">Inventario</span>
+                            </a>
+                        </li>
+                        <!-- Cerrar Sesión -->
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -46,74 +75,45 @@
 
             <!-- Contenido principal -->
             <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Inventario</h1>
-                    <!-- Botones de acción -->
-                    <div>
-                        <button class="btn btn-primary" id="addGroupBtn">Agregar Grupo</button>
-                        <button class="btn btn-danger" id="resetTableBtn">Resetear Tabla</button>
-                        <button class="btn btn-success" id="generateExcelBtn">Generar Excel</button>
-                        <button class="btn btn-info" id="sendMailBtn">Enviar Correo</button>
-                        <button class="btn btn-secondary" id="toggleSummaryBtn">Mostrar Resúmenes</button>
+                <!-- =========================
+                     SECCIÓN DE INVENTARIO
+                     ========================= -->
+                <div id="inventarioSection" class="pt-3 pb-2 mb-3 border-bottom">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+                        <h1 class="h2">Inventario</h1>
+                        <!-- Botones de acción -->
+                        <div>
+                            <button class="btn btn-primary" id="addGroupBtn">Agregar Grupo</button>
+                            <button class="btn btn-danger" id="resetTableBtn">Resetear Tabla</button>
+                            <button class="btn btn-success" id="generateExcelBtn">Generar Excel</button>
+                            <button class="btn btn-info" id="sendMailBtn">Enviar Correo</button>
+                            <button class="btn btn-secondary" id="toggleSummaryBtn">Mostrar Resúmenes</button>
+                            <!-- Nuevo botón para mostrar/ocultar Empaque -->
+                            <button class="btn btn-warning" id="toggleEmpaqueBtn2">Mostrar Empaque</button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Campo para el responsable del conteo -->
-                <div class="mb-3">
-                    <label for="responsable" class="form-label">Responsable del Conteo:</label>
-                    <input type="text" class="form-control" id="responsable" placeholder="Ingrese el nombre del responsable">
-                </div>
-
-                <!-- Tabla de datos -->
-                <div class="table-responsive">
-                    <table id="dataTable" class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th class="col-variety">Variety</th>
-                                <th class="col-tipo">Tipo</th>
-                                <th class="col-batch">Batch</th>
-                                <!-- Reemplazar el texto "Fecha" con un ícono de calendario -->
-                                <th class="col-fecha" title="Fecha">
-                                    <i class="fa fa-calendar" aria-hidden="false"></i>
-                                </th>
-                                <th class="col-tj-reg">TJ - REG</th>
-                                <th class="col-long">Long</th>
-                                <th class="col-p1">P1</th>
-                                <th class="col-p2">P2</th>
-                                <th class="col-p3">P3</th>
-                                <th class="col-p4">P4</th>
-                                <th class="col-r1">R1</th>
-                                <th class="col-r2">R2</th>
-                                <th class="col-r3">R3</th>
-                                <th class="col-r4">R4</th>
-                                <th class="col-bunches-procona">Bunches/Procona</th>
-                                <th class="col-bunches-total">Bunches Total</th>
-                                <th class="col-stems">Stems</th>
-                                <th class="col-stems-total">Stems Total</th>
-                                <th class="col-notas">Notas</th>
-                                <th class="col-acciones">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Filas de la tabla -->
-                        </tbody>
-                    </table>                    
-                </div>
-
-                <!-- Contenedor para las tablas resumidas -->
-                <div id="summaryTables" class="mt-4" style="display: none;">
-                    <h3>Resúmenes</h3>
-                    
-                    <!-- Tabla Por Longitud -->
-                    <div class="mb-4">
-                        <h4>Por Longitud</h4>
+                    <!-- Sección para la tabla de Empaque (inicialmente oculta) -->
+                    <div id="empaqueSection" style="display:none; margin-top: 2rem;">
+                        <h2>Empaque</h2>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <button class="btn btn-primary" id="addEmpaqueRowBtn">Agregar Fila de Empaque</button>
+                            <!-- Aquí podrías agregar más botones, por ejemplo, para generar Excel de Empaque -->
+                        </div>
                         <div class="table-responsive">
-                            <table id="summaryByLength" class="table table-bordered">
+                            <table id="empaqueTable" class="table table-bordered">
                                 <thead>
                                     <tr>
                                         <th>Variety</th>
+                                        <th>Tipo de Ramo</th>
                                         <th>Long</th>
-                                        <th>Stems</th>
+                                        <th>Caja</th>
+                                        <th>#Cajas</th>
+                                        <th>Total Empaque</th>
+                                        <th>Sobrante</th>
+                                        <th>Proceso</th>
+                                        <th>TOTAL Sobrante Futuro</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -122,57 +122,252 @@
                             </table>
                         </div>
                     </div>
-                    
-                    <!-- Tabla Por Tipo de Ramo -->
-                    <div class="mb-4">
-                        <h4>Por Tipo de Ramo</h4>
-                        <div class="table-responsive">
-                            <table id="summaryByBouquetType" class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Variety</th>
-                                        <th>TJ - REG</th>
-                                        <th>Long</th>
-                                        <th>Bunches Total</th>
-                                        <th>Stems</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Filas generadas dinámicamente -->
-                                </tbody>
-                            </table>
+
+                    <!-- Campo para el responsable del conteo -->
+                    <div class="mb-3">
+                        <label for="responsable" class="form-label">Responsable del Conteo:</label>
+                        <input type="text" class="form-control" id="responsable" placeholder="Ingrese el nombre del responsable">
+                    </div>
+
+                    <!-- Tabla de datos principal -->
+                    <div class="table-responsive">
+                        <table id="dataTable" class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="col-variety">Variety</th>
+                                    <th class="col-tipo">Tipo</th>
+                                    <th class="col-batch">Batch</th>
+                                    <!-- Reemplazar el texto "Fecha" con un ícono de calendario -->
+                                    <th class="col-fecha" title="Fecha">
+                                        <i class="fa fa-calendar" aria-hidden="false"></i>
+                                    </th>
+                                    <th class="col-tj-reg">TJ - REG</th>
+                                    <th class="col-long">Long</th>
+                                    <th class="col-p1">P1</th>
+                                    <th class="col-p2">P2</th>
+                                    <th class="col-p3">P3</th>
+                                    <th class="col-p4">P4</th>
+                                    <th class="col-r1">R1</th>
+                                    <th class="col-r2">R2</th>
+                                    <th class="col-r3">R3</th>
+                                    <th class="col-r4">R4</th>
+                                    <th class="col-bunches-procona">Bunches/Procona</th>
+                                    <th class="col-bunches-total">Bunches Total</th>
+                                    <th class="col-stems">Stems</th>
+                                    <th class="col-stems-total">Stems Total</th>
+                                    <th class="col-notas">Notas</th>
+                                    <th class="col-acciones">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Filas de la tabla -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Contenedor para las tablas resumidas -->
+                    <div id="summaryTables" class="mt-4" style="display: none;">
+                        <h3>Resúmenes</h3>
+
+                        <!-- Tabla Por Longitud -->
+                        <div class="mb-4">
+                            <h4>Por Longitud</h4>
+                            <div class="table-responsive">
+                                <table id="summaryByLength" class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Variety</th>
+                                            <th>Long</th>
+                                            <th>Stems</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Filas generadas dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tabla Por Tipo de Ramo -->
+                        <div class="mb-4">
+                            <h4>Por Tipo de Ramo</h4>
+                            <div class="table-responsive">
+                                <table id="summaryByBouquetType" class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Variety</th>
+                                            <th>TJ - REG</th>
+                                            <th>Long</th>
+                                            <th>Bunches Total</th>
+                                            <th>Stems</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Filas generadas dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tabla Por Batch -->
+                        <div class="mb-4">
+                            <h4>Por Batch</h4>
+                            <div class="table-responsive">
+                                <table id="summaryByBatch" class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Variety</th>
+                                            <th>Batch</th>
+                                            <th>Long</th>
+                                            <th>Stems</th>
+                                            <th>Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Filas generadas dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Contenedor para el Gran Total -->
+                    <div class="grand-total-container">
+                        <strong>Gran Total de Stems:</strong> <span id="grandTotalValue">0</span>
+                    </div>
+
+                    <!-- Placeholder para alertas -->
+                    <div id="alertPlaceholder"></div>
+                </div> 
+                <!-- Fin de inventarioSection -->
+
+
+                <!-- =========================
+                     SECCIÓN DE PACK RATE
+                     ========================= -->
+                <div id="packrateSection" style="display: none;">
+                    <h2 class="mt-4">Pack Rate</h2>
+                    <p>
+                        <em>
+                            (Ejemplo inicial de tabla estática. Más adelante puedes dinamizarlo.)
+                        </em>
+                    </p>
                     
-                    <!-- Tabla Por Batch -->
-                    <div class="mb-4">
-                        <h4>Por Batch</h4>
-                        <div class="table-responsive">
-                            <table id="summaryByBatch" class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Variety</th>
-                                        <th>Batch</th>
-                                        <th>Long</th>
-                                        <th>Stems</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Filas generadas dinámicamente -->
-                                </tbody>
-                            </table>
-                        </div>
+                    <!-- Tabla de Pack Rate -->
+                    <div class="table-responsive">
+                        <table id="packrateTable" class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>STEMS</th>
+                                    <th>Variety</th>
+                                    <th>(espacio en blanco)</th>
+                                    <th>70</th>
+                                    <th>60</th>
+                                    <th>55</th>
+                                    <th>50</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td contenteditable="true">100</td>
+                                    <td>
+                                        <!-- Reutilizamos un select de variety ya existente -->
+                                        <select class="form-select form-select-sm">
+                                            <option value="">Seleccione Variety</option>
+                                            <option value="VERONICA">VERONICA</option>
+                                            <option value="MENTHA">MENTHA</option>
+                                            <option value="HYPERICUM">HYPERICUM</option>
+                                            <option value="EUPATORIUM">EUPATORIUM</option>
+                                            <option value="PAPYRUS">PAPYRUS</option>
+                                            <option value="ORIGANUM">ORIGANUM</option>
+                                        </select>
+                                    </td>
+                                    <td>HB</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                </tr>
+                                <tr>
+                                    <td contenteditable="true">90</td>
+                                    <td>
+                                        <select class="form-select form-select-sm">
+                                            <option value="">Seleccione Variety</option>
+                                            <option value="VERONICA">VERONICA</option>
+                                            <option value="MENTHA">MENTHA</option>
+                                            <option value="HYPERICUM">HYPERICUM</option>
+                                            <option value="EUPATORIUM">EUPATORIUM</option>
+                                            <option value="PAPYRUS">PAPYRUS</option>
+                                            <option value="ORIGANUM">ORIGANUM</option>
+                                        </select>
+                                    </td>
+                                    <td>STEMS</td>
+                                    <td contenteditable="true">1</td>
+                                    <td contenteditable="true">2</td>
+                                    <td contenteditable="true">3</td>
+                                    <td contenteditable="true">4</td>
+                                </tr>
+                                <tr>
+                                    <td contenteditable="true">80</td>
+                                    <td>
+                                        <select class="form-select form-select-sm">
+                                            <option value="">Seleccione Variety</option>
+                                            <!-- ... -->
+                                        </select>
+                                    </td>
+                                    <td>QB</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                </tr>
+                                <tr>
+                                    <td contenteditable="true">70</td>
+                                    <td>
+                                        <select class="form-select form-select-sm">
+                                            <option value="">Seleccione Variety</option>
+                                            <!-- ... -->
+                                        </select>
+                                    </td>
+                                    <td>STEMS</td>
+                                    <td contenteditable="true">1</td>
+                                    <td contenteditable="true">2</td>
+                                    <td contenteditable="true">3</td>
+                                    <td contenteditable="true">4</td>
+                                </tr>
+                                <tr>
+                                    <td contenteditable="true">60</td>
+                                    <td>
+                                        <select class="form-select form-select-sm">
+                                            <option value="">Seleccione Variety</option>
+                                            <!-- ... -->
+                                        </select>
+                                    </td>
+                                    <td>EB</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                    <td contenteditable="true">0</td>
+                                </tr>
+                                <tr>
+                                    <td contenteditable="true">50</td>
+                                    <td>
+                                        <select class="form-select form-select-sm">
+                                            <option value="">Seleccione Variety</option>
+                                            <!-- ... -->
+                                        </select>
+                                    </td>
+                                    <td>STEMS</td>
+                                    <td contenteditable="true">1</td>
+                                    <td contenteditable="true">2</td>
+                                    <td contenteditable="true">3</td>
+                                    <td contenteditable="true">4</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <!-- Contenedor para el Gran Total -->
-                <div class="grand-total-container">
-                    <strong>Gran Total de Stems:</strong> <span id="grandTotalValue">0</span>
-                </div>
-
-                <!-- Placeholder para alertas -->
-                <div id="alertPlaceholder"></div>
+                <!-- Fin de packrateSection -->
 
             </main>
         </div>
@@ -182,7 +377,7 @@
     <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">        
+          <div class="modal-header">
             <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
           </div>
           <div class="modal-body">
@@ -210,7 +405,7 @@
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <!-- Incluir tus archivos JavaScript -->
     <script src="auth.js"></script>
-    <script src="config.js"></script> <!-- Asegúrate de cargar config.js antes -->
+    <script src="config.js"></script> 
     <script src="main.js"></script>
 </body>
 </html>

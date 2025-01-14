@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataTable = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
     const responsableInput = document.getElementById('responsable');
     const alertPlaceholder = document.getElementById('alertPlaceholder');
+    const inventarioSection = document.getElementById('inventarioSection');
+    const packrateSection = document.getElementById('packrateSection');
 
     // Elementos del menú lateral (si existen)
     const sidebarMenu = document.getElementById('sidebarMenu');
@@ -40,6 +42,70 @@ document.addEventListener('DOMContentLoaded', () => {
         "PAPYRUS": ["MAXUS", "LUXUS"],
         "ORIGANUM": ["ORIGANUM"]
     };
+
+
+
+    // Botón en el menú lateral para mostrar la sección de Empaque
+    const empaqueBtn = document.getElementById('empaqueBtn');
+    if (empaqueBtn) {
+        empaqueBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Ocultar packrate, si estuviera visible
+            if (packrateSection) packrateSection.style.display = 'none';
+
+            // Ocultar la sección de Empaque, si quieres dejar de verla
+            const empaqueSection = document.getElementById('empaqueSection');
+            empaqueSection.style.display = 'none';
+
+            // Mostrar la sección principal de Inventario
+            if (inventarioSection) inventarioSection.style.display = 'block';
+        });
+    }
+
+
+    const toggleEmpaqueBtn = document.getElementById('toggleEmpaqueBtn');
+    if (toggleEmpaqueBtn) {
+        toggleEmpaqueBtn.addEventListener('click', () => {
+            const empaqueSection = document.getElementById('empaqueSection');
+            
+            if (empaqueSection.style.display === 'none' || empaqueSection.style.display === '') {
+                empaqueSection.style.display = 'block';
+                toggleEmpaqueBtn.innerText = 'Ocultar Empaque';
+            } else {
+                empaqueSection.style.display = 'none';
+                toggleEmpaqueBtn.innerText = 'Mostrar Empaque';
+            }
+        });
+    }
+
+    // Nuevo botón para mostrar/ocultar Empaque desde la sección principal
+    const toggleEmpaqueBtn2 = document.getElementById('toggleEmpaqueBtn2');
+    if (toggleEmpaqueBtn2) {
+        toggleEmpaqueBtn2.addEventListener('click', () => {
+            const empaqueSection = document.getElementById('empaqueSection');
+            if (!empaqueSection) return; // Por seguridad, en caso no exista
+
+            if (empaqueSection.style.display === 'none' || empaqueSection.style.display === '') {
+                empaqueSection.style.display = 'block';
+                toggleEmpaqueBtn2.innerText = 'Ocultar Empaque';
+            } else {
+                empaqueSection.style.display = 'none';
+                toggleEmpaqueBtn2.innerText = 'Mostrar Empaque';
+            }
+        });
+    }
+
+
+    const packrateBtn = document.getElementById('packrateBtn');
+    if (packrateBtn) {
+        packrateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Mostrar Pack Rate, ocultar Inventario
+            if (inventarioSection) inventarioSection.style.display = 'none';
+            if (packrateSection) packrateSection.style.display = 'block';
+        });
+    }
 
     // ============================
     // Declaración de Funciones
@@ -537,6 +603,109 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
+    function addEmpaqueRow() {
+        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+        const row = empaqueTableBody.insertRow();
+    
+        // 1. Variety
+        const varietyCell = row.insertCell();
+        const varietySelect = createVarietySelect();
+        varietyCell.appendChild(varietySelect);
+    
+        // 2. Tipo de Ramo
+        const tipoCell = row.insertCell();
+        const tipoSelect = createTJRegSelect(); 
+        tipoCell.appendChild(tipoSelect);
+    
+        // 3. Long (celda editable)
+        const longCell = row.insertCell();
+        longCell.contentEditable = true;
+        longCell.classList.add('editable');
+        longCell.setAttribute('data-col', 'Long');
+    
+        // 4. Caja (select con 3 opciones)
+        const cajaCell = row.insertCell();
+        const cajaSelect = document.createElement('select');
+        cajaSelect.classList.add('form-select', 'form-select-sm');
+        ["HB", "QB", "EB"].forEach(optionValue => {
+            const opt = document.createElement('option');
+            opt.value = optionValue;
+            opt.text = optionValue;
+            cajaSelect.appendChild(opt);
+        });
+        cajaCell.appendChild(cajaSelect);
+    
+        // 5. #Cajas
+        const numCajasCell = row.insertCell();
+        numCajasCell.contentEditable = true;
+        numCajasCell.classList.add('editable');
+        numCajasCell.setAttribute('data-col', 'NumCajas');
+    
+        // 6. Total Empaque
+        const totalEmpaqueCell = row.insertCell();
+        totalEmpaqueCell.contentEditable = false;
+        totalEmpaqueCell.classList.add('editable'); 
+        totalEmpaqueCell.setAttribute('data-col', 'TotalEmpaque');
+        totalEmpaqueCell.innerText = '0';
+    
+        // 7. Sobrante
+        const sobranteCell = row.insertCell();
+        sobranteCell.contentEditable = true;
+        sobranteCell.classList.add('editable');
+        sobranteCell.setAttribute('data-col', 'Sobrante');
+    
+        // 8. Proceso
+        const procesoCell = row.insertCell();
+        procesoCell.contentEditable = true;
+        procesoCell.classList.add('editable');
+        procesoCell.setAttribute('data-col', 'Proceso');
+    
+        // 9. TOTAL Sobrante Futuro
+        const totalSobranteFCell = row.insertCell();
+        totalSobranteFCell.contentEditable = false;
+        totalSobranteFCell.classList.add('editable'); 
+        totalSobranteFCell.setAttribute('data-col', 'TotalSobranteFuturo');
+        totalSobranteFCell.innerText = '0';
+    
+        // 10. Botón Eliminar Fila
+        const deleteCell = row.insertCell();
+        deleteCell.classList.add('text-center');
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
+        deleteBtn.title = 'Eliminar fila de Empaque';
+        deleteBtn.addEventListener('click', () => {
+            removeEmpaqueRow(row);
+        });
+        deleteCell.appendChild(deleteBtn);
+    
+        // Escuchar eventos para recalcular en celdas clave (#Cajas, Sobrante, Proceso, etc.)
+        row.addEventListener('input', () => {
+            calculateEmpaqueRow(row);
+            saveEmpaqueTableData();
+        });
+    
+        // Guardar tras agregar la nueva fila
+        saveEmpaqueTableData();
+    }
+
+    function removeEmpaqueRow(row) {
+        row.remove();
+        saveEmpaqueTableData();
+        showAlert('Fila de Empaque eliminada.', 'success');
+    }
+    
+    
+
+    const addEmpaqueRowBtn = document.getElementById('addEmpaqueRowBtn');
+    if (addEmpaqueRowBtn) {
+        addEmpaqueRowBtn.addEventListener('click', () => {
+            addEmpaqueRow();
+        });
+    }
+
+    
+
     // Función para agregar filas extra a un grupo
     // Si isHypericum = true, usamos hypericumLongs, de lo contrario longDefaults.
     // ============================
@@ -762,6 +931,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateStemsTotal(groupId);
     }
+
+    function calculateEmpaqueRow(row) {
+        // Obtenemos los valores de #Cajas, Sobrante y Proceso
+        const numCajasCell = row.querySelector('td[data-col="NumCajas"]');
+        const sobranteCell = row.querySelector('td[data-col="Sobrante"]');
+        const procesoCell = row.querySelector('td[data-col="Proceso"]');
+        const totalEmpaqueCell = row.querySelector('td[data-col="TotalEmpaque"]');
+        const totalSobranteFCell = row.querySelector('td[data-col="TotalSobranteFuturo"]');
+    
+        const numCajas = parseInt(numCajasCell?.innerText.trim()) || 0;
+        const sobrante = parseInt(sobranteCell?.innerText.trim()) || 0;
+        const proceso = parseInt(procesoCell?.innerText.trim()) || 0;
+    
+        // Ejemplo de cómo podrías calcular (ajusta según tus reglas):
+        // totalEmpaque = #Cajas * 10 (o la lógica que quieras)
+        const totalEmpaque = numCajas * 10; // EJEMPLO
+    
+        // total sobrante futuro = sobrante - proceso (o la fórmula que tú decidas)
+        const totalSobranteFuturo = sobrante - proceso; // EJEMPLO
+    
+        totalEmpaqueCell.innerText = totalEmpaque.toString();
+        totalSobranteFCell.innerText = totalSobranteFuturo.toString();
+    }
+    
 
     // Función para actualizar el total de stems de un grupo
     function updateStemsTotal(groupId) {
@@ -989,6 +1182,136 @@ document.addEventListener('DOMContentLoaded', () => {
             populateSummaryTables();
         }
     }
+
+    function saveEmpaqueTableData() {
+        const empaqueData = [];
+        const rows = document.querySelectorAll('#empaqueTable tbody tr');
+        rows.forEach((row) => {
+            const varietySelect = row.cells[0].querySelector('select');
+            const tipoSelect = row.cells[1].querySelector('select');
+            const longValue = row.cells[2].innerText.trim();
+            const cajaSelect = row.cells[3].querySelector('select');
+            const numCajasValue = row.cells[4].innerText.trim();
+            const totalEmpaqueValue = row.cells[5].innerText.trim();
+            const sobranteValue = row.cells[6].innerText.trim();
+            const procesoValue = row.cells[7].innerText.trim();
+            const totalSobranteFValue = row.cells[8].innerText.trim();
+    
+            empaqueData.push({
+                variety: varietySelect.value,
+                tipo: tipoSelect.value,
+                long: longValue,
+                caja: cajaSelect.value,
+                numCajas: numCajasValue,
+                totalEmpaque: totalEmpaqueValue,
+                sobrante: sobranteValue,
+                proceso: procesoValue,
+                totalSobranteFuturo: totalSobranteFValue
+            });
+        });
+    
+        localStorage.setItem('empaqueData', JSON.stringify(empaqueData));
+    }
+    
+    function loadEmpaqueTableData() {
+        const data = JSON.parse(localStorage.getItem('empaqueData')) || [];
+        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+        empaqueTableBody.innerHTML = '';
+    
+        data.forEach((item) => {
+            // Inserta una nueva fila
+            const row = empaqueTableBody.insertRow();
+    
+            // 1. Variety
+            const varietyCell = row.insertCell();
+            const varietySelect = createVarietySelect(item.variety);
+            varietyCell.appendChild(varietySelect);
+    
+            // 2. Tipo
+            const tipoCell = row.insertCell();
+            const tipoSelect = createTJRegSelect(item.tipo);
+            tipoCell.appendChild(tipoSelect);
+    
+            // 3. Long
+            const longCell = row.insertCell();
+            longCell.contentEditable = true;
+            longCell.classList.add('editable');
+            longCell.setAttribute('data-col', 'Long');
+            longCell.innerText = item.long;
+    
+            // 4. Caja
+            const cajaCell = row.insertCell();
+            const cajaSelect = document.createElement('select');
+            cajaSelect.classList.add('form-select', 'form-select-sm');
+            ["HB", "QB", "EB"].forEach(optionValue => {
+                const opt = document.createElement('option');
+                opt.value = optionValue;
+                opt.text = optionValue;
+                if (optionValue === item.caja) {
+                    opt.selected = true;
+                }
+                cajaSelect.appendChild(opt);
+            });
+            cajaCell.appendChild(cajaSelect);
+    
+            // 5. #Cajas
+            const numCajasCell = row.insertCell();
+            numCajasCell.contentEditable = true;
+            numCajasCell.classList.add('editable');
+            numCajasCell.setAttribute('data-col', 'NumCajas');
+            numCajasCell.innerText = item.numCajas;
+    
+            // 6. Total Empaque
+            const totalEmpaqueCell = row.insertCell();
+            totalEmpaqueCell.contentEditable = false;
+            totalEmpaqueCell.classList.add('editable');
+            totalEmpaqueCell.setAttribute('data-col', 'TotalEmpaque');
+            totalEmpaqueCell.innerText = item.totalEmpaque || '0';
+    
+            // 7. Sobrante
+            const sobranteCell = row.insertCell();
+            sobranteCell.contentEditable = true;
+            sobranteCell.classList.add('editable');
+            sobranteCell.setAttribute('data-col', 'Sobrante');
+            sobranteCell.innerText = item.sobrante;
+    
+            // 8. Proceso
+            const procesoCell = row.insertCell();
+            procesoCell.contentEditable = true;
+            procesoCell.classList.add('editable');
+            procesoCell.setAttribute('data-col', 'Proceso');
+            procesoCell.innerText = item.proceso;
+    
+            // 9. TOTAL Sobrante Futuro
+            const totalSobranteFCell = row.insertCell();
+            totalSobranteFCell.contentEditable = false;
+            totalSobranteFCell.classList.add('editable');
+            totalSobranteFCell.setAttribute('data-col', 'TotalSobranteFuturo');
+            totalSobranteFCell.innerText = item.totalSobranteFuturo || '0';
+            
+            // 10. Celda para el botón Eliminar
+            const deleteCell = row.insertCell();
+            deleteCell.classList.add('text-center');
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
+            deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
+            deleteBtn.title = 'Eliminar fila de Empaque';
+            deleteBtn.addEventListener('click', () => {
+                removeEmpaqueRow(row);
+            });
+            deleteCell.appendChild(deleteBtn);
+
+            // Listener de recalculo
+            row.addEventListener('input', () => {
+                calculateEmpaqueRow(row);
+                saveEmpaqueTableData();
+            });
+    
+            // Recalcula para asegurar que todo esté al día
+            calculateEmpaqueRow(row);
+        });
+    }
+    
 
     // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
@@ -1656,4 +1979,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveTableData = saveTableData;
     window.updateAllCalculations = updateAllCalculations;
     window.reloadConfigAndRecalculate = reloadConfigAndRecalculate;
+    // Cargar datos de Empaque al iniciar
+    loadEmpaqueTableData();
+
 });
