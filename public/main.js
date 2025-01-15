@@ -1929,158 +1929,143 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para generar la tabla de Pack Rate con estructura "uniforme"
     // Genera la tabla usando la estructura original
     function generatePackRateTable() {
-    const packrateTable = document.getElementById("packrateTable");
-    if (!packrateTable) return;
-
-    const tBody = packrateTable.querySelector("tbody");
-    if (!tBody) return;
-    tBody.innerHTML = "";
-
-    // Definición de longitudes: se crearán 4 columnas (70, 60, 55, 50)
-    const longColumns = [70, 60, 55, 50];
-
-    // Definición de cada una de las 6 filas por variedad.
-    // "editable" indica si se ingresa el valor (cajas) o se muestra el resultado (STEMS).
-    const rowDefinitions = [
-        { label: "HB", editable: true },
-        { label: "STEMS", editable: false },
-        { label: "QB", editable: true },
-        { label: "STEMS", editable: false },
-        { label: "EB", editable: true },
-        { label: "STEMS", editable: false }
-    ];
-
-    // Obtener todas las variedades (concatenando las opciones de cada "tipo")
-    let allVarieties = [];
-    Object.keys(varietyOptions).forEach(tipo => {
-        allVarieties = allVarieties.concat(varietyOptions[tipo]);
-    });
-
-    // Por cada variedad se crea un bloque de 6 filas
-    allVarieties.forEach(varName => {
-        rowDefinitions.forEach((def, index) => {
-        const row = tBody.insertRow();
-
-        if (index === 0) {
-            // Primera fila del bloque (HB)
-            // Cell0: Multiplicador (editable)
-            const cellMultiplier = row.insertCell();
-            cellMultiplier.contentEditable = true;
-            cellMultiplier.innerText = "25"; // valor default
-            cellMultiplier.style.textAlign = "center";
-            cellMultiplier.style.minWidth = "30px";
-
-            // Cell1: Nombre de la variedad (con rowspan = 6)
-            const cellVariety = row.insertCell();
-            cellVariety.innerText = varName;
-            cellVariety.style.textAlign = "center";
-            cellVariety.rowSpan = rowDefinitions.length;
-
-            // Cell2: Etiqueta ("HB")
-            const cellLabel = row.insertCell();
-            cellLabel.innerText = def.label;
-            cellLabel.style.fontWeight = "bold";
-            cellLabel.style.textAlign = "center";
-
-            // Cell3 a Cell6: Valores para long (70, 60, 55, 50)
-            longColumns.forEach(() => {
-            const cell = row.insertCell();
-            cell.style.textAlign = "center";
-            cell.contentEditable = def.editable;
-            cell.innerText = "0";
-            });
-        } else {
-            // Para las filas siguientes del bloque (QB, EB o STEMS)
-            // Se inserta 1 celda vacía para compensar (ya que la primera fila tiene 2 celdas extras)
-            const blankCell = row.insertCell();
-            blankCell.innerText = "";
-
-            // Luego se inserta la celda de etiqueta (Cell1 de este renglón)
-            const cellLabel = row.insertCell();
-            cellLabel.innerText = def.label;
-            cellLabel.style.fontWeight = "bold";
-            cellLabel.style.textAlign = "center";
-
-            // Luego se insertan 4 celdas para los valores para long (70, 60, 55, 50)
-            longColumns.forEach(() => {
-            const cell = row.insertCell();
-            cell.style.textAlign = "center";
-            cell.contentEditable = def.editable;
-            cell.innerText = "0";
-            });
-        }
+        const packrateTable = document.getElementById("packrateTable");
+        if (!packrateTable) return;
+      
+        const tBody = packrateTable.querySelector("tbody");
+        if (!tBody) return;
+        tBody.innerHTML = "";
+      
+        // Definición de longitudes: se crearán 4 columnas (70, 60, 55, 50)
+        const longColumns = [70, 60, 55, 50];
+      
+        // Definición de cada una de las 6 filas por variedad.
+        // 'editable' indica si se ingresa el valor (cajas) o se muestra el resultado (STEMS)
+        const rowDefinitions = [
+          { label: "HB", editable: true },
+          { label: "STEMS", editable: false },
+          { label: "QB", editable: true },
+          { label: "STEMS", editable: false },
+          { label: "EB", editable: true },
+          { label: "STEMS", editable: false }
+        ];
+      
+        // Obtener todas las variedades (concatenando las opciones de cada "tipo")
+        let allVarieties = [];
+        Object.keys(varietyOptions).forEach(tipo => {
+          allVarieties = allVarieties.concat(varietyOptions[tipo]);
         });
-    });
-
-    // Al finalizar la generación, se asignan los eventos para recalcular los resultados.
-    attachPackRateEvents();
+      
+        // Por cada variedad se crea un bloque de 6 filas
+        allVarieties.forEach(varName => {
+          // Se crea la celda para el multiplicador y la de variety sólo en la primera fila del bloque.
+          let multiplierCellCreated = false;
+          let varietyCellCreated = false;
+      
+          rowDefinitions.forEach((def, index) => {
+            const row = tBody.insertRow();
+      
+            // Para la primera fila, insertar celda del multiplicador con rowspan=6
+            if (!multiplierCellCreated) {
+              const cellMultiplier = row.insertCell();
+              cellMultiplier.contentEditable = true;
+              cellMultiplier.innerText = "25"; // valor default
+              cellMultiplier.style.textAlign = "center";
+              cellMultiplier.style.minWidth = "30px";
+              cellMultiplier.rowSpan = rowDefinitions.length;
+              multiplierCellCreated = true;
+            }
+      
+            // En la primera fila también se inserta la celda de variety con rowspan=6
+            if (!varietyCellCreated) {
+              const cellVariety = row.insertCell();
+              cellVariety.innerText = varName;
+              cellVariety.style.textAlign = "center";
+              cellVariety.rowSpan = rowDefinitions.length;
+              varietyCellCreated = true;
+            }
+      
+            // Luego se inserta la celda de etiqueta (por ejemplo "HB", "STEMS", etc.)
+            const cellLabel = row.insertCell();
+            cellLabel.innerText = def.label;
+            cellLabel.style.fontWeight = "bold";
+            cellLabel.style.textAlign = "center";
+      
+            // Se insertan las celdas para cada longitud (70, 60, 55, 50)
+            longColumns.forEach(() => {
+              const cell = row.insertCell();
+              cell.style.textAlign = "center";
+              cell.contentEditable = def.editable;
+              cell.innerText = "0";
+            });
+          });
+        });
+      
+        // Al finalizar, asignamos los eventos para recalcular los resultados
+        attachPackRateEvents();
     }
-
+      
     // Asignar eventos a las filas editables del bloque
     function attachPackRateEvents() {
-    const packrateTable = document.getElementById("packrateTable");
-    if (!packrateTable) return;
-    const rows = packrateTable.querySelectorAll("tbody tr");
-
-    // Se asume que cada bloque de una variedad consta de 6 renglones consecutivos.
-    // En cada bloque, las filas de cajas (editable) son las filas en posiciones:
-    // 0 (HB), 2 (QB) y 4 (EB).
-    // La fila STEMS correspondiente se encuentra inmediatamente después (1, 3 y 5).
-    const totalRows = rows.length;
-    for (let i = 0; i < totalRows; i += 6) {
-        [0, 2, 4].forEach(offset => {
-        const rowBoxes = rows[i + offset];
-        const rowStems = rows[i + offset + 1];
-        if (!rowBoxes || !rowStems) return;
-
-        // Al editar la fila de cajas se recalcula la fila STEMS correspondiente.
-        rowBoxes.addEventListener("input", () => {
-            // Se usa la primera fila (rows[i]) para obtener el multiplicador.
-            recalcPackRateRow(rowBoxes, rowStems, rows[i]);
-        });
-        });
-
-        // Si se edita el multiplicador (celda0 de la primera fila del bloque),
-        // se recalculan las tres parejas (HB, QB y EB).
-        const firstRow = rows[i];
-        const cellMultiplier = firstRow.cells[0];
-        cellMultiplier.addEventListener("input", () => {
-        recalcPackRateRow(rows[i + 0], rows[i + 1], firstRow); // HB
-        recalcPackRateRow(rows[i + 2], rows[i + 3], firstRow); // QB
-        recalcPackRateRow(rows[i + 4], rows[i + 5], firstRow); // EB
-        });
-    }
-    }
-
+        const packrateTable = document.getElementById("packrateTable");
+        if (!packrateTable) return;
+        const rows = packrateTable.querySelectorAll("tbody tr");
+      
+        // Se asume que cada bloque de una variedad consta de 6 filas consecutivas.
+        for (let i = 0; i < rows.length; i += 6) {
+          // Los renglones de cajas son: 0 (HB), 2 (QB) y 4 (EB)
+          [0, 2, 4].forEach(offset => {
+            const rowBoxes = rows[i + offset];
+            const rowStems = rows[i + offset + 1];
+            if (!rowBoxes || !rowStems) return;
+            // Al editar la fila de cajas se recalcula la fila STEMS correspondiente.
+            rowBoxes.addEventListener("input", () => {
+              // Se obtiene el multiplicador de la primera fila del bloque.
+              recalcPackRateRow(rowBoxes, rowStems, rows[i]);
+            });
+          });
+      
+          // Si se edita el multiplicador (celda0 de la primera fila del bloque)
+          const firstRow = rows[i];
+          const cellMultiplier = firstRow.cells[0];
+          cellMultiplier.addEventListener("input", () => {
+            // Recalcular todas las parejas (HB, QB y EB) cuando el multiplicador cambie
+            recalcPackRateRow(rows[i + 0], rows[i + 1], firstRow); // HB
+            recalcPackRateRow(rows[i + 2], rows[i + 3], firstRow); // QB
+            recalcPackRateRow(rows[i + 4], rows[i + 5], firstRow); // EB
+          });
+        }
+    }  
     // Función de recálculo ajustando el offset de acuerdo a la cantidad de celdas en la fila de cajas
     function recalcPackRateRow(rowBoxes, rowStems, firstRow) {
-  // Obtenemos el multiplicador desde la celda 0 de la primera fila del bloque.
-  const multiplier = parseFloat(firstRow.cells[0].innerText) || 0;
-
-  // Determinar el offset según la cantidad de celdas en la fila de cajas:
-  // - Si la fila de cajas es "full" (7 celdas, es decir, HB) se espera que los datos de long estén en cells 3–6.
-  // - Si la fila tiene 6 celdas (QB, EB o STEMS) se esperan en cells 2–5.
-  const isFullRow = rowBoxes.cells.length === 7;
-  const offset = isFullRow ? 3 : 2;
-
-  // Recorremos las celdas de los valores (desde offset hasta el final)
-  for (let col = offset; col < rowBoxes.cells.length; col++) {
-    const cellBox = rowBoxes.cells[col];
-    const valueBox = parseFloat(cellBox.innerText) || 0;
-    const result = valueBox * multiplier;
-    // Si se trata de la fila HB (full row), se escribe el resultado en la celda de la fila STEMS
-    // usando col - 1 (para que el valor se ubique exactamente debajo de la celda de long).
-    // En las demás filas se escribe en el mismo índice (ya que la estructura es de 6 celdas).
-    if (isFullRow) {
-      if (rowStems.cells[col - 1] !== undefined) {
-        rowStems.cells[col - 1].innerText = result.toString();
-      }
-    } else {
-      if (rowStems.cells[col] !== undefined) {
-        rowStems.cells[col].innerText = result.toString();
-      }
-    }
-  }
-    }
-
+        // Obtener el multiplicador desde la primera celda de la primera fila del bloque
+        const multiplier = parseFloat(firstRow.cells[0].innerText) || 0;
+      
+        // Determinar el offset según la estructura de la fila de cajas:
+        // - Si la fila tiene 7 celdas: se asume que es la fila HB y los datos comienzan en el índice 3.
+        // - Si la fila tiene 5 celdas: se asume que es QB o EB y los datos comienzan en el índice 1.
+        let offset;
+        if (rowBoxes.cells.length === 7) {
+          offset = 3;
+        } else if (rowBoxes.cells.length === 5) {
+          offset = 1;
+        } else {
+          console.warn("Estructura inesperada en la fila de cajas");
+          return;
+        }
+      
+        // Recorremos las celdas de datos en la fila de cajas
+        // La cantidad de celdas de datos es rowBoxes.cells.length - offset.
+        for (let col = offset; col < rowBoxes.cells.length; col++) {
+          const cellBox = rowBoxes.cells[col];
+          const valueBox = parseFloat(cellBox.innerText) || 0;
+          const result = valueBox * multiplier;
+          // Calculamos el índice de destino en la fila STEMS:
+          // Se agrega +1 para desplazar un campo a la derecha.
+          const stemDataIndex = col - offset + 1;
+          if (rowStems.cells[stemDataIndex] !== undefined) {
+            rowStems.cells[stemDataIndex].innerText = result.toString();
+          }
+        }
+    }  
 });
