@@ -1922,12 +1922,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.reloadConfigAndRecalculate = reloadConfigAndRecalculate;
     // Cargar datos de Empaque al iniciar
     loadEmpaqueTableData();
-
-    // ==============================
-    // NUEVA FUNCIÓN: generatePackRateTable
-    // ==============================
-    // Función para generar la tabla de Pack Rate con estructura "uniforme"
-    // Genera la tabla usando la estructura original
+    
     function generatePackRateTable() {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return;
@@ -2004,6 +1999,216 @@ document.addEventListener('DOMContentLoaded', () => {
         // Al finalizar, asignamos los eventos para recalcular los resultados
         attachPackRateEvents();
     }
+
+    function renderPackRateBlocks(blocks) {
+        const packrateTable = document.getElementById("packrateTable");
+        if (!packrateTable) return;
+      
+        const tBody = packrateTable.querySelector("tbody");
+        tBody.innerHTML = ""; // Limpiar la tabla antes de renderizar
+      
+        // Definición de las longitudes (las columnas de la tabla)
+        const longColumns = [70, 60, 55, 50];
+        // Cada bloque se compone de 6 filas: dos filas para cada tipo (HB, QB, EB)
+        const rowDefinitions = [
+          { type: "HB", label: "HB", editable: true },
+          { type: "HB", label: "STEMS", editable: false },
+          { type: "QB", label: "QB", editable: true },
+          { type: "QB", label: "STEMS", editable: false },
+          { type: "EB", label: "EB", editable: true },
+          { type: "EB", label: "STEMS", editable: false }
+        ];
+      
+        blocks.forEach(block => {
+          // Se asume que block.groupId (o block.id) es el identificador único del bloque  
+          const groupId = block.groupId || block.id || "";
+          // Se utilizan banderas para insertar sólo una vez celdas de multiplicador y de variedad
+          let multiplierCellCreated = false;
+          let varietyCellCreated = false;
+      
+          rowDefinitions.forEach(def => {
+            const row = tBody.insertRow();
+            if (groupId) {
+              // Se asocia el identificador al atributo data-group-id
+              row.setAttribute("data-group-id", groupId);
+            }
+      
+            // Solo en la primera fila del bloque se crea la celda del multiplicador (con rowspan=6)
+            if (!multiplierCellCreated) {
+              const cellMultiplier = row.insertCell();
+              cellMultiplier.contentEditable = true;
+              // Se muestra el valor almacenado o se toma un valor por defecto (por ejemplo, "25")
+              cellMultiplier.innerText = (block.multiplier !== undefined) ? block.multiplier.toString() : "25";
+              cellMultiplier.style.textAlign = "center";
+              cellMultiplier.style.minWidth = "30px";
+              cellMultiplier.rowSpan = rowDefinitions.length;
+              multiplierCellCreated = true;
+            }
+      
+            // Solo en la primera fila se crea la celda de variedad (con rowspan=6)
+            if (!varietyCellCreated) {
+              const cellVariety = row.insertCell();
+              cellVariety.innerText = block.variety ? block.variety : "";
+              cellVariety.style.textAlign = "center";
+              cellVariety.rowSpan = rowDefinitions.length;
+              varietyCellCreated = true;
+            }
+      
+            // Celda de etiqueta que muestra el nombre del tipo para esa fila (ejemplo: "HB" o "STEMS")
+            const cellLabel = row.insertCell();
+            cellLabel.innerText = def.label;
+            cellLabel.style.fontWeight = "bold";
+            cellLabel.style.textAlign = "center";
+      
+            // Se crean las celdas para cada longitud
+            longColumns.forEach(long => {
+              const cell = row.insertCell();
+              cell.style.textAlign = "center";
+              cell.contentEditable = def.editable;
+              if (def.editable) {
+                // Se asume que block.cajas es un objeto anidado: { HB: {70: value, ...}, QB: {…}, EB: {…} }
+                const value =
+                  (block.cajas &&
+                   block.cajas[def.type] &&
+                   block.cajas[def.type][long] !== undefined)
+                    ? block.cajas[def.type][long]
+                    : "0";
+                cell.innerText = value.toString();
+              } else {
+                // Se asume que block.stems es similar a block.cajas
+                const value =
+                  (block.stems &&
+                   block.stems[def.type] &&
+                   block.stems[def.type][long] !== undefined)
+                    ? block.stems[def.type][long]
+                    : "0";
+                cell.innerText = value.toString();
+              }
+            });
+          });
+        });
+    }
+      
+          
+    function extractPackRateData() {
+        const packrateTable = document.getElementById("packrateTable");
+        if (!packrateTable) return null;
+        
+        const tBody = packrateTable.querySelector("tbody");
+        const rows = Array.from(tBody.querySelectorAll("tr"));
+        const blocks = [];
+        
+        // Suponemos que cada bloque está compuesto por 6 filas consecutivas
+        for (let i = 0; i < rows.length; i += 6) {
+          const blockRows = rows.slice(i, i + 6);
+          if (blockRows.length < 6) break;
+          
+          // La primera fila debe tener el data-group-id y además contener la celda multiplicador y variedad
+          const mainRow = blockRows[0];
+          const groupId = mainRow.getAttribute("data-group-id") || "";
+          const multiplier = parseFloat(mainRow.cells[0].innerText) || 25;
+          const variety = mainRow.cells[1].innerText.trim();
+          
+          const longColumns = [70, 60, 55, 50];
+          const tipos = ["HB", "QB", "EB"];
+          const cajas = {};
+          const stems = {};
+          
+          // Se asume que:
+          // - La fila de cajas para un tipo está en la posición idx*2 (0 para HB, 2 para QB, 4 para EB)
+          // - La fila de stems para un tipo está en la posición idx*2+1 (1 para HB, 3 para QB, 5 para EB)
+          tipos.forEach((tipo, idx) => {
+            cajas[tipo] = {};
+            stems[tipo] = {};
+            const rowCajas = blockRows[idx * 2];
+            const rowStems = blockRows[idx * 2 + 1];
+            
+            // Se utiliza un offset de 3: las celdas 0 y 1 tienen multiplicador y variedad (con rowspan) y la celda 2 la etiqueta
+            longColumns.forEach((long, colIndex) => {
+              const cajaCell = rowCajas.cells[colIndex + 3];
+              const stemCell = rowStems.cells[colIndex + 3];
+              cajas[tipo][long] = cajaCell ? cajaCell.innerText.trim() : "0";
+              stems[tipo][long] = stemCell ? stemCell.innerText.trim() : "0";
+            });
+          });
+          
+          blocks.push({
+            groupId,       // Este identificador se usará para actualizar el documento en Firebase
+            multiplier,
+            variety,
+            cajas,
+            stems,
+            updatedAt: new Date().toISOString()
+            // Puedes agregar otros campos si lo requieres
+          });
+        }
+        
+        return blocks;
+    }
+      
+    async function savePackRateData() {
+        const blocks = extractPackRateData();
+        if (!blocks || blocks.length === 0) {
+          showAlert("No se encontró información en la tabla PackRate.", "warning");
+          return;
+        }
+      
+        try {
+          for (const block of blocks) {
+            // Se envía el objeto, que si posee groupId se actualizará, de lo contrario se crea uno nuevo.
+            const response = await fetch('/api/packrate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(block)
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              // Si el documento se creó (por no tener groupId), el servidor devuelve { id: docRef.id }
+              // Actualizamos el objeto con ese id para futuros guardados.
+              if (result.id && !block.groupId) {
+                block.groupId = result.id;
+              }
+            } else {
+              const errorData = await response.json();
+              console.error("Error guardando bloque PackRate:", errorData);
+            }
+          }
+          // Se persiste la data actualizada en localStorage para no perder los groupId asignados
+          localStorage.setItem('packrateData', JSON.stringify(blocks));
+          showAlert("Datos de PackRate guardados en Firebase.", "success");
+        } catch (error) {
+          console.error("Error en savePackRateData:", error);
+          showAlert("Error al guardar PackRate en Firebase.", "danger");
+        }
+    }
+    
+    async function loadPackRateData() {
+        try {
+          const response = await fetch('/api/packrate');
+          if (response.ok) {
+            const data = await response.json();
+            // Reconstruir la tabla de Pack Rate usando los datos obtenidos
+            renderPackRateBlocks(data);
+          } else {
+            console.error('Error al cargar PackRate desde Firebase');
+          }
+        } catch (error) {
+          console.error('Error en loadPackRateData:', error);
+        }
+    }
+      
+    loadPackRateData();
+    // Puedes asignar, por ejemplo, un botón en la UI para guardar la data en Firebase
+    const savePackRateBtn = document.getElementById('savePackRateBtn');
+    if (savePackRateBtn) {
+        savePackRateBtn.addEventListener('click', async () => {
+          savePackRateBtn.disabled = true;
+          await savePackRateData();
+          savePackRateBtn.disabled = false;
+        });
+    }
+      
       
     // Asignar eventos a las filas editables del bloque
     function attachPackRateEvents() {
@@ -2068,4 +2273,5 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
     }  
+
 });

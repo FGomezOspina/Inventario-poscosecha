@@ -25,15 +25,12 @@
                         </button>
 
                         <!-- Submenú de Configuración -->
-                        <!-- AÑADIMOS id="configNavItem" A LA <li> para control de visibilidad -->
                         <li class="nav-item" id="configNavItem">
-                            <!-- Enlace que despliega/colapsa el submenú -->
                             <a class="nav-link collapsed" data-bs-toggle="collapse" href="#configSubmenu" 
                                aria-expanded="false" aria-controls="configSubmenu">
                                 <i class="fas fa-cog"></i>
                                 <span class="link-text">Configuración</span>
                             </a>
-                            <!-- Contenedor del submenú -->
                             <ul class="collapse list-unstyled ms-3" id="configSubmenu">
                                 <li class="nav-item">
                                     <a class="nav-link" href="#" id="configBtn">
@@ -51,7 +48,6 @@
                         </li>
 
                         <!-- Inventario -->
-                        <!-- AÑADIMOS id="inventarioNavItem" A LA <li> para control de visibilidad -->
                         <li class="nav-item" id="inventarioNavItem">
                             <a class="nav-link" href="#" id="inventarioBtn">
                                 <i class="fas fa-box"></i>
@@ -60,7 +56,6 @@
                         </li>
 
                         <!-- Empaque -->
-                        <!-- AÑADIMOS id="soloEmpaqueNavItem" A LA <li> para control de visibilidad -->
                         <li class="nav-item" id="soloEmpaqueNavItem">
                             <a class="nav-link" href="#" id="empaqueBtn">
                                 <i class="fas fa-boxes"></i>
@@ -139,7 +134,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Filas de la tabla -->
+                                <!-- Filas de la tabla se generan dinámicamente -->
                             </tbody>
                         </table>
                     </div>
@@ -220,7 +215,6 @@
                 </div> 
                 <!-- Fin de inventarioSection -->
 
-
                 <!-- =========================
                      SECCIÓN DE EMPAQUE
                      ========================= -->
@@ -228,7 +222,6 @@
                     <h2>Empaque</h2>
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <button class="btn btn-primary" id="addEmpaqueRowBtn">Agregar Fila de Empaque</button>
-                        <!-- Otros botones específicos de Empaque si los necesitas -->
                     </div>
                     <div class="table-responsive">
                         <table id="empaqueTable" class="table table-bordered">
@@ -254,12 +247,15 @@
                 </div>
                 <!-- Fin de empaqueSection -->
 
-
                 <!-- =========================
                      SECCIÓN DE PACK RATE
                      ========================= -->
                 <div id="packrateSection" style="display: none;">
                     <h2 class="mt-4">Pack Rate</h2>
+                    <!-- Botón para guardar los datos de Pack Rate en Firebase -->
+                    <div class="mb-3">
+                      <button class="btn btn-success" id="savePackRateBtn">Guardar PackRate en Firebase</button>
+                    </div>
                     <div class="table-responsive">
                         <table id="packrateTable" class="table table-bordered table-striped table-hover">
                             <thead>

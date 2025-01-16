@@ -1,70 +1,126 @@
 // server.js
-//USE EMAILJS PARA ENVIO DE CORREOS
+
+// ========== Importaciones y configuración inicial ==========
 const express = require('express');
 const path = require('path');
 const app = express();
-const nodemailer = require('nodemailer'); // Importamos Nodemailer
-const multer = require('multer'); // Importamos Multer para manejar archivos
+const nodemailer = require('nodemailer'); // Para envío de correos
+const multer = require('multer');          // Para manejo de archivos en formularios
 const upload = multer();
-const cors = require('cors'); // Importamos cors para manejar solicitudes desde el frontend
+const cors = require('cors');              // Para CORS
 
-// Configura el puerto
-const PORT = process.env.PORT || 3000;
-
-// Habilitamos CORS para todas las solicitudes
+// Habilitar CORS para todas las solicitudes
 app.use(cors());
+// Para poder interpretar JSON en las peticiones POST
+app.use(express.json());
 
-// Sirve los archivos estáticos desde la carpeta 'public'
+// Sirve archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta para el index.html
+// ========== Inicializar Firebase Admin ==========
+const admin = require('firebase-admin');
+
+// Se utiliza el archivo de credenciales descargado de Firebase Console
+const serviceAccount = require('./empaque-1a809-firebase-adminsdk-x7iv9-a7e86d22de.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+// Obtener instancia de Firestore
+const db = admin.firestore();
+
+// ========== Endpoints existentes ==========
+
+// Endpoint para servir index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Endpoint para enviar el correo electrónico
+// Endpoint para enviar correo electrónico
 app.post('/send-email', upload.single('file'), (req, res) => {
-    const { toEmail } = req.body;
-    const file = req.file;
+  const { toEmail } = req.body;
+  const file = req.file;
 
-    if (!toEmail || !file) {
-        return res.status(400).send('Faltan datos');
+  if (!toEmail || !file) {
+    return res.status(400).send('Faltan datos');
+  }
+
+  // Configurar el transporte de Nodemailer
+  let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'fabio.gomez@fli.com.co', // Reemplaza con tu correo
+      pass: 'qzvjczsqcapnfeni'          // Reemplaza con tu contraseña de aplicación
     }
+  });
 
-    // Configurar el transporte de Nodemailer
-    let transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: 'fabio.gomez@fli.com.co', // Reemplaza con tu correo
-            pass: 'qzvjczsqcapnfeni' // Reemplaza con tu contraseña de aplicación
-        }
-    });
+  let mailOptions = {
+    from: 'fabio.gomez@fli.com.co',
+    to: toEmail,
+    subject: 'Inventario',
+    text: `Fecha de envío: ${new Date().toLocaleString()}`,
+    attachments: [
+      {
+        filename: 'Inventario.xlsx',
+        content: file.buffer
+      }
+    ]
+  };
 
-    let mailOptions = {
-        from: 'fabio.gomez@fli.com.co', // Reemplaza con tu correo
-        to: toEmail,
-        subject: 'Inventario',
-        text: `Fecha de envío: ${new Date().toLocaleString()}`,
-        attachments: [
-            {
-                filename: 'Inventario.xlsx',
-                content: file.buffer
-            }
-        ]
-    };
-
-    transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-            console.error(error);
-            res.status(500).send('Error al enviar el correo');
-        } else {
-            console.log('Correo enviado: ' + info.response);
-            res.send('Correo enviado');
-        }
-    });
+  transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.error(error);
+      res.status(500).send('Error al enviar el correo');
+    } else {
+      console.log('Correo enviado: ' + info.response);
+      res.send('Correo enviado');
+    }
+  });
 });
 
-// Inicia el servidor
+// ========== Endpoints para Firestore (Tabla PackRate) ==========
+
+// Endpoint para guardar PackRate (crear o actualizar)
+app.post('/api/packrate', async (req, res) => {
+    try {
+        const packRateData = req.body;
+        packRateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+
+        if (packRateData.groupId) {
+            // Actualizar documento existente
+            await db.collection('packrate').doc(packRateData.groupId).set(packRateData, { merge: true });
+            res.status(200).json({ message: "Documento actualizado" });
+        } else {
+            // Crear nuevo documento
+            packRateData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+            const docRef = await db.collection('packrate').add(packRateData);
+            res.status(200).json({ id: docRef.id });
+        }
+    } catch (error) {
+        console.error('Error al guardar PackRate:', error);
+        res.status(500).json({ error: 'Error al guardar PackRate' });
+    }
+});
+
+// Endpoint para obtener PackRate
+app.get('/api/packrate', async (req, res) => {
+    try {
+        const snapshot = await db.collection('packrate').get();
+        const packrateList = [];
+        snapshot.forEach(doc => {
+            packrateList.push({ groupId: doc.id, ...doc.data() });
+        });
+        res.status(200).json(packrateList);
+    } catch (error) {
+        console.error('Error al obtener PackRate:', error);
+        res.status(500).json({ error: 'Error al obtener PackRate' });
+    }
+});
+
+
+// ========== Configurar el puerto y arrancar el servidor ==========
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor disponible en http://localhost:${PORT} o en http://<TU-IP-LOCAL>:${PORT}`);
+  console.log(`Servidor disponible en http://localhost:${PORT} o en http://<TU-IP-LOCAL>:${PORT}`);
 });
