@@ -8,6 +8,7 @@ const nodemailer = require('nodemailer'); // Para envío de correos
 const multer = require('multer');          // Para manejo de archivos en formularios
 const upload = multer();
 const cors = require('cors');              // Para CORS
+require('dotenv').config();               // Cargar variables de entorno desde .env
 
 // Habilitar CORS para todas las solicitudes
 app.use(cors());
@@ -20,8 +21,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ========== Inicializar Firebase Admin ==========
 const admin = require('firebase-admin');
 
-// Se utiliza el archivo de credenciales descargado de Firebase Console
-const serviceAccount = require('./empaque-1a809-firebase-adminsdk-x7iv9-a7e86d22de.json');
+// Leer credenciales desde variables de entorno
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -46,17 +47,17 @@ app.post('/send-email', upload.single('file'), (req, res) => {
     return res.status(400).send('Faltan datos');
   }
 
-  // Configurar el transporte de Nodemailer
+  // Configurar el transporte de Nodemailer con credenciales desde variables de entorno
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'fabio.gomez@fli.com.co', // Reemplaza con tu correo
-      pass: 'qzvjczsqcapnfeni'          // Reemplaza con tu contraseña de aplicación
+      user: process.env.EMAIL_USER, // Usuario del correo
+      pass: process.env.EMAIL_PASS  // Contraseña del correo
     }
   });
 
   let mailOptions = {
-    from: 'fabio.gomez@fli.com.co',
+    from: process.env.EMAIL_USER,
     to: toEmail,
     subject: 'Inventario',
     text: `Fecha de envío: ${new Date().toLocaleString()}`,
@@ -117,7 +118,6 @@ app.get('/api/packrate', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener PackRate' });
     }
 });
-
 
 // ========== Configurar el puerto y arrancar el servidor ==========
 const PORT = process.env.PORT || 3000;
