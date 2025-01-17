@@ -1921,175 +1921,171 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateAllCalculations = updateAllCalculations;
     window.reloadConfigAndRecalculate = reloadConfigAndRecalculate;
     // Cargar datos de Empaque al iniciar
+    // Cargar la tabla inicial (por ejemplo, con las variedades locales)
     loadEmpaqueTableData();
-    
+    generatePackRateTable();
+
+    // Función que genera la tabla PackRate (sin modificaciones en la lógica de armado)
     function generatePackRateTable() {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return;
-      
+    
         const tBody = packrateTable.querySelector("tbody");
         if (!tBody) return;
         tBody.innerHTML = "";
-      
-        // Definición de longitudes: se crearán 4 columnas (70, 60, 55, 50)
+    
         const longColumns = [70, 60, 55, 50];
-      
-        // Definición de cada una de las 6 filas por variedad.
-        // 'editable' indica si se ingresa el valor (cajas) o se muestra el resultado (STEMS)
         const rowDefinitions = [
-          { label: "HB", editable: true },
-          { label: "STEMS", editable: false },
-          { label: "QB", editable: true },
-          { label: "STEMS", editable: false },
-          { label: "EB", editable: true },
-          { label: "STEMS", editable: false }
+        { label: "HB", editable: true },
+        { label: "STEMS", editable: false },
+        { label: "QB", editable: true },
+        { label: "STEMS", editable: false },
+        { label: "EB", editable: true },
+        { label: "STEMS", editable: false }
         ];
-      
-        // Obtener todas las variedades (concatenando las opciones de cada "tipo")
+    
         let allVarieties = [];
         Object.keys(varietyOptions).forEach(tipo => {
-          allVarieties = allVarieties.concat(varietyOptions[tipo]);
+        allVarieties = allVarieties.concat(varietyOptions[tipo]);
         });
-      
-        // Por cada variedad se crea un bloque de 6 filas
-        allVarieties.forEach(varName => {
-          // Se crea la celda para el multiplicador y la de variety sólo en la primera fila del bloque.
-          let multiplierCellCreated = false;
-          let varietyCellCreated = false;
-      
-          rowDefinitions.forEach((def, index) => {
+    
+        // Se asigna el orden según la posición en el arreglo para garantizar el orden
+        allVarieties.forEach((varName, orderIndex) => {
+        let multiplierCellCreated = false;
+        let varietyCellCreated = false;
+    
+        rowDefinitions.forEach((def, index) => {
             const row = tBody.insertRow();
-      
-            // Para la primera fila, insertar celda del multiplicador con rowspan=6
+    
+            // En la primera fila se agregan las celdas de multiplicador y variedad.
+            // Se agrega un atributo "data-order" para guardar la posición y
+            // "data-group-id" se dejará en blanco (o no se asigna) hasta que se guarde.
             if (!multiplierCellCreated) {
-              const cellMultiplier = row.insertCell();
-              cellMultiplier.contentEditable = true;
-              cellMultiplier.innerText = "25"; // valor default
-              cellMultiplier.style.textAlign = "center";
-              cellMultiplier.style.minWidth = "30px";
-              cellMultiplier.rowSpan = rowDefinitions.length;
-              multiplierCellCreated = true;
+            const cellMultiplier = row.insertCell();
+            cellMultiplier.contentEditable = true;
+            cellMultiplier.innerText = "25"; // valor por defecto
+            cellMultiplier.style.textAlign = "center";
+            cellMultiplier.style.minWidth = "30px";
+            cellMultiplier.rowSpan = rowDefinitions.length;
+            multiplierCellCreated = true;
             }
-      
-            // En la primera fila también se inserta la celda de variety con rowspan=6
+    
             if (!varietyCellCreated) {
-              const cellVariety = row.insertCell();
-              cellVariety.innerText = varName;
-              cellVariety.style.textAlign = "center";
-              cellVariety.rowSpan = rowDefinitions.length;
-              varietyCellCreated = true;
+            const cellVariety = row.insertCell();
+            cellVariety.innerText = varName;
+            cellVariety.style.textAlign = "center";
+            cellVariety.rowSpan = rowDefinitions.length;
+            // Se guarda el orden en un atributo de la primera fila (para poder reordenar si se requiriera)
+            row.setAttribute("data-order", orderIndex);
+            // No se establece data-group-id porque aún no está guardado en Firestore.
+            varietyCellCreated = true;
             }
-      
-            // Luego se inserta la celda de etiqueta (por ejemplo "HB", "STEMS", etc.)
+    
             const cellLabel = row.insertCell();
             cellLabel.innerText = def.label;
             cellLabel.style.fontWeight = "bold";
             cellLabel.style.textAlign = "center";
-      
-            // Se insertan las celdas para cada longitud (70, 60, 55, 50)
+    
             longColumns.forEach(() => {
-              const cell = row.insertCell();
-              cell.style.textAlign = "center";
-              cell.contentEditable = def.editable;
-              cell.innerText = "0";
+            const cell = row.insertCell();
+            cell.style.textAlign = "center";
+            cell.contentEditable = def.editable;
+            cell.innerText = "0";
             });
-          });
         });
-      
-        // Al finalizar, asignamos los eventos para recalcular los resultados
+        });
+    
         attachPackRateEvents();
     }
-
+    
+    // La función para renderizar bloques obtenidos de Firebase (opcional, para recargar por completo)
+    // Si se utiliza este método, se recomienda ordenar en base al campo "order"
     function renderPackRateBlocks(blocks) {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return;
-      
+    
         const tBody = packrateTable.querySelector("tbody");
-        tBody.innerHTML = ""; // Limpiar la tabla antes de renderizar
-      
-        // Definición de las longitudes (las columnas de la tabla)
+        tBody.innerHTML = "";
+    
         const longColumns = [70, 60, 55, 50];
-        // Cada bloque se compone de 6 filas: dos filas para cada tipo (HB, QB, EB)
         const rowDefinitions = [
-          { type: "HB", label: "HB", editable: true },
-          { type: "HB", label: "STEMS", editable: false },
-          { type: "QB", label: "QB", editable: true },
-          { type: "QB", label: "STEMS", editable: false },
-          { type: "EB", label: "EB", editable: true },
-          { type: "EB", label: "STEMS", editable: false }
+        { type: "HB", label: "HB", editable: true },
+        { type: "HB", label: "STEMS", editable: false },
+        { type: "QB", label: "QB", editable: true },
+        { type: "QB", label: "STEMS", editable: false },
+        { type: "EB", label: "EB", editable: true },
+        { type: "EB", label: "STEMS", editable: false }
         ];
-      
+    
+        // Si se utiliza el campo order, se puede ordenar los bloques:
+        blocks.sort((a, b) => {
+        if (a.order === undefined || b.order === undefined) return 0;
+        return a.order - b.order;
+        });
+    
         blocks.forEach(block => {
-          // Se asume que block.groupId (o block.id) es el identificador único del bloque  
-          const groupId = block.groupId || block.id || "";
-          // Se utilizan banderas para insertar sólo una vez celdas de multiplicador y de variedad
-          let multiplierCellCreated = false;
-          let varietyCellCreated = false;
-      
-          rowDefinitions.forEach(def => {
+        const groupId = block.groupId; // Se espera que tenga o no el groupId ya asignado.
+        let multiplierCellCreated = false;
+        let varietyCellCreated = false;
+    
+        rowDefinitions.forEach(def => {
             const row = tBody.insertRow();
             if (groupId) {
-              // Se asocia el identificador al atributo data-group-id
-              row.setAttribute("data-group-id", groupId);
+            row.setAttribute("data-group-id", groupId);
             }
-      
-            // Solo en la primera fila del bloque se crea la celda del multiplicador (con rowspan=6)
+    
             if (!multiplierCellCreated) {
-              const cellMultiplier = row.insertCell();
-              cellMultiplier.contentEditable = true;
-              // Se muestra el valor almacenado o se toma un valor por defecto (por ejemplo, "25")
-              cellMultiplier.innerText = (block.multiplier !== undefined) ? block.multiplier.toString() : "25";
-              cellMultiplier.style.textAlign = "center";
-              cellMultiplier.style.minWidth = "30px";
-              cellMultiplier.rowSpan = rowDefinitions.length;
-              multiplierCellCreated = true;
+            const cellMultiplier = row.insertCell();
+            cellMultiplier.contentEditable = true;
+            cellMultiplier.innerText = (block.multiplier !== undefined) ? block.multiplier.toString() : "25";
+            cellMultiplier.style.textAlign = "center";
+            cellMultiplier.style.minWidth = "30px";
+            cellMultiplier.rowSpan = rowDefinitions.length;
+            multiplierCellCreated = true;
             }
-      
-            // Solo en la primera fila se crea la celda de variedad (con rowspan=6)
+    
             if (!varietyCellCreated) {
-              const cellVariety = row.insertCell();
-              cellVariety.innerText = block.variety ? block.variety : "";
-              cellVariety.style.textAlign = "center";
-              cellVariety.rowSpan = rowDefinitions.length;
-              varietyCellCreated = true;
+            const cellVariety = row.insertCell();
+            cellVariety.innerText = block.variety ? block.variety : "";
+            cellVariety.style.textAlign = "center";
+            cellVariety.rowSpan = rowDefinitions.length;
+            // Se puede guardar el orden si existe:
+            if (block.order !== undefined) {
+                row.setAttribute("data-order", block.order);
             }
-      
-            // Celda de etiqueta que muestra el nombre del tipo para esa fila (ejemplo: "HB" o "STEMS")
+            varietyCellCreated = true;
+            }
+    
             const cellLabel = row.insertCell();
             cellLabel.innerText = def.label;
             cellLabel.style.fontWeight = "bold";
             cellLabel.style.textAlign = "center";
-      
-            // Se crean las celdas para cada longitud
+    
             longColumns.forEach(long => {
-              const cell = row.insertCell();
-              cell.style.textAlign = "center";
-              cell.contentEditable = def.editable;
-              if (def.editable) {
-                // Se asume que block.cajas es un objeto anidado: { HB: {70: value, ...}, QB: {…}, EB: {…} }
+            const cell = row.insertCell();
+            cell.style.textAlign = "center";
+            cell.contentEditable = def.editable;
+            if (def.editable) {
                 const value =
-                  (block.cajas &&
-                   block.cajas[def.type] &&
-                   block.cajas[def.type][long] !== undefined)
+                (block.cajas && block.cajas[def.type] && block.cajas[def.type][long] !== undefined)
                     ? block.cajas[def.type][long]
                     : "0";
                 cell.innerText = value.toString();
-              } else {
-                // Se asume que block.stems es similar a block.cajas
+            } else {
                 const value =
-                  (block.stems &&
-                   block.stems[def.type] &&
-                   block.stems[def.type][long] !== undefined)
+                (block.stems && block.stems[def.type] && block.stems[def.type][long] !== undefined)
                     ? block.stems[def.type][long]
                     : "0";
                 cell.innerText = value.toString();
-              }
+            }
             });
-          });
         });
+        });
+    
+        attachPackRateEvents();
     }
-      
-          
+    
+    // Extrae los datos de la tabla y también la posición (order) que habíamos guardado
     function extractPackRateData() {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return null;
@@ -2097,181 +2093,173 @@ document.addEventListener('DOMContentLoaded', () => {
         const tBody = packrateTable.querySelector("tbody");
         const rows = Array.from(tBody.querySelectorAll("tr"));
         const blocks = [];
-        
-        // Suponemos que cada bloque está compuesto por 6 filas consecutivas
+    
         for (let i = 0; i < rows.length; i += 6) {
-          const blockRows = rows.slice(i, i + 6);
-          if (blockRows.length < 6) break;
-          
-          // La primera fila debe tener el data-group-id y además contener la celda multiplicador y variedad
-          const mainRow = blockRows[0];
-          const groupId = mainRow.getAttribute("data-group-id") || "";
-          const multiplier = parseFloat(mainRow.cells[0].innerText) || 25;
-          const variety = mainRow.cells[1].innerText.trim();
-          
-          const longColumns = [70, 60, 55, 50];
-          const tipos = ["HB", "QB", "EB"];
-          const cajas = {};
-          const stems = {};
-          
-          // Se asume que:
-          // - La fila de cajas para un tipo está en la posición idx*2 (0 para HB, 2 para QB, 4 para EB)
-          // - La fila de stems para un tipo está en la posición idx*2+1 (1 para HB, 3 para QB, 5 para EB)
-          tipos.forEach((tipo, idx) => {
+        const blockRows = rows.slice(i, i + 6);
+        if (blockRows.length < 6) break;
+    
+        const mainRow = blockRows[0];
+        // Si no existe data-group-id, groupId queda undefined (no se guarda cadena vacía)
+        const groupId = mainRow.getAttribute("data-group-id") || undefined;
+        const multiplier = parseFloat(mainRow.cells[0].innerText) || 25;
+        const variety = mainRow.cells[1].innerText.trim();
+        // Capturamos el order si fue asignado
+        let order = mainRow.getAttribute("data-order");
+        order = order !== null ? parseInt(order, 10) : undefined;
+    
+        const longColumns = [70, 60, 55, 50];
+        const tipos = ["HB", "QB", "EB"];
+        const cajas = {};
+        const stems = {};
+    
+        tipos.forEach((tipo, idx) => {
             cajas[tipo] = {};
             stems[tipo] = {};
             const rowCajas = blockRows[idx * 2];
             const rowStems = blockRows[idx * 2 + 1];
-            
-            // Se utiliza un offset de 3: las celdas 0 y 1 tienen multiplicador y variedad (con rowspan) y la celda 2 la etiqueta
+    
             longColumns.forEach((long, colIndex) => {
-              const cajaCell = rowCajas.cells[colIndex + 3];
-              const stemCell = rowStems.cells[colIndex + 3];
-              cajas[tipo][long] = cajaCell ? cajaCell.innerText.trim() : "0";
-              stems[tipo][long] = stemCell ? stemCell.innerText.trim() : "0";
+            const cajaCell = rowCajas.cells[colIndex + 3];
+            const stemCell = rowStems.cells[colIndex + 3];
+            cajas[tipo][long] = cajaCell ? cajaCell.innerText.trim() : "0";
+            stems[tipo][long] = stemCell ? stemCell.innerText.trim() : "0";
             });
-          });
-          
-          blocks.push({
-            groupId,       // Este identificador se usará para actualizar el documento en Firebase
+        });
+    
+        blocks.push({
+            groupId,
             multiplier,
             variety,
             cajas,
             stems,
+            order, // se incluye el order para preservar la posición si fuera necesario
             updatedAt: new Date().toISOString()
-            // Puedes agregar otros campos si lo requieres
-          });
+        });
         }
-        
+    
         return blocks;
     }
-      
+    
+    // Guardamos los datos en Firestore sin reconstruir la tabla completa
     async function savePackRateData() {
         const blocks = extractPackRateData();
         if (!blocks || blocks.length === 0) {
-          showAlert("No se encontró información en la tabla PackRate.", "warning");
-          return;
+        showAlert("No se encontró información en la tabla PackRate.", "warning");
+        return;
         }
-      
+    
         try {
-          for (const block of blocks) {
-            // Se envía el objeto, que si posee groupId se actualizará, de lo contrario se crea uno nuevo.
+        for (const block of blocks) {
             const response = await fetch('/api/packrate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(block)
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(block)
             });
-            
+    
             if (response.ok) {
-              const result = await response.json();
-              // Si el documento se creó (por no tener groupId), el servidor devuelve { id: docRef.id }
-              // Actualizamos el objeto con ese id para futuros guardados.
-              if (result.id && !block.groupId) {
-                block.groupId = result.id;
-              }
-            } else {
-              const errorData = await response.json();
-              console.error("Error guardando bloque PackRate:", errorData);
+            const result = await response.json();
+            // Si se creó el documento, se devuelve { id: ... }  
+            // Se actualiza la propiedad data-group-id en la fila correspondiente para mantener la relación.
+            if (result.id && !block.groupId) {
+                // Buscamos la fila principal (la primera de las 6) que coincide con el order y variety
+                const tBody = document.getElementById("packrateTable").querySelector("tbody");
+                const rows = Array.from(tBody.querySelectorAll("tr"));
+                for (let i = 0; i < rows.length; i += 6) {
+                // Se asume que la fila principal tiene la celda de variedad en índice 1
+                const currentVariety = rows[i].cells[1].innerText.trim();
+                const currentOrder = rows[i].getAttribute("data-order");
+                if (currentVariety === block.variety && (currentOrder == block.order)) {
+                    rows[i].setAttribute("data-group-id", result.id);
+                    break;
+                }
+                }
             }
-          }
-          // Se persiste la data actualizada en localStorage para no perder los groupId asignados
-          localStorage.setItem('packrateData', JSON.stringify(blocks));
-          showAlert("Datos de PackRate guardados en Firebase.", "success");
+            } else {
+            const errorData = await response.json();
+            console.error("Error guardando bloque PackRate:", errorData);
+            }
+        }
+        showAlert("Datos de PackRate guardados en Firebase.", "success");
         } catch (error) {
-          console.error("Error en savePackRateData:", error);
-          showAlert("Error al guardar PackRate en Firebase.", "danger");
+        console.error("Error en savePackRateData:", error);
+        showAlert("Error al guardar PackRate en Firebase.", "danger");
         }
     }
     
+    // Función de carga completa desde Firestore (opcional). Si se llama, es importante ordenar por "order".
     async function loadPackRateData() {
         try {
-          const response = await fetch('/api/packrate');
-          if (response.ok) {
+        const response = await fetch('/api/packrate');
+        if (response.ok) {
             const data = await response.json();
-            // Reconstruir la tabla de Pack Rate usando los datos obtenidos
             renderPackRateBlocks(data);
-          } else {
+        } else {
             console.error('Error al cargar PackRate desde Firebase');
-          }
+        }
         } catch (error) {
-          console.error('Error en loadPackRateData:', error);
+        console.error('Error en loadPackRateData:', error);
         }
     }
-      
-    loadPackRateData();
-    // Puedes asignar, por ejemplo, un botón en la UI para guardar la data en Firebase
+    
+    // Se asigna el botón de guardar
     const savePackRateBtn = document.getElementById('savePackRateBtn');
     if (savePackRateBtn) {
         savePackRateBtn.addEventListener('click', async () => {
-          savePackRateBtn.disabled = true;
-          await savePackRateData();
-          savePackRateBtn.disabled = false;
+        savePackRateBtn.disabled = true;
+        await savePackRateData();
+        savePackRateBtn.disabled = false;
         });
     }
-      
-      
-    // Asignar eventos a las filas editables del bloque
+    
+    // Asignar eventos para recalcular STEMS al editar los valores en las filas de cajas
     function attachPackRateEvents() {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return;
         const rows = packrateTable.querySelectorAll("tbody tr");
-      
-        // Se asume que cada bloque de una variedad consta de 6 filas consecutivas.
+    
         for (let i = 0; i < rows.length; i += 6) {
-          // Los renglones de cajas son: 0 (HB), 2 (QB) y 4 (EB)
-          [0, 2, 4].forEach(offset => {
+        [0, 2, 4].forEach(offset => {
             const rowBoxes = rows[i + offset];
             const rowStems = rows[i + offset + 1];
             if (!rowBoxes || !rowStems) return;
-            // Al editar la fila de cajas se recalcula la fila STEMS correspondiente.
             rowBoxes.addEventListener("input", () => {
-              // Se obtiene el multiplicador de la primera fila del bloque.
-              recalcPackRateRow(rowBoxes, rowStems, rows[i]);
+            recalcPackRateRow(rowBoxes, rowStems, rows[i]);
             });
-          });
-      
-          // Si se edita el multiplicador (celda0 de la primera fila del bloque)
-          const firstRow = rows[i];
-          const cellMultiplier = firstRow.cells[0];
-          cellMultiplier.addEventListener("input", () => {
-            // Recalcular todas las parejas (HB, QB y EB) cuando el multiplicador cambie
+        });
+    
+        const firstRow = rows[i];
+        const cellMultiplier = firstRow.cells[0];
+        cellMultiplier.addEventListener("input", () => {
             recalcPackRateRow(rows[i + 0], rows[i + 1], firstRow); // HB
             recalcPackRateRow(rows[i + 2], rows[i + 3], firstRow); // QB
             recalcPackRateRow(rows[i + 4], rows[i + 5], firstRow); // EB
-          });
+        });
         }
-    }  
-    // Función de recálculo ajustando el offset de acuerdo a la cantidad de celdas en la fila de cajas
+    }
+    
+    // Función que recalcula los valores de STEMS en base al multiplicador y el valor en cajas
     function recalcPackRateRow(rowBoxes, rowStems, firstRow) {
-        // Obtener el multiplicador desde la primera celda de la primera fila del bloque
         const multiplier = parseFloat(firstRow.cells[0].innerText) || 0;
-      
-        // Determinar el offset según la estructura de la fila de cajas:
-        // - Si la fila tiene 7 celdas: se asume que es la fila HB y los datos comienzan en el índice 3.
-        // - Si la fila tiene 5 celdas: se asume que es QB o EB y los datos comienzan en el índice 1.
         let offset;
         if (rowBoxes.cells.length === 7) {
-          offset = 3;
+        offset = 3;
         } else if (rowBoxes.cells.length === 5) {
-          offset = 1;
+        offset = 1;
         } else {
-          console.warn("Estructura inesperada en la fila de cajas");
-          return;
+        console.warn("Estructura inesperada en la fila de cajas");
+        return;
         }
-      
-        // Recorremos las celdas de datos en la fila de cajas
-        // La cantidad de celdas de datos es rowBoxes.cells.length - offset.
+    
         for (let col = offset; col < rowBoxes.cells.length; col++) {
-          const cellBox = rowBoxes.cells[col];
-          const valueBox = parseFloat(cellBox.innerText) || 0;
-          const result = valueBox * multiplier;
-          // Calculamos el índice de destino en la fila STEMS:
-          // Se agrega +1 para desplazar un campo a la derecha.
-          const stemDataIndex = col - offset + 1;
-          if (rowStems.cells[stemDataIndex] !== undefined) {
+        const cellBox = rowBoxes.cells[col];
+        const valueBox = parseFloat(cellBox.innerText) || 0;
+        const result = valueBox * multiplier;
+        const stemDataIndex = col - offset + 1;
+        if (rowStems.cells[stemDataIndex] !== undefined) {
             rowStems.cells[stemDataIndex].innerText = result.toString();
-          }
         }
-    }  
+        }
+    }
+
 
 });

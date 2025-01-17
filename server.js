@@ -4,24 +4,19 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const nodemailer = require('nodemailer'); // Para envío de correos
-const multer = require('multer');          // Para manejo de archivos en formularios
+const nodemailer = require('nodemailer');
+const multer = require('multer');
 const upload = multer();
-const cors = require('cors');              // Para CORS
-require('dotenv').config();               // Cargar variables de entorno desde .env
+const cors = require('cors');
+require('dotenv').config();
 
-// Habilitar CORS para todas las solicitudes
 app.use(cors());
-// Para poder interpretar JSON en las peticiones POST
 app.use(express.json());
-
-// Sirve archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ========== Inicializar Firebase Admin ==========
 const admin = require('firebase-admin');
 
-// Verificar que FIREBASE_CREDENTIALS esté definida y sea un JSON válido
 if (!process.env.FIREBASE_CREDENTIALS) {
   console.error('ERROR: La variable de entorno FIREBASE_CREDENTIALS no está definida.');
   process.exit(1);
@@ -39,17 +34,14 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-// Obtener instancia de Firestore
 const db = admin.firestore();
 
 // ========== Endpoints existentes ==========
 
-// Endpoint para servir index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Endpoint para enviar correo electrónico
 app.post('/send-email', upload.single('file'), (req, res) => {
   const { toEmail } = req.body;
   const file = req.file;
@@ -58,12 +50,11 @@ app.post('/send-email', upload.single('file'), (req, res) => {
     return res.status(400).send('Faltan datos');
   }
 
-  // Configurar el transporte de Nodemailer con credenciales desde variables de entorno
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // Usuario del correo
-      pass: process.env.EMAIL_PASS  // Contraseña del correo
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
     }
   });
 
@@ -92,7 +83,6 @@ app.post('/send-email', upload.single('file'), (req, res) => {
 });
 
 // ========== Endpoints para Firestore (Tabla PackRate) ==========
-
 // Endpoint para guardar PackRate (crear o actualizar)
 app.post('/api/packrate', async (req, res) => {
     try {
@@ -100,11 +90,9 @@ app.post('/api/packrate', async (req, res) => {
         packRateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
 
         if (packRateData.groupId) {
-            // Actualizar documento existente
             await db.collection('packrate').doc(packRateData.groupId).set(packRateData, { merge: true });
             res.status(200).json({ message: "Documento actualizado" });
         } else {
-            // Crear nuevo documento
             packRateData.createdAt = admin.firestore.FieldValue.serverTimestamp();
             const docRef = await db.collection('packrate').add(packRateData);
             res.status(200).json({ id: docRef.id });
@@ -115,7 +103,7 @@ app.post('/api/packrate', async (req, res) => {
     }
 });
 
-// Endpoint para obtener PackRate
+
 app.get('/api/packrate', async (req, res) => {
     try {
         const snapshot = await db.collection('packrate').get();
