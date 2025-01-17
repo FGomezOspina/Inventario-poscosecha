@@ -21,8 +21,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ========== Inicializar Firebase Admin ==========
 const admin = require('firebase-admin');
 
-// Leer credenciales desde variables de entorno
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+// Verificar que FIREBASE_CREDENTIALS esté definida y sea un JSON válido
+if (!process.env.FIREBASE_CREDENTIALS) {
+  console.error('ERROR: La variable de entorno FIREBASE_CREDENTIALS no está definida.');
+  process.exit(1);
+}
+
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+} catch (error) {
+  console.error('ERROR: La variable FIREBASE_CREDENTIALS no contiene un JSON válido.', error);
+  process.exit(1);
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
