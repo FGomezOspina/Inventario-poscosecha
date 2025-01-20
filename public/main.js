@@ -87,18 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (packrateBtn) {
         packrateBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Mostrar packrate
+            // Mostrar la sección de Pack Rate y ocultar las demás
             if (packrateSection) {
                 packrateSection.style.display = 'block';
-                // Generar la tabla de Pack Rate
-                generatePackRateTable();
+                // Llamar a la función para cargar los datos de Firebase
+                loadPackRateData();
             }
-            // Ocultar inventario
             if (inventarioSection) inventarioSection.style.display = 'none';
-            // Ocultar empaque
             if (empaqueSection) empaqueSection.style.display = 'none';
         });
     }
+    
 
     // ============================
     // Función para mostrar alertas
@@ -1928,29 +1927,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Carga la información de empaque (si es necesaria para otro fin)
     loadEmpaqueTableData();
 
-    // Al cargar la página se intenta obtener los datos de Firebase.
-    // Si Firebase no tiene datos, se genera una tabla base con ceros.
-    window.addEventListener('load', async () => {
-    try {
-        const response = await fetch('/api/packrate');
-        if (response.ok) {
-        const data = await response.json();
-        // Si se obtienen datos de Firebase, se renderiza la tabla usando esos datos.
-        if (data && data.length > 0) {
-            renderPackRateBlocks(data);
-        } else {
-            // No hay datos guardados en Firebase: generar tabla base.
-            generatePackRateTable();
-        }
-        } else {
-        console.error('Error al cargar PackRate desde Firebase');
-        generatePackRateTable();
-        }
-    } catch (error) {
-        console.error('Error en loadPackRateData:', error);
-        generatePackRateTable();
-    }
+    window.addEventListener('load', () => {
+        // Aquí se garantiza que se carguen y rendericen los datos de Pack Rate desde Firebase
+        loadPackRateData();
     });
+      
+
+    // Al cargar la página se intenta obtener los datos de Firebase.
+    async function loadPackRateData() {
+        try {
+          const response = await fetch('/api/packrate');
+          if (response.ok) {
+            const blocks = await response.json();
+            console.log("loadPackRateData - Datos recibidos desde Firebase:", blocks);
+      
+            // Si existen bloques, se reconstruye la tabla; si no, se genera la tabla base.
+            if (blocks && blocks.length > 0) {
+              // Llama a renderPackRateBlocks para reconstruir la tabla con los datos guardados.
+              renderPackRateBlocks(blocks);
+            } else {
+              generatePackRateTable();
+            }
+            // Actualiza los cálculos globales
+            updateAllCalculations();
+          } else {
+            console.error("Error en la respuesta de /api/packrate");
+            generatePackRateTable();
+          }
+        } catch (error) {
+          console.error("Error en loadPackRateData:", error);
+          generatePackRateTable();
+        }
+    }
+      
 
 
     // =============================================================
@@ -2035,95 +2044,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para renderizar la tabla a partir de los bloques obtenidos desde Firebase.
     function renderPackRateBlocks(blocks) {
-    const packrateTable = document.getElementById("packrateTable");
-    if (!packrateTable) return;
-
-    const tBody = packrateTable.querySelector("tbody");
-    tBody.innerHTML = "";
-
-    const longColumns = [70, 60, 55, 50];
-    const rowDefinitions = [
-        { type: "HB", label: "HB", editable: true },
-        { type: "HB", label: "STEMS", editable: false },
-        { type: "QB", label: "QB", editable: true },
-        { type: "QB", label: "STEMS", editable: false },
-        { type: "EB", label: "EB", editable: true },
-        { type: "EB", label: "STEMS", editable: false }
-    ];
-
-    // Se ordenan los bloques según el campo "order" (si existe).
-    blocks.sort((a, b) => {
-        if (a.order === undefined || b.order === undefined) return 0;
-        return a.order - b.order;
-    });
-
-    blocks.forEach(block => {
-        const groupId = block.groupId; // Valor asignado en Firebase (puede ser undefined si aún no se creó)
-        let multiplierCellCreated = false;
-        let varietyCellCreated = false;
-
-        rowDefinitions.forEach(def => {
-        const row = tBody.insertRow();
-        if (groupId) {
-            row.setAttribute("data-group-id", groupId);
-        }
-
-        // Primera fila del bloque: se coloca la celda del multiplicador con rowspan.
-        if (!multiplierCellCreated) {
-            const cellMultiplier = row.insertCell();
-            cellMultiplier.contentEditable = true;
-            cellMultiplier.innerText = (block.multiplier !== undefined) ? block.multiplier.toString() : "25";
-            cellMultiplier.style.textAlign = "center";
-            cellMultiplier.style.minWidth = "30px";
-            cellMultiplier.rowSpan = rowDefinitions.length;
-            multiplierCellCreated = true;
-        }
-        // Primera fila del bloque: se coloca la celda de variedad con rowspan.
-        if (!varietyCellCreated) {
-            const cellVariety = row.insertCell();
-            cellVariety.innerText = block.variety ? block.variety : "";
-            cellVariety.style.textAlign = "center";
-            cellVariety.rowSpan = rowDefinitions.length;
-            if (block.order !== undefined) {
-            row.setAttribute("data-order", block.order);
-            }
-            varietyCellCreated = true;
-        }
-
-        // Celda de etiqueta usando la definición actual.
-        const cellLabel = row.insertCell();
-        cellLabel.innerText = def.label;
-        cellLabel.style.fontWeight = "bold";
-        cellLabel.style.textAlign = "center";
-
-        // Se generan las celdas para las longitudes.
-        longColumns.forEach(long => {
-            const cell = row.insertCell();
-            cell.style.textAlign = "center";
-            cell.contentEditable = def.editable;
-            if (def.editable) {
-            const value =
-                (block.cajas &&
-                block.cajas[def.type] &&
-                block.cajas[def.type][long] !== undefined)
-                ? block.cajas[def.type][long]
-                : "0";
-            cell.innerText = value.toString();
-            } else {
-            const value =
-                (block.stems &&
-                block.stems[def.type] &&
-                block.stems[def.type][long] !== undefined)
-                ? block.stems[def.type][long]
-                : "0";
-            cell.innerText = value.toString();
-            }
+        const packrateTable = document.getElementById("packrateTable");
+        if (!packrateTable) return;
+      
+        const tBody = packrateTable.querySelector("tbody");
+        tBody.innerHTML = "";
+      
+        const longColumns = [70, 60, 55, 50];
+        const rowDefinitions = [
+          { type: "HB", label: "HB", editable: true },
+          { type: "HB", label: "STEMS", editable: false },
+          { type: "QB", label: "QB", editable: true },
+          { type: "QB", label: "STEMS", editable: false },
+          { type: "EB", label: "EB", editable: true },
+          { type: "EB", label: "STEMS", editable: false }
+        ];
+      
+        // Ordenar los bloques según un campo "order" si existe
+        blocks.sort((a, b) => {
+          if (a.order === undefined || b.order === undefined) return 0;
+          return a.order - b.order;
         });
+      
+        blocks.forEach(block => {
+          const groupId = block.groupId; // Puede ser undefined si aún no se asignó
+          let multiplierCellCreated = false;
+          let varietyCellCreated = false;
+      
+          rowDefinitions.forEach(def => {
+            const row = tBody.insertRow();
+            if (groupId) {
+              row.setAttribute("data-group-id", groupId);
+            }
+            // Primera fila: celda del multiplicador con rowspan
+            if (!multiplierCellCreated) {
+              const cellMultiplier = row.insertCell();
+              cellMultiplier.contentEditable = true;
+              cellMultiplier.innerText = (block.multiplier !== undefined) ? block.multiplier.toString() : "25";
+              cellMultiplier.style.textAlign = "center";
+              cellMultiplier.style.minWidth = "30px";
+              cellMultiplier.rowSpan = rowDefinitions.length;
+              multiplierCellCreated = true;
+            }
+            // Primera fila: celda de variedad con rowspan
+            if (!varietyCellCreated) {
+              const cellVariety = row.insertCell();
+              cellVariety.innerText = block.variety ? block.variety : "";
+              cellVariety.style.textAlign = "center";
+              cellVariety.rowSpan = rowDefinitions.length;
+              if (block.order !== undefined) {
+                row.setAttribute("data-order", block.order);
+              }
+              varietyCellCreated = true;
+            }
+            // Celda de etiqueta
+            const cellLabel = row.insertCell();
+            cellLabel.innerText = def.label;
+            cellLabel.style.fontWeight = "bold";
+            cellLabel.style.textAlign = "center";
+            // Celdas para cada longitud
+            longColumns.forEach(long => {
+              const cell = row.insertCell();
+              cell.style.textAlign = "center";
+              cell.contentEditable = def.editable;
+              if (def.editable) {
+                const value =
+                  (block.cajas &&
+                    block.cajas[def.type] &&
+                    block.cajas[def.type][long] !== undefined)
+                    ? block.cajas[def.type][long]
+                    : "0";
+                cell.innerText = value.toString();
+              } else {
+                const value =
+                  (block.stems &&
+                    block.stems[def.type] &&
+                    block.stems[def.type][long] !== undefined)
+                    ? block.stems[def.type][long]
+                    : "0";
+                cell.innerText = value.toString();
+              }
+            });
+          });
         });
-    });
-
-    attachPackRateEvents();
+      
+        // Una vez renderizada la tabla, aseguramos que se configuren los eventos y cálculos
+        attachPackRateEvents();
+        updateAllCalculations();
     }
+      
 
 
     // Función que extrae los datos de la tabla (asumiendo bloques de 6 filas).
