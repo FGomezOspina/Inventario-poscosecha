@@ -593,29 +593,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Fila principal ---
         const mainRow = empaqueTableBody.insertRow();
         mainRow.setAttribute('data-group-id', groupId);
-        
-        // Columna 1: Variety (select) con rowspan para que aparezca solo una vez
+      
+        // Columna 1: Variety (select) con rowspan para que aparezca solo una vez en el grupo
         const varietyCell = document.createElement('td');
         varietyCell.rowSpan = numRows;
         const varietySelect = createVarietySelect();
         varietyCell.appendChild(varietySelect);
         mainRow.appendChild(varietyCell);
       
-        // Columna 2: Tipo de Ramo (select) con rowspan
-        const tipoCell = document.createElement('td');
-        tipoCell.rowSpan = numRows;
-        const tipoSelect = createTJRegSelect(); // Si requieres otro select para "Tipo", cámbialo aquí
+        // Columna 2: Tipo de Ramo (select) SIN rowspan, se creará en cada fila
+        // En la fila principal se genera:
+        let tipoCell = document.createElement('td');
+        const tipoSelect = createTJRegSelect(); // O la función que uses para "Tipo de Ramo"
         tipoCell.appendChild(tipoSelect);
         mainRow.appendChild(tipoCell);
       
-        // Columna 3: Long (editable) SIN rowspan, aparece en cada fila  
+        // Columna 3: Long (editable) SIN rowspan, aparecerá en cada fila
         let longCell = document.createElement('td');
         longCell.contentEditable = true;
-        longCell.innerText = ''; // Valor inicial (podrías asignar un valor por defecto)
+        longCell.innerText = '';
         mainRow.appendChild(longCell);
       
-        // --- Columna 4: Caja ---
-        // Se crea en cada fila para que el usuario pueda seleccionarla en cada registro
+        // Columna 4: Caja (select) – se crea en cada fila
         let cajaCell = document.createElement('td');
         const cajaSelect = document.createElement('select');
         cajaSelect.classList.add('form-select', 'form-select-sm');
@@ -628,27 +627,32 @@ document.addEventListener('DOMContentLoaded', () => {
         cajaCell.appendChild(cajaSelect);
         mainRow.appendChild(cajaCell);
       
-        // --- Columna 5: # Cajas ---
+        // Columna 5: # Cajas (editable) – se crea en cada fila
         let numCajasCell = document.createElement('td');
         numCajasCell.contentEditable = true;
         numCajasCell.innerText = '';
         mainRow.appendChild(numCajasCell);
       
-        // --- Columna 6: Total Empaque (calculado) con rowspan ---
+        // NUEVA COLUMNA: Total UND (NO editable) – se crea en cada fila
+        let totalUNDCell = document.createElement('td');
+        totalUNDCell.innerText = '';  // Se calculará o asigna según la lógica de negocio
+        mainRow.appendChild(totalUNDCell);
+      
+        // Columna 6: Total Empaque (calculado) con rowspan
         const totalEmpaqueCell = document.createElement('td');
         totalEmpaqueCell.rowSpan = numRows;
         totalEmpaqueCell.classList.add('text-center');
         totalEmpaqueCell.innerText = tipoSelect.value || '';
         mainRow.appendChild(totalEmpaqueCell);
       
-        // --- Columna 7: Sobrante (calculado) con rowspan ---
+        // Columna 7: Sobrante (calculado) con rowspan
         const sobranteCell = document.createElement('td');
         sobranteCell.rowSpan = numRows;
         sobranteCell.classList.add('text-center');
-        sobranteCell.innerText = ''; // Se actualizará en función de Long
+        sobranteCell.innerText = '';
         mainRow.appendChild(sobranteCell);
       
-        // --- Columna 8: Proceso (editable) con rowspan ---
+        // Columna 8: Proceso (editable) con rowspan
         const procesoCell = document.createElement('td');
         procesoCell.rowSpan = numRows;
         procesoCell.contentEditable = true;
@@ -656,14 +660,14 @@ document.addEventListener('DOMContentLoaded', () => {
         procesoCell.innerText = cajaSelect.value || '';
         mainRow.appendChild(procesoCell);
       
-        // --- Columna 9: Total Sobrante Futuro (calculado) con rowspan ---
+        // Columna 9: TOTAL Sobrante Futuro (calculado) con rowspan
         const totalSobranteFCell = document.createElement('td');
         totalSobranteFCell.rowSpan = numRows;
         totalSobranteFCell.classList.add('text-center');
-        totalSobranteFCell.innerText = ''; // Se actualizará según el valor de "# Cajas"
+        totalSobranteFCell.innerText = '';
         mainRow.appendChild(totalSobranteFCell);
       
-        // --- Columna 10: Acciones (botón eliminar grupo) con rowspan ---
+        // Columna 10: Acciones (botón eliminar grupo) con rowspan
         const accionesCell = document.createElement('td');
         accionesCell.rowSpan = numRows;
         accionesCell.classList.add('text-center');
@@ -683,12 +687,12 @@ document.addEventListener('DOMContentLoaded', () => {
         mainRow.appendChild(accionesCell);
       
         // --- Eventos en la fila principal ---
+        // Por ejemplo, si cambias Tipo de Ramo, actualizas Total Empaque (o lo que requiera cálculo)
         tipoSelect.addEventListener('change', () => {
           totalEmpaqueCell.innerText = tipoSelect.value;
           saveEmpaqueGroupData();
         });
         longCell.addEventListener('input', () => {
-          // Puedes actualizar el sobrante en la fila principal o calcularlo en función de otros datos
           sobranteCell.innerText = longCell.innerText;
           saveEmpaqueGroupData();
         });
@@ -700,24 +704,26 @@ document.addEventListener('DOMContentLoaded', () => {
           totalSobranteFCell.innerText = numCajasCell.innerText;
           saveEmpaqueGroupData();
         });
+        // totalUNDCell se actualiza desde código (por ejemplo, con un cálculo); no es editable.
       
-        // --- Creación de las Subfilas ---
-        // En estas subfilas se crean las celdas para los campos que no tienen rowspan, en este caso:
-        // * Long (editable)
-        // * Caja (select)
-        // * # Cajas (editable)
+        // --- Creación de las subfilas para completar el grupo (filas 2 y 3) ---
         for (let i = 1; i < numRows; i++) {
           const subRow = empaqueTableBody.insertRow();
           subRow.setAttribute('data-group-id', groupId);
       
-          // Columna 3: Long (editable) para cada subfila
+          // Columna: Tipo de Ramo (select) SIN rowspan, se crea en cada subfila
+          let subTipoCell = document.createElement('td');
+          const subTipoSelect = createTJRegSelect();
+          subTipoCell.appendChild(subTipoSelect);
+          subRow.appendChild(subTipoCell);
+      
+          // Columna: Long (editable)
           let subLongCell = document.createElement('td');
           subLongCell.contentEditable = true;
-          // Podrías sincronizar con la fila principal o dejarlo independiente
           subLongCell.innerText = '';
           subRow.appendChild(subLongCell);
       
-          // Columna 4: Caja
+          // Columna: Caja (select)
           let subCajaCell = document.createElement('td');
           const subCajaSelect = document.createElement('select');
           subCajaSelect.classList.add('form-select', 'form-select-sm');
@@ -730,15 +736,25 @@ document.addEventListener('DOMContentLoaded', () => {
           subCajaCell.appendChild(subCajaSelect);
           subRow.appendChild(subCajaCell);
       
-          // Columna 5: # Cajas
+          // Columna: # Cajas (editable)
           let subNumCajasCell = document.createElement('td');
           subNumCajasCell.contentEditable = true;
           subNumCajasCell.innerText = '';
           subRow.appendChild(subNumCajasCell);
       
-          // Eventos en los campos de la subfila (opcional)
+          // NUEVA Columna: Total UND (NO editable)
+          let subTotalUNDCell = document.createElement('td');
+          subTotalUNDCell.innerText = '';
+          subRow.appendChild(subTotalUNDCell);
+      
+          // Los siguientes campos (Total Empaque, Sobrante, Proceso, TOTAL Sobrante Futuro y Acciones)
+          // ya se muestran en la fila principal (mediante rowspan), por lo que no se generan aquí.
+      
+          // Eventos en la subfila (opcional)
+          subTipoSelect.addEventListener('change', () => {
+            saveEmpaqueGroupData();
+          });
           subLongCell.addEventListener('input', () => {
-            // Si deseas sincronizar la celda de "Long" entre filas o realizar cálculos:
             saveEmpaqueGroupData();
           });
           subCajaSelect.addEventListener('change', () => {
@@ -753,9 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showAlert('Grupo de Empaque agregado correctamente.', 'success');
     }
       
-      
-      
-      
+        
     // =====================
     // Función para guardar datos del grupo de Empaque
     // =====================
