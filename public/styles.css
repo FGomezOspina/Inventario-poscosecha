@@ -1,7 +1,9 @@
 /* styles.css */
 
-/* Estilos generales para el menú lateral */
-#sidebarMenu {
+/* ============================
+   Estilos generales para el menú lateral
+   ============================ */
+   #sidebarMenu {
     position: fixed;
     top: 0;
     left: 0;
@@ -36,7 +38,9 @@
     font-size: 0.9rem; /* Reducido el tamaño de la fuente */
 }
 
-/* Ajustar el contenido principal */
+/* ============================
+   Ajustar el contenido principal
+   ============================ */
 .main-content {
     margin-left: 180px; /* Ajustado al nuevo ancho del sidebar */
     transition: all 0.3s ease;
@@ -44,7 +48,9 @@
     z-index: 1;
 }
 
-/* Estilos para el botón de toggle */
+/* ============================
+   Estilos para el botón de toggle
+   ============================ */
 .toggle-btn {
     display: none;
     position: fixed;
@@ -78,7 +84,9 @@
     }
 }
 
-/* Estilos para la tabla */
+/* ============================
+   Estilos para la tabla Inventario (#dataTable)
+   ============================ */
 .table-responsive {
     overflow: auto;
     max-height: 60vh; /* Reducido para un diseño más compacto */
@@ -104,7 +112,7 @@
     overflow: hidden;
 }
 
-/* Ajustar el ancho de las columnas */
+/* Ajustar el ancho de las columnas en la tabla Inventario */
 #dataTable th, 
 #dataTable td {
     padding: 4px; /* Reducido de 8px a 4px */
@@ -114,7 +122,7 @@
     border: 1px solid black; /* Asegura que los bordes sean consistentes */
 }
 
-/* Ajustes específicos para cada columna */
+/* Ajustes específicos para cada columna Inventario */
 .col-variety {
     width: 180px; /* Más ancho para ver el contenido */
     min-width: 160px;
@@ -159,41 +167,43 @@
     max-width: 60px;
 }
 
-/* Colores para las columnas P */
+/* Colores para las columnas P en Inventario */
 td[data-col^="P"],
 th[data-col^="P"] {
     background-color: #D9E1F2;
     border: 1px solid black !important;
 }
 
-/* Colores para las columnas R */
+/* Colores para las columnas R en Inventario */
 td[data-col^="R"],
 th[data-col^="R"] {
     background-color: #FCE4D6;
     border: 1px solid black !important;
 }
 
-/* Colores para la columna 'Long' */
+/* Colores para la columna 'Long' en Inventario */
 td[data-col="Long"],
 th[data-col="Long"] {
     background-color: #FFFFCC;
     border: 1px solid black !important;
 }
 
-/* Colores para la columna 'Batch' */
+/* Colores para la columna 'Batch' en Inventario */
 td[data-col="Batch"],
 th[data-col="Batch"] {
     background-color: #FFFFCC;
     border: 1px solid black !important;
 }
 
-/* Bordes negros para todas las celdas */
+/* Bordes negros para todas las celdas Inventario */
 .table-bordered th,
 .table-bordered td {
     border: 1px solid black !important;
 }
 
-/* Estilos para el botón de eliminar grupo */
+/* ============================
+   Estilos para el botón de eliminar grupo
+   ============================ */
 .delete-btn {
     background: none;
     border: none;
@@ -210,23 +220,29 @@ th[data-col="Batch"] {
     color: #a71d2a;
 }
 
-/* Resaltar la celda enfocada */
+/* ============================
+   Resaltar la celda enfocada
+   ============================ */
 .editable:focus {
     outline: 2px solid #0d6efd;
 }
 
-/* Ajustar los inputs de tipo date */
+/* ============================
+   Ajustar los inputs de tipo date
+   ============================ */
 td[data-col="Fecha"] input[type="date"],
 th[data-col="Fecha"] {
-    width: 100%; /* Ocupa todo el ancho de la celda */
-    box-sizing: border-box; /* Incluye padding y border en el cálculo del ancho */
-    font-size: 12px; /* Tamaño de fuente reducido */
-    padding: 2px; /* Padding reducido */
-    border: 1px solid #ced4da; /* Borde consistente */
-    border-radius: 4px; /* Bordes redondeados */
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 12px;
+    padding: 2px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
 }
 
-/* Alternar colores de filas */
+/* ============================
+   Alternar colores de filas en Inventario
+   ============================ */
 #dataTable tbody tr:nth-child(odd) {
     background-color: #f9f9f9;
 }
@@ -235,30 +251,30 @@ th[data-col="Fecha"] {
     background-color: #ffffff;
 }
 
-/* Estilos dinámicos para pantallas pequeñas */
+/* ============================
+   Estilos dinámicos para pantallas pequeñas Inventario
+   ============================ */
 @media (max-width: 768px) {
     #dataTable {
-        font-size: 10px; /* Reducir tamaño de la fuente */
+        font-size: 10px;
     }
 
     #dataTable th, 
     #dataTable td {
-        padding: 2px; /* Reducir el padding */
-        font-size: 10px; /* Ajustar el tamaño de la fuente */
+        padding: 2px;
+        font-size: 10px;
     }
 
-    /* Asegurar que "Acciones" y "Notas" sean visibles */
     .col-acciones,
     td[data-col="Acciones"],
     th[data-col="Acciones"],
     .col-notas,
     td[data-col="Notas"],
     th[data-col="Notas"] {
-        display: table-cell; /* Asegura visibilidad */
-        white-space: normal; /* Permitir saltos de línea */
+        display: table-cell;
+        white-space: normal;
     }
 
-    /* Ajustar botones en "Acciones" */
     .delete-btn {
         width: 24px;
         height: 24px;
@@ -269,7 +285,6 @@ th[data-col="Fecha"] {
 /* ============================
    Estilos para las Tablas Resumidas
    ============================ */
-
 #summaryTables {
     margin-top: 30px;
 }
@@ -277,17 +292,17 @@ th[data-col="Fecha"] {
 #summaryTables h3 {
     margin-bottom: 20px;
     text-align: center;
-    color: #0d6efd; /* Azul principal para destacar el título */
+    color: #0d6efd;
 }
 
 #summaryTables h4 {
     margin-bottom: 10px;
-    color: #0d6efd; /* Azul principal para los subtítulos */
+    color: #0d6efd;
 }
 
 #summaryTables .table-responsive {
     overflow: auto;
-    max-height: 50vh; /* Ajusta según tus necesidades */
+    max-height: 50vh;
     margin-bottom: 20px;
 }
 
@@ -298,35 +313,36 @@ th[data-col="Fecha"] {
 
 #summaryTables table th,
 #summaryTables table td {
-    font-size: 12px; /* Tamaño de fuente para las tablas resumidas */
+    font-size: 12px;
     padding: 8px;
     text-align: center;
     border: 1px solid #dee2e6;
 }
 
 #summaryTables table th {
-    background-color: #e9ecef; /* Fondo de encabezados */
+    background-color: #e9ecef;
     font-weight: bold;
 }
 
 #summaryTables table tbody tr:nth-child(even) {
-    background-color: #f2f2f2; /* Filas pares con fondo gris claro */
+    background-color: #f2f2f2;
 }
 
 #summaryTables table tbody tr:hover {
-    background-color: #e2e6ea; /* Fondo al pasar el cursor */
+    background-color: #e2e6ea;
 }
 
-/* Estilos específicos para las tablas individuales */
+/* ============================
+   Estilos específicos para cada tabla resumen
+   ============================ */
 
 /* Tabla Por Longitud */
 #summaryByLength th,
 #summaryByLength td {
     background-color: #ffffff;
 }
-
 #summaryByLength th {
-    background-color: #e9ecef; /* Fondo para encabezados */
+    background-color: #e9ecef;
 }
 
 /* Tabla Por Tipo de Ramo */
@@ -334,9 +350,8 @@ th[data-col="Fecha"] {
 #summaryByBouquetType td {
     background-color: #ffffff;
 }
-
 #summaryByBouquetType th {
-    background-color: #e9ecef; /* Fondo para encabezados */
+    background-color: #e9ecef;
 }
 
 /* Tabla Por Batch */
@@ -344,12 +359,11 @@ th[data-col="Fecha"] {
 #summaryByBatch td {
     background-color: #ffffff;
 }
-
 #summaryByBatch th {
-    background-color: #e9ecef; /* Fondo para encabezados */
+    background-color: #e9ecef;
 }
 
-/* Responsividad Adicional para Tablas Resumidas */
+/* Responsividad para tablas resumen */
 @media (max-width: 768px) {
     #summaryTables table th,
     #summaryTables table td {
@@ -357,7 +371,6 @@ th[data-col="Fecha"] {
         padding: 4px;
     }
 
-    /* Ajustar el tamaño de los títulos */
     #summaryTables h3 {
         font-size: 1.2em;
     }
@@ -367,35 +380,33 @@ th[data-col="Fecha"] {
     }
 }
 
-/* Resaltar celdas enfocadas en las tablas resumidas */
+/* Resaltar celdas en tablas resumen */
 #summaryTables table td:focus {
     outline: none;
     border: 2px solid #0d6efd;
     background-color: #e7f1ff;
 }
 
-/* Estilos para las celdas de "Bunches/Procona" y "Bunches Total" en las tablas resumidas */
+/* Celdas específicas en tablas resumen */
 #summaryTables #summaryByBouquetType th:nth-child(4),
 #summaryTables #summaryByBouquetType td:nth-child(4),
 #summaryTables #summaryByBatch th:nth-child(2),
 #summaryTables #summaryByBatch td:nth-child(2) {
-    background-color: #FFEFD5; /* Beige claro */
+    background-color: #FFEFD5;
 }
 
-/* Estilos para las celdas de "Stems" en las tablas resumidas */
 #summaryTables #summaryByLength th:nth-child(3),
 #summaryTables #summaryByLength td:nth-child(3),
 #summaryTables #summaryByBouquetType th:nth-child(5),
 #summaryTables #summaryByBouquetType td:nth-child(5),
 #summaryTables #summaryByBatch th:nth-child(4),
 #summaryTables #summaryByBatch td:nth-child(4) {
-    background-color: #E0FFFF; /* Aqua claro */
+    background-color: #E0FFFF;
 }
 
 /* ============================
-   Gran Total (.grand-total-container)
+   Gran Total
    ============================ */
-
 .grand-total-container {
     margin-top: 20px;
     font-size: 1.2em;
@@ -405,8 +416,6 @@ th[data-col="Fecha"] {
 /* ============================
    Mejoras Adicionales
    ============================ */
-
-/* Resaltar celdas enfocadas */
 #dataTable td:focus,
 #summaryTables table td:focus {
     outline: none;
@@ -414,18 +423,16 @@ th[data-col="Fecha"] {
     background-color: #e7f1ff;
 }
 
-/* Estilos para inputs de tipo date */
 #dataTable td[data-col="Fecha"] input[type="date"],
 th[data-col="Fecha"] {
-    width: 100%; /* Ocupa todo el ancho de la celda */
-    box-sizing: border-box; /* Incluye padding y border en el cálculo del ancho */
-    font-size: 12px; /* Tamaño de fuente reducido */
-    padding: 2px; /* Padding reducido */
-    border: 1px solid #ced4da; /* Borde consistente */
-    border-radius: 4px; /* Bordes redondeados */
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 12px;
+    padding: 2px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
 }
 
-/* Alternar colores de filas */
 #dataTable tbody tr:nth-child(odd) {
     background-color: #f9f9f9;
 }
@@ -434,27 +441,30 @@ th[data-col="Fecha"] {
     background-color: #ffffff;
 }
 
-/* Estilos dinámicos para pantallas pequeñas */
-@media (max-width: 576px) {
-    /* Ocultar columnas menos importantes en la tabla principal en pantallas muy pequeñas */
-    .col-notas,
-    td[data-col="Notas"],
-    th[data-col="Notas"],
-    .col-acciones,
-    td[data-col="Acciones"],
-    th[data-col="Acciones"] {
-        display: none;
-    }
+/* ============================
+   Estilos para la Tabla de Empaque
+   ============================ */
+#empaqueTable {
+    width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
 }
 
-/* Al final de styles.css */
+#empaqueTable th,
+#empaqueTable td {
+    padding: 4px;
+    font-size: 12px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid black;
+}
 
-/* Colores por variedad (ejemplo) */
-.var-artist   td { background-color: #ffe5e5; }
-.var-bizarre  td { background-color: #e5ffe5; }
-.var-caya     td { background-color: #e5f7ff; }
-.var-june     td { background-color: #fff5e5; }
-.var-navy     td { background-color: #e5e5ff; }
-.var-roswitha td { background-color: #ffe5f7; }
+/* Asegura que las celdas con rowspan se centren */
+#empaqueTable td[rowspan] {
+    text-align: center;
+    vertical-align: middle;
+}
 
-/* y así sucesivamente, o haz un color distinto para cada "tipo" de variedad */
+/* ============================
+   Fin del archivo styles.css
+   ============================ */

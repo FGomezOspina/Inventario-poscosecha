@@ -585,91 +585,306 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
-    function addEmpaqueRow() {
+    function addGroupEmpaque() {
         const empaqueTableBody = document.querySelector('#empaqueTable tbody');
-        const row = empaqueTableBody.insertRow();
-    
-        // 1. Variety
-        const varietyCell = row.insertCell();
+        const groupId = Date.now().toString(); // ID único para el grupo
+        const numRows = 3; // Grupo de 3 filas
+      
+        // --- Fila principal ---
+        const mainRow = empaqueTableBody.insertRow();
+        mainRow.setAttribute('data-group-id', groupId);
+        
+        // Columna 1: Variety (select) con rowspan para que aparezca solo una vez
+        const varietyCell = document.createElement('td');
+        varietyCell.rowSpan = numRows;
         const varietySelect = createVarietySelect();
         varietyCell.appendChild(varietySelect);
-    
-        // 2. Tipo de Ramo
-        const tipoCell = row.insertCell();
-        const tipoSelect = createTJRegSelect(); 
+        mainRow.appendChild(varietyCell);
+      
+        // Columna 2: Tipo de Ramo (select) con rowspan
+        const tipoCell = document.createElement('td');
+        tipoCell.rowSpan = numRows;
+        const tipoSelect = createTJRegSelect(); // Si requieres otro select para "Tipo", cámbialo aquí
         tipoCell.appendChild(tipoSelect);
-    
-        // 3. Long (celda editable)
-        const longCell = row.insertCell();
+        mainRow.appendChild(tipoCell);
+      
+        // Columna 3: Long (editable) SIN rowspan, aparece en cada fila  
+        let longCell = document.createElement('td');
         longCell.contentEditable = true;
-        longCell.classList.add('editable');
-        longCell.setAttribute('data-col', 'Long');
-    
-        // 4. Caja (select con 3 opciones)
-        const cajaCell = row.insertCell();
+        longCell.innerText = ''; // Valor inicial (podrías asignar un valor por defecto)
+        mainRow.appendChild(longCell);
+      
+        // --- Columna 4: Caja ---
+        // Se crea en cada fila para que el usuario pueda seleccionarla en cada registro
+        let cajaCell = document.createElement('td');
         const cajaSelect = document.createElement('select');
         cajaSelect.classList.add('form-select', 'form-select-sm');
-        ["HB", "QB", "EB"].forEach(optionValue => {
-            const opt = document.createElement('option');
-            opt.value = optionValue;
-            opt.text = optionValue;
-            cajaSelect.appendChild(opt);
+        ["HB", "QB", "EB"].forEach(optVal => {
+          const opt = document.createElement('option');
+          opt.value = optVal;
+          opt.text = optVal;
+          cajaSelect.appendChild(opt);
         });
         cajaCell.appendChild(cajaSelect);
-    
-        // 5. #Cajas
-        const numCajasCell = row.insertCell();
+        mainRow.appendChild(cajaCell);
+      
+        // --- Columna 5: # Cajas ---
+        let numCajasCell = document.createElement('td');
         numCajasCell.contentEditable = true;
-        numCajasCell.classList.add('editable');
-        numCajasCell.setAttribute('data-col', 'NumCajas');
-    
-        // 6. Total Empaque
-        const totalEmpaqueCell = row.insertCell();
-        totalEmpaqueCell.contentEditable = false;
-        totalEmpaqueCell.classList.add('editable'); 
-        totalEmpaqueCell.setAttribute('data-col', 'TotalEmpaque');
-        totalEmpaqueCell.innerText = '0';
-    
-        // 7. Sobrante
-        const sobranteCell = row.insertCell();
-        sobranteCell.contentEditable = true;
-        sobranteCell.classList.add('editable');
-        sobranteCell.setAttribute('data-col', 'Sobrante');
-    
-        // 8. Proceso
-        const procesoCell = row.insertCell();
+        numCajasCell.innerText = '';
+        mainRow.appendChild(numCajasCell);
+      
+        // --- Columna 6: Total Empaque (calculado) con rowspan ---
+        const totalEmpaqueCell = document.createElement('td');
+        totalEmpaqueCell.rowSpan = numRows;
+        totalEmpaqueCell.classList.add('text-center');
+        totalEmpaqueCell.innerText = tipoSelect.value || '';
+        mainRow.appendChild(totalEmpaqueCell);
+      
+        // --- Columna 7: Sobrante (calculado) con rowspan ---
+        const sobranteCell = document.createElement('td');
+        sobranteCell.rowSpan = numRows;
+        sobranteCell.classList.add('text-center');
+        sobranteCell.innerText = ''; // Se actualizará en función de Long
+        mainRow.appendChild(sobranteCell);
+      
+        // --- Columna 8: Proceso (editable) con rowspan ---
+        const procesoCell = document.createElement('td');
+        procesoCell.rowSpan = numRows;
         procesoCell.contentEditable = true;
-        procesoCell.classList.add('editable');
-        procesoCell.setAttribute('data-col', 'Proceso');
-    
-        // 9. TOTAL Sobrante Futuro
-        const totalSobranteFCell = row.insertCell();
-        totalSobranteFCell.contentEditable = false;
-        totalSobranteFCell.classList.add('editable'); 
-        totalSobranteFCell.setAttribute('data-col', 'TotalSobranteFuturo');
-        totalSobranteFCell.innerText = '0';
-    
-        // 10. Botón Eliminar Fila
-        const deleteCell = row.insertCell();
-        deleteCell.classList.add('text-center');
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
-        deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
-        deleteBtn.title = 'Eliminar fila de Empaque';
-        deleteBtn.addEventListener('click', () => {
-            removeEmpaqueRow(row);
+        procesoCell.classList.add('text-center');
+        procesoCell.innerText = cajaSelect.value || '';
+        mainRow.appendChild(procesoCell);
+      
+        // --- Columna 9: Total Sobrante Futuro (calculado) con rowspan ---
+        const totalSobranteFCell = document.createElement('td');
+        totalSobranteFCell.rowSpan = numRows;
+        totalSobranteFCell.classList.add('text-center');
+        totalSobranteFCell.innerText = ''; // Se actualizará según el valor de "# Cajas"
+        mainRow.appendChild(totalSobranteFCell);
+      
+        // --- Columna 10: Acciones (botón eliminar grupo) con rowspan ---
+        const accionesCell = document.createElement('td');
+        accionesCell.rowSpan = numRows;
+        accionesCell.classList.add('text-center');
+        const deleteGroupBtn = document.createElement('button');
+        deleteGroupBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        deleteGroupBtn.classList.add('delete-btn');
+        deleteGroupBtn.title = 'Eliminar grupo de Empaque';
+        deleteGroupBtn.addEventListener('click', () => {
+          if (confirm('¿Está seguro de eliminar este grupo de empaque?')) {
+            const rowsToDelete = empaqueTableBody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+            rowsToDelete.forEach(row => row.remove());
+            saveEmpaqueGroupData();
+            showAlert('Grupo de Empaque eliminado.', 'warning');
+          }
         });
-        deleteCell.appendChild(deleteBtn);
-    
-        // Escuchar eventos para recalcular (#Cajas, Sobrante, etc.)
-        row.addEventListener('input', () => {
-            calculateEmpaqueRow(row);
-            saveEmpaqueTableData();
+        accionesCell.appendChild(deleteGroupBtn);
+        mainRow.appendChild(accionesCell);
+      
+        // --- Eventos en la fila principal ---
+        tipoSelect.addEventListener('change', () => {
+          totalEmpaqueCell.innerText = tipoSelect.value;
+          saveEmpaqueGroupData();
         });
-    
-        // Guardar tras agregar la nueva fila
-        saveEmpaqueTableData();
+        longCell.addEventListener('input', () => {
+          // Puedes actualizar el sobrante en la fila principal o calcularlo en función de otros datos
+          sobranteCell.innerText = longCell.innerText;
+          saveEmpaqueGroupData();
+        });
+        cajaSelect.addEventListener('change', () => {
+          procesoCell.innerText = cajaSelect.value;
+          saveEmpaqueGroupData();
+        });
+        numCajasCell.addEventListener('input', () => {
+          totalSobranteFCell.innerText = numCajasCell.innerText;
+          saveEmpaqueGroupData();
+        });
+      
+        // --- Creación de las Subfilas ---
+        // En estas subfilas se crean las celdas para los campos que no tienen rowspan, en este caso:
+        // * Long (editable)
+        // * Caja (select)
+        // * # Cajas (editable)
+        for (let i = 1; i < numRows; i++) {
+          const subRow = empaqueTableBody.insertRow();
+          subRow.setAttribute('data-group-id', groupId);
+      
+          // Columna 3: Long (editable) para cada subfila
+          let subLongCell = document.createElement('td');
+          subLongCell.contentEditable = true;
+          // Podrías sincronizar con la fila principal o dejarlo independiente
+          subLongCell.innerText = '';
+          subRow.appendChild(subLongCell);
+      
+          // Columna 4: Caja
+          let subCajaCell = document.createElement('td');
+          const subCajaSelect = document.createElement('select');
+          subCajaSelect.classList.add('form-select', 'form-select-sm');
+          ["HB", "QB", "EB"].forEach(optVal => {
+            const opt = document.createElement('option');
+            opt.value = optVal;
+            opt.text = optVal;
+            subCajaSelect.appendChild(opt);
+          });
+          subCajaCell.appendChild(subCajaSelect);
+          subRow.appendChild(subCajaCell);
+      
+          // Columna 5: # Cajas
+          let subNumCajasCell = document.createElement('td');
+          subNumCajasCell.contentEditable = true;
+          subNumCajasCell.innerText = '';
+          subRow.appendChild(subNumCajasCell);
+      
+          // Eventos en los campos de la subfila (opcional)
+          subLongCell.addEventListener('input', () => {
+            // Si deseas sincronizar la celda de "Long" entre filas o realizar cálculos:
+            saveEmpaqueGroupData();
+          });
+          subCajaSelect.addEventListener('change', () => {
+            saveEmpaqueGroupData();
+          });
+          subNumCajasCell.addEventListener('input', () => {
+            saveEmpaqueGroupData();
+          });
+        }
+      
+        saveEmpaqueGroupData();
+        showAlert('Grupo de Empaque agregado correctamente.', 'success');
     }
+      
+      
+      
+      
+    // =====================
+    // Función para guardar datos del grupo de Empaque
+    // =====================
+    function saveEmpaqueGroupData() {
+        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+        const groups = {};
+      
+        Array.from(empaqueTableBody.rows).forEach(row => {
+          const groupId = row.getAttribute('data-group-id');
+          if (!groupId) return;
+          groups[groupId] = {
+            variety: row.cells[0].querySelector('select').value,
+            tipoRamo: row.cells[1].querySelector('select').value,
+            long: row.cells[2].innerText.trim(),
+            caja: row.cells[3].querySelector('select').value,
+            numCajas: row.cells[4].innerText.trim(),
+            totalEmpaque: row.cells[5].innerText.trim(),
+            sobrante: row.cells[6].innerText.trim(),
+            proceso: row.cells[7].innerText.trim(),
+            totalSobranteFuturo: row.cells[8].innerText.trim()
+          };
+        });
+        
+        localStorage.setItem('empaqueData', JSON.stringify(groups));
+    }
+      
+    // =====================
+    // Función para cargar la tabla de Empaque desde localStorage (opcional)
+    // =====================
+    function loadEmpaqueTableData() {
+        const data = JSON.parse(localStorage.getItem('empaqueData')) || {};
+        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+        empaqueTableBody.innerHTML = '';
+        
+        Object.keys(data).forEach(groupId => {
+          const group = data[groupId];
+          const row = empaqueTableBody.insertRow();
+          row.setAttribute('data-group-id', groupId);
+          
+          // Col 1: Variety
+          const varietyCell = document.createElement('td');
+          varietyCell.rowSpan = 1;
+          varietyCell.classList.add('editable');
+          const varietySelect = createVarietySelect(group.variety);
+          varietyCell.appendChild(varietySelect);
+          row.appendChild(varietyCell);
+          
+          // Col 2: Tipo de Ramo
+          const tipoCell = document.createElement('td');
+          const tipoSelect = createTJRegSelect(group.tipoRamo);
+          tipoCell.appendChild(tipoSelect);
+          row.appendChild(tipoCell);
+          
+          // Col 3: Long
+          const longCell = document.createElement('td');
+          longCell.contentEditable = true;
+          longCell.setAttribute('data-col', 'Long');
+          longCell.innerText = group.long;
+          row.appendChild(longCell);
+          
+          // Col 4: Caja
+          const cajaCell = document.createElement('td');
+          const cajaSelect = document.createElement('select');
+          cajaSelect.classList.add('form-select', 'form-select-sm');
+          ["HB", "QB", "EB"].forEach(optVal => {
+            const opt = document.createElement('option');
+            opt.value = optVal;
+            opt.text = optVal;
+            if (group.caja === optVal) opt.selected = true;
+            cajaSelect.appendChild(opt);
+          });
+          cajaCell.appendChild(cajaSelect);
+          row.appendChild(cajaCell);
+          
+          // Col 5: # Cajas
+          const numCajasCell = document.createElement('td');
+          numCajasCell.contentEditable = true;
+          numCajasCell.setAttribute('data-col', 'NumCajas');
+          numCajasCell.innerText = group.numCajas;
+          row.appendChild(numCajasCell);
+          
+          // Col 6: Total Empaque
+          const totalEmpaqueCell = document.createElement('td');
+          totalEmpaqueCell.setAttribute('data-col', 'Total Empaque');
+          totalEmpaqueCell.classList.add('text-center');
+          totalEmpaqueCell.innerText = group.tipoRamo;  // valor del Tipo de Ramo
+          row.appendChild(totalEmpaqueCell);
+          
+          // Col 7: Sobrante
+          const sobranteCell = document.createElement('td');
+          sobranteCell.setAttribute('data-col', 'Sobrante');
+          sobranteCell.classList.add('text-center');
+          sobranteCell.innerText = group.long;  // valor de Long
+          row.appendChild(sobranteCell);
+          
+          // Col 8: Proceso
+          const procesoCell = document.createElement('td');
+          procesoCell.contentEditable = true;
+          procesoCell.setAttribute('data-col', 'Proceso');
+          procesoCell.classList.add('text-center');
+          procesoCell.innerText = group.caja;  // valor de Caja
+          row.appendChild(procesoCell);
+          
+          // Col 9: Total Sobrante Futuro
+          const totalSobranteFCell = document.createElement('td');
+          totalSobranteFCell.setAttribute('data-col', 'Total Sobrante Futuro');
+          totalSobranteFCell.classList.add('text-center');
+          totalSobranteFCell.innerText = group.numCajas;  // valor de # Cajas
+          row.appendChild(totalSobranteFCell);
+          
+          // Col 10: Acciones
+          const accionesCell = document.createElement('td');
+          accionesCell.classList.add('text-center');
+          const deleteGroupBtn = document.createElement('button');
+          deleteGroupBtn.innerHTML = '<i class="fa fa-trash"></i>';
+          deleteGroupBtn.classList.add('delete-btn');
+          deleteGroupBtn.title = 'Eliminar grupo de Empaque';
+          deleteGroupBtn.addEventListener('click', () => {
+            if (confirm('¿Está seguro de eliminar este grupo de empaque?')) {
+              row.remove();
+              saveEmpaqueGroupData();
+              showAlert('Grupo de Empaque eliminado.', 'warning');
+            }
+          });
+          accionesCell.appendChild(deleteGroupBtn);
+          row.appendChild(accionesCell);
+        });
+    }
+      
 
     function removeEmpaqueRow(row) {
         row.remove();
@@ -680,9 +895,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const addEmpaqueRowBtn = document.getElementById('addEmpaqueRowBtn');
     if (addEmpaqueRowBtn) {
         addEmpaqueRowBtn.addEventListener('click', () => {
-            addEmpaqueRow();
+            addGroupEmpaque();
         });
     }
+
 
     // Función addExtraRows CORREGIDA
     function addExtraRows(groupId, extraCount, isHypericum = true) {
@@ -1164,101 +1380,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('empaqueData', JSON.stringify(empaqueData));
     }
     
-    function loadEmpaqueTableData() {
-        const data = JSON.parse(localStorage.getItem('empaqueData')) || [];
-        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
-        empaqueTableBody.innerHTML = '';
     
-        data.forEach((item) => {
-            const row = empaqueTableBody.insertRow();
-    
-            // 1. Variety
-            const varietyCell = row.insertCell();
-            const varietySelect = createVarietySelect(item.variety);
-            varietyCell.appendChild(varietySelect);
-    
-            // 2. Tipo
-            const tipoCell = row.insertCell();
-            const tipoSelect = createTJRegSelect(item.tipo);
-            tipoCell.appendChild(tipoSelect);
-    
-            // 3. Long
-            const longCell = row.insertCell();
-            longCell.contentEditable = true;
-            longCell.classList.add('editable');
-            longCell.setAttribute('data-col', 'Long');
-            longCell.innerText = item.long;
-    
-            // 4. Caja
-            const cajaCell = row.insertCell();
-            const cajaSelect = document.createElement('select');
-            cajaSelect.classList.add('form-select', 'form-select-sm');
-            ["HB", "QB", "EB"].forEach(optionValue => {
-                const opt = document.createElement('option');
-                opt.value = optionValue;
-                opt.text = optionValue;
-                if (optionValue === item.caja) {
-                    opt.selected = true;
-                }
-                cajaSelect.appendChild(opt);
-            });
-            cajaCell.appendChild(cajaSelect);
-    
-            // 5. #Cajas
-            const numCajasCell = row.insertCell();
-            numCajasCell.contentEditable = true;
-            numCajasCell.classList.add('editable');
-            numCajasCell.setAttribute('data-col', 'NumCajas');
-            numCajasCell.innerText = item.numCajas;
-    
-            // 6. Total Empaque
-            const totalEmpaqueCell = row.insertCell();
-            totalEmpaqueCell.contentEditable = false;
-            totalEmpaqueCell.classList.add('editable');
-            totalEmpaqueCell.setAttribute('data-col', 'TotalEmpaque');
-            totalEmpaqueCell.innerText = item.totalEmpaque || '0';
-    
-            // 7. Sobrante
-            const sobranteCell = row.insertCell();
-            sobranteCell.contentEditable = true;
-            sobranteCell.classList.add('editable');
-            sobranteCell.setAttribute('data-col', 'Sobrante');
-            sobranteCell.innerText = item.sobrante;
-    
-            // 8. Proceso
-            const procesoCell = row.insertCell();
-            procesoCell.contentEditable = true;
-            procesoCell.classList.add('editable');
-            procesoCell.setAttribute('data-col', 'Proceso');
-            procesoCell.innerText = item.proceso;
-    
-            // 9. TOTAL Sobrante Futuro
-            const totalSobranteFCell = row.insertCell();
-            totalSobranteFCell.contentEditable = false;
-            totalSobranteFCell.classList.add('editable');
-            totalSobranteFCell.setAttribute('data-col', 'TotalSobranteFuturo');
-            totalSobranteFCell.innerText = item.totalSobranteFuturo || '0';
-            
-            // 10. Botón Eliminar
-            const deleteCell = row.insertCell();
-            deleteCell.classList.add('text-center');
-            const deleteBtn = document.createElement('button');
-            deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
-            deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
-            deleteBtn.title = 'Eliminar fila de Empaque';
-            deleteBtn.addEventListener('click', () => {
-                removeEmpaqueRow(row);
-            });
-            deleteCell.appendChild(deleteBtn);
-
-            row.addEventListener('input', () => {
-                calculateEmpaqueRow(row);
-                saveEmpaqueTableData();
-            });
-    
-            calculateEmpaqueRow(row);
-        });
-    }
+      
 
     // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
