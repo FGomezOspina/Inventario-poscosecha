@@ -53,8 +53,8 @@ app.post('/send-email', upload.single('file'), (req, res) => {
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: 'fabio.gomez@fli.com.co',
+      pass: 'lgepmrsgvwqhihsk'
     }
   });
 
