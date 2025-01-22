@@ -2457,6 +2457,118 @@ document.addEventListener('DOMContentLoaded', () => {
     return blocks;
     }
 
+    function extractInventarioData() {
+        const table = document.getElementById('dataTable');
+        if (!table) return [];
+      
+        const rows = table.querySelectorAll('tbody tr');
+        const result = [];
+      
+        rows.forEach(row => {
+          const groupId = row.getAttribute('data-group-id');
+          if (!groupId) return;
+      
+          // Se detecta si es la fila principal o una sub-fila
+          const isMainRow = row.cells[0]?.getAttribute('data-col') === 'Variety';
+          
+          // Obtenemos variety y tipo desde la fila principal
+          // (se hallan en la primera fila del grupo)
+          let variety = "";
+          let tipo = "";
+          if (isMainRow) {
+            variety = row.cells[0]?.querySelector('select')?.value || '';
+            tipo    = row.querySelector('td[data-col="Tipo"]')?.innerText.trim() || '';
+          } else {
+            // La sub-fila no las tiene a la vista, así que buscamos
+            // la fila principal de este grupo
+            const mainRow = document.querySelector(`tr[data-group-id="${groupId}"]`);
+            if (mainRow) {
+              variety = mainRow.cells[0]?.querySelector('select')?.value || '';
+              tipo    = mainRow.querySelector('td[data-col="Tipo"]')?.innerText.trim() || '';
+            }
+          }
+      
+          // Ahora la celda "Long" sí existe en cada fila (principal o subfila)
+          const long = row.querySelector('td[data-col="Long"]')?.innerText.trim() || '';
+      
+          // Bunches Total
+          const bunchesTotalCell = row.querySelector('td[data-col="Bunches Total"]');
+          const bunchesTotal = bunchesTotalCell ? parseInt(bunchesTotalCell.innerText.trim()) || 0 : 0;
+      
+          // Si variety/tipo/long es válido, lo metemos al array
+          if (variety && tipo && long) {
+            result.push({
+              variety: variety,
+              tipoRamo: tipo,
+              long: long,
+              bunchesTotal: bunchesTotal
+            });
+          }
+        });
+      
+        return result;
+    }
+
+    function extractInventarioDataSummarized() {
+        const rawData = extractInventarioData(); // la función anterior
+        const mapKeyed = {};
+      
+        rawData.forEach(item => {
+          const key = `${item.variety.toUpperCase()}_${item.tipoRamo.toUpperCase()}_${item.long}`;
+          if (!mapKeyed[key]) {
+            mapKeyed[key] = {
+              variety: item.variety,
+              tipoRamo: item.tipoRamo,
+              long: item.long,
+              bunchesTotal: 0
+            };
+          }
+          mapKeyed[key].bunchesTotal += item.bunchesTotal;
+        });
+      
+        return Object.values(mapKeyed);
+    }
+      
+      
+    async function saveInventarioDataToFirebase() {
+        const dataArray = extractInventarioDataSummarized();
+        if (!dataArray.length) {
+          showAlert("No hay filas en la tabla de Inventario para guardar.", "warning");
+          return;
+        }
+      
+        try {
+          // Podrías mandar todo en un solo request, o uno por uno.
+          // Aquí, uno por uno:
+          for (const item of dataArray) {
+            const response = await fetch('/api/inventario', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(item)
+            });
+            if (!response.ok) {
+              console.error('Error guardando item inventario:', item);
+            }
+          }
+      
+          showAlert("Datos guardados.", "success");
+        } catch (error) {
+          console.error("Error al guardar inventario en Firebase:", error);
+          showAlert("Error al guardar inventario en Firebase.", "danger");
+        }
+    }
+
+    const saveInventarioFirebaseBtn = document.getElementById('saveInventarioFirebaseBtn');
+    if (saveInventarioFirebaseBtn) {
+    saveInventarioFirebaseBtn.addEventListener('click', () => {
+        saveInventarioDataToFirebase();
+    });
+    }
+
+      
+
 
     // Función para guardar los datos en Firebase sin reconstruir la tabla completa.
     // Si se crea un nuevo documento (sin groupId), se actualiza el atributo data-group-id.
