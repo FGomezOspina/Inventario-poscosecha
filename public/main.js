@@ -2468,39 +2468,46 @@ document.addEventListener('DOMContentLoaded', () => {
           const groupId = row.getAttribute('data-group-id');
           if (!groupId) return;
       
-          // Se detecta si es la fila principal o una sub-fila
+          // Se detecta si es la fila principal o una subfila
           const isMainRow = row.cells[0]?.getAttribute('data-col') === 'Variety';
-          
-          // Obtenemos variety y tipo desde la fila principal
-          // (se hallan en la primera fila del grupo)
+      
           let variety = "";
-          let tipo = "";
+          let tipoRamo = "";  // Aquí guardaremos el valor de "TJ - REG"
+          
           if (isMainRow) {
+            // La primera celda es Variety (que tiene el <select>)
             variety = row.cells[0]?.querySelector('select')?.value || '';
-            tipo    = row.querySelector('td[data-col="Tipo"]')?.innerText.trim() || '';
+      
+            // Buscamos en la misma fila el select de "TJ - REG"
+            const tjRegSelect = row.querySelector('td[data-col="TJ - REG"] select');
+            tipoRamo = tjRegSelect ? tjRegSelect.value : '';
           } else {
-            // La sub-fila no las tiene a la vista, así que buscamos
-            // la fila principal de este grupo
+            // Si es subfila, encontramos la fila principal para Variety y TJ - REG
             const mainRow = document.querySelector(`tr[data-group-id="${groupId}"]`);
             if (mainRow) {
               variety = mainRow.cells[0]?.querySelector('select')?.value || '';
-              tipo    = mainRow.querySelector('td[data-col="Tipo"]')?.innerText.trim() || '';
+      
+              const tjRegSelect = mainRow.querySelector('td[data-col="TJ - REG"] select');
+              tipoRamo = tjRegSelect ? tjRegSelect.value : '';
             }
           }
       
           // Ahora la celda "Long" sí existe en cada fila (principal o subfila)
-          const long = row.querySelector('td[data-col="Long"]')?.innerText.trim() || '';
+          const longCell = row.querySelector('td[data-col="Long"]');
+          const longVal = longCell ? longCell.innerText.trim() : '';
       
           // Bunches Total
           const bunchesTotalCell = row.querySelector('td[data-col="Bunches Total"]');
-          const bunchesTotal = bunchesTotalCell ? parseInt(bunchesTotalCell.innerText.trim()) || 0 : 0;
+          const bunchesTotal = bunchesTotalCell 
+            ? parseInt(bunchesTotalCell.innerText.trim()) || 0 
+            : 0;
       
-          // Si variety/tipo/long es válido, lo metemos al array
-          if (variety && tipo && long) {
+          // Solo empujamos si variety, tipoRamo y long tienen valor
+          if (variety && tipoRamo && longVal) {
             result.push({
               variety: variety,
-              tipoRamo: tipo,
-              long: long,
+              tipoRamo: tipoRamo, // En este campo irá "REG", "TJ", "WS10", "NF", etc.
+              long: longVal,
               bunchesTotal: bunchesTotal
             });
           }
@@ -2508,13 +2515,16 @@ document.addEventListener('DOMContentLoaded', () => {
       
         return result;
     }
+      
 
     function extractInventarioDataSummarized() {
         const rawData = extractInventarioData(); // la función anterior
         const mapKeyed = {};
       
         rawData.forEach(item => {
+          // item.tipoRamo ahora contiene "REG", "TJ", "WS10", "NF", etc.
           const key = `${item.variety.toUpperCase()}_${item.tipoRamo.toUpperCase()}_${item.long}`;
+      
           if (!mapKeyed[key]) {
             mapKeyed[key] = {
               variety: item.variety,
@@ -2528,6 +2538,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
         return Object.values(mapKeyed);
     }
+      
       
       
     async function saveInventarioDataToFirebase() {
