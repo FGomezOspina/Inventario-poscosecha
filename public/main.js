@@ -2732,4 +2732,204 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+    // Botón para actualizar la tabla de Total Disponible en Empaque
+    const updateTableBtn = document.getElementById('updateTableBtn');
+    if (updateTableBtn) {
+        updateTableBtn.addEventListener('click', async () => {
+            console.log('Botón "Actualizar la Tabla" presionado.');
+            await updateTotalDisponible();
+        });
+    } else {
+        console.error('No se encontró el botón con id "updateTableBtn".');
+    }
+
+
+    /**
+     * Función para actualizar la colección "Total Disponible" en Firebase.
+     * Crea o actualiza documentos basados en la variedad, tipo de ramo y longitud.
+     */
+    // Función updateTotalDisponible CORREGIDA
+    // Función actualizada para actualizar Total Disponible
+    // Función updateTotalDisponible CORREGIDA
+    async function updateTotalDisponible() {
+        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+        if (!empaqueTableBody) {
+            showAlert('No se encontró la tabla de Empaque.', 'danger');
+            return;
+        }
+
+        const groups = {}; // Clave: `${variety}_${tipoRamo}_${long}`, Valor: { totalEmpaque, sobranteCell }
+
+        // Iterar sobre cada fila de la tabla de Empaque
+        const rows = empaqueTableBody.querySelectorAll('tr');
+        console.log(`Número de filas encontradas: ${rows.length}`);
+        rows.forEach((row, index) => {
+            // Asegurarse de que la fila tiene suficientes celdas
+            if (row.cells.length < 11) {
+                console.warn(`Fila ${index + 1} tiene menos de 11 celdas. Saltando.`);
+                return;
+            }
+
+            // Acceder a las celdas por índice
+            const varietyCell = row.cells[0];
+            const tipoRamoCell = row.cells[1];
+            const longCell = row.cells[2];
+            const totalEmpaqueCell = row.cells[6];
+            const sobranteCell = row.cells[7]; // Asegurarse de que esta celda existe
+
+            // Verificar que 'sobranteCell' está definido
+            if (!sobranteCell) {
+                console.warn(`Fila ${index + 1} no tiene una celda 'Sobrante'.`);
+                return;
+            }
+
+            // Extraer los valores
+            let variety = '';
+            let tipoRamo = '';
+            let long = '';
+            let totalEmpaque = 0;
+
+            // Obtener el valor de Variety
+            const varietySelect = varietyCell.querySelector('select');
+            if (varietySelect) {
+                variety = varietySelect.value.trim();
+            } else {
+                variety = varietyCell.innerText.trim();
+            }
+
+            // Obtener el valor de TipoRamo
+            const tipoRamoSelect = tipoRamoCell.querySelector('select');
+            if (tipoRamoSelect) {
+                tipoRamo = tipoRamoSelect.value.trim();
+            } else {
+                tipoRamo = tipoRamoCell.innerText.trim();
+            }
+
+            // Obtener el valor de Long
+            const longInput = longCell.querySelector('input');
+            if (longInput) {
+                long = longInput.value.trim();
+            } else {
+                long = longCell.innerText.trim();
+            }
+
+            // Obtener el valor de Total Empaque
+            const totalEmpaqueInput = totalEmpaqueCell.querySelector('input');
+            if (totalEmpaqueInput) {
+                totalEmpaque = parseInt(totalEmpaqueInput.value.trim()) || 0;
+            } else {
+                totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim()) || 0;
+            }
+
+            console.log(`Fila ${index + 1}: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
+
+            if (variety && tipoRamo && long) {
+                const key = `${variety}_${tipoRamo}_${long}`;
+                if (!groups[key]) {
+                    groups[key] = { totalEmpaque: 0, sobranteCell: sobranteCell };
+                }
+                groups[key].totalEmpaque += totalEmpaque;
+            } else {
+                console.warn(`Fila ${index + 1} tiene campos incompletos. Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
+            }
+        });
+
+        // Convertir el objeto groups a un array para procesar cada documento
+        const groupEntries = Object.entries(groups);
+        console.log(`Grupos únicos encontrados: ${groupEntries.length}`);
+        console.log(groups);
+
+        if (groupEntries.length === 0) {
+            showAlert('No se encontraron grupos válidos en la tabla de Empaque.', 'warning');
+            return;
+        }
+
+        // Mostrar el spinner y deshabilitar el botón durante la operación
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        if (loadingSpinner) {
+            loadingSpinner.style.display = 'inline-block';
+        }
+        updateTableBtn.disabled = true;
+        showAlert('Actualizando Total Disponible...', 'info');
+
+        try {
+            // Iterar sobre cada grupo y enviar la información al servidor
+            for (const [key, group] of groupEntries) {
+                const [variety, tipoRamo, long] = key.split('_');
+                const totalEmpaque = group.totalEmpaque;
+                const sobranteCell = group.sobranteCell;
+
+                console.log(`Enviando actualización para: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
+
+                // Validar que totalEmpaque es positivo
+                if (totalEmpaque < 0) {
+                    console.warn(`Total Empaque negativo para ${key}. Saltando actualización.`);
+                    sobranteCell.innerText = '0';
+                    continue;
+                }
+
+                // Preparar el payload para el servidor
+                const payload = {
+                    variety,
+                    tipoRamo,
+                    long,
+                    totalEmpaque
+                };
+
+                // Enviar la solicitud al servidor para crear o actualizar el documento en Firebase
+                const response = await fetch('/api/total-disponible', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log(`Respuesta del servidor para ${key}:`, response);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(`Datos recibidos del servidor para ${key}:`, data);
+                    const sobrante = data.sobrante;
+
+                    // Validar que 'sobrante' está definido y es un número
+                    if (sobrante !== undefined && typeof sobrante === 'number') {
+                        sobranteCell.innerText = sobrante;
+                        console.log(`Calculado sobrante para ${key}: ${sobrante}`);
+                    } else {
+                        sobranteCell.innerText = '0';
+                        console.warn(`Sobrante para ${key} es undefined o no es un número.`);
+                    }
+                } else {
+                    // Manejo de errores
+                    let errorMessage = 'Error desconocido.';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        console.error('Error al parsear la respuesta de error:', e);
+                    }
+                    console.error(`Error en la actualización de Total Disponible para ${variety}, ${tipoRamo}, ${long}:`, errorMessage);
+                    showAlert(`Error al actualizar Total Disponible para ${variety}, ${tipoRamo}, ${long}: ${errorMessage}`, 'danger');
+                }
+            }
+
+            showAlert('Total Disponible actualizado correctamente.', 'success');
+        } catch (error) {
+            console.error('Error en updateTotalDisponible:', error);
+            showAlert('Ocurrió un error al actualizar Total Disponible.', 'danger');
+        } finally {
+            // Ocultar el spinner y habilitar el botón
+            if (loadingSpinner) {
+                loadingSpinner.style.display = 'none';
+            }
+            updateTableBtn.disabled = false;
+        }
+    }
+
+    
+    
+    
+    
+    
 });

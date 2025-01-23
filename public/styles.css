@@ -465,6 +465,17 @@ th[data-col="Fecha"] {
     vertical-align: middle;
 }
 
+/* Asegurar que la columna "Sobrante" esté visible */
+#empaqueTable th:nth-child(7),
+#empaqueTable td:nth-child(7) {
+  display: table-cell;
+  /* Puedes agregar estilos adicionales si lo deseas */
+  background-color: #FFF2CC; /* Color de fondo claro */
+  font-weight: bold;
+  text-align: center;
+}
+
+
 /* ============================
    Fin del archivo styles.css
    ============================ */

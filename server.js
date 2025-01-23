@@ -16,7 +16,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
 // ========== 2. INICIALIZAR FIREBASE ADMIN ==========
 const admin = require('firebase-admin');
 
@@ -36,11 +35,11 @@ try {
 
 // Inicializar Firebase Admin
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://<TU-PROYECTO>.firebaseio.com' // Reemplaza <TU-PROYECTO> con el nombre de tu proyecto
 });
 
 const db = admin.firestore();
-
 
 // ========== 3. ENDPOINTS PRINCIPALES (INVENTARIO, PACKRATE, ETC.) ==========
 
@@ -61,13 +60,13 @@ app.post('/send-email', upload.single('file'), (req, res) => {
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'fabio.gomez@fli.com.co',
-      pass: 'lgepmrsgvwqhihsk'
+      user: 'fabio.gomez@fli.com.co', // Reemplaza con tu correo
+      pass: 'lgepmrsgvwqhihsk'         // Reemplaza con tu contraseña o contraseña de aplicación
     }
   });
 
   let mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: process.env.EMAIL_USER, // Asegúrate de definir EMAIL_USER en tu archivo .env
     to: toEmail,
     subject: 'Inventario',
     text: `Fecha de envío: ${new Date().toLocaleString()}`,
@@ -89,7 +88,6 @@ app.post('/send-email', upload.single('file'), (req, res) => {
     }
   });
 });
-
 
 // ========== 4. ENDPOINTS PARA FIRESTORE: PACKRATE ==========
 
@@ -130,10 +128,9 @@ app.get('/api/packrate', async (req, res) => {
   }
 });
 
+// ========== 5. ENDPOINTS PARA FIRESTORE: INVENTARIO ==========
 
-// ========== 5. ENDPOINT PARA FIRESTORE: INVENTARIO ==========
-
-// Nota: NO se implementa el punto #3 (GET global), por lo tanto solo hacemos POST (upsert).
+// --- 5.1. Crear o actualizar INVENTARIO ---
 app.post('/api/inventario', async (req, res) => {
   try {
     const { variety, tipoRamo, long, bunchesTotal } = req.body;
@@ -161,8 +158,93 @@ app.post('/api/inventario', async (req, res) => {
   }
 });
 
+// --- 6. ENDPOINT PARA FIRESTORE: TOTAL DISPONIBLE ---
+app.post('/api/total-disponible', async (req, res) => {
+  try {
+    console.log('Solicitud POST a /api/total-disponible recibida');
+    console.log('Payload:', req.body);
 
-// ========== 6. CONFIGURAR EL PUERTO Y ARRANCAR EL SERVIDOR ==========
+    const { variety, tipoRamo, long, totalEmpaque } = req.body;
+
+    // Validar campos requeridos
+    if (!variety || !tipoRamo || !long || totalEmpaque === undefined) {
+      console.log('Faltan campos requeridos en la solicitud.');
+      return res.status(400).json({ error: 'Faltan campos requeridos.' });
+    }
+
+    // Validar que totalEmpaque es un número y positivo
+    if (isNaN(totalEmpaque)) {
+      console.log('totalEmpaque no es un número válido.');
+      return res.status(400).json({ error: 'totalEmpaque debe ser un número válido.' });
+    }
+
+    if (Number(totalEmpaque) < 0) {
+      console.log('totalEmpaque no puede ser negativo.');
+      return res.status(400).json({ error: 'totalEmpaque no puede ser negativo.' });
+    }
+
+    // Construir el ID del documento basado en variedad, tipoRamo y longitud
+    const docId = `${variety.toUpperCase()}_${tipoRamo.toUpperCase()}_${long}`;
+
+    const docRef = db.collection('TotalDisponible').doc(docId);
+    const doc = await docRef.get();
+
+    let disponible = 0;
+    if (doc.exists) {
+      disponible = Number(doc.data().disponible);
+      if (isNaN(disponible)) {
+        console.log(`Valor de 'disponible' inválido en el documento ${docId}. Reiniciando a 0.`);
+        disponible = 0;
+      }
+      console.log(`Documento existente: ${docId}. Disponible actual: ${disponible}`);
+    } else {
+      console.log(`Documento no existente: ${docId}. Inicializando disponible a 0.`);
+      // Inicializar documento con 'disponible' = 0
+      await docRef.set({
+        variety,
+        tipoRamo,
+        long,
+        disponible: 0,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // Calcular sobrante y actualizar disponible correctamente
+    let sobrante = 0;
+    if (Number(totalEmpaque) <= Number(disponible)) {
+      sobrante = Number(disponible) - Number(totalEmpaque);
+      disponible = Number(disponible) - Number(totalEmpaque);
+      console.log(`totalEmpaque (${totalEmpaque}) <= disponible (${disponible + Number(totalEmpaque)}). Nuevo Disponible: ${disponible}`);
+    } else {
+      sobrante = 0;
+      disponible = 0;
+      console.log(`totalEmpaque (${totalEmpaque}) > disponible (${disponible}). Sobrante: ${sobrante}. Nuevo Disponible: ${disponible}`);
+    }
+
+    // Asegurar que sobrante es positivo
+    sobrante = Math.max(sobrante, 0);
+
+    console.log(`Sobrante calculado: ${sobrante}`);
+
+    // Actualizar 'disponible' en Firestore
+    await docRef.update({
+      disponible: disponible,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`Disponible para ${docId} actualizado a ${disponible}`);
+    console.log(`Enviando respuesta: { sobrante: ${sobrante} }`);
+    res.status(200).json({ sobrante });
+  } catch (error) {
+    console.error('Error al actualizar Total Disponible:', error);
+    res.status(500).json({ error: 'Error al actualizar Total Disponible.' });
+  }
+});
+
+
+
+// ========== 7. CONFIGURAR EL PUERTO Y ARRANCAR EL SERVIDOR ==========
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor disponible en http://localhost:${PORT} o en http://<TU-IP-LOCAL>:${PORT}`);
