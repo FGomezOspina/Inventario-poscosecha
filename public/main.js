@@ -2744,10 +2744,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+   
+
     /**
      * Función para actualizar el Total Disponible y el Proceso en la tabla de Empaque.
      * Agrupa las filas por Variety, TipoRamo y Long, suma el Total Empaque,
-     * envía los datos al servidor y actualiza las columnas Sobrante y Proceso
+     * envía los datos al servidor y actualiza las columnas Sobrante, Proceso y Total Disponible
      * con la respuesta recibida.
      */
     async function updateTotalDisponible() {
@@ -2771,6 +2773,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalEmpaqueIndex = 6;    // Estático: Total Empaque está en la columna 7 (índice 6)
         const sobranteIndex = 7;        // Estático: Sobrante está en la columna 8 (índice 7)
         const procesoIndex = 8;          // Estático: Proceso está en la columna 9 (índice 8)
+        const totalDisponibleIndex = 9;  // Estático: Total Disponible está en la columna 10 (índice 9)
 
         console.log(`Índices de columnas establecidos:
             Variety: ${varietyIndex},
@@ -2778,16 +2781,17 @@ document.addEventListener('DOMContentLoaded', () => {
             Long: ${longIndex},
             Total Empaque: ${totalEmpaqueIndex},
             Sobrante: ${sobranteIndex},
-            Proceso: ${procesoIndex}
+            Proceso: ${procesoIndex},
+            Total Disponible: ${totalDisponibleIndex}
         `);
 
         // Determinar el índice máximo requerido para validar las filas
-        const maxRequiredIndex = Math.max(procesoIndex, totalEmpaqueIndex, sobranteIndex);
+        const maxRequiredIndex = Math.max(totalDisponibleIndex, procesoIndex, sobranteIndex, totalEmpaqueIndex);
 
         const rows = empaqueTableBody.querySelectorAll('tr');
         console.log(`Número de filas encontradas: ${rows.length}`);
 
-        const groups = {}; // Clave: `${variety}_${tipoRamo}_${long}`, Valor: { totalEmpaque, sobranteCell, procesoCell }
+        const groups = {}; // Clave: `${variety}_${tipoRamo}_${long}`, Valor: { totalEmpaque, sobranteCell, procesoCell, totalDisponibleCell }
 
         rows.forEach((row, index) => {
             // Verificar si la fila tiene suficientes celdas
@@ -2803,6 +2807,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalEmpaqueCell = row.cells[totalEmpaqueIndex];
             const sobranteCell = row.cells[sobranteIndex];
             const procesoCell = row.cells[procesoIndex];
+            const totalDisponibleCell = row.cells[totalDisponibleIndex];
 
             // Verificar que las celdas existen
             if (!sobranteCell) {
@@ -2812,6 +2817,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!procesoCell) {
                 console.warn(`Fila ${index + 1} no tiene una celda 'Proceso'.`);
+                return;
+            }
+
+            if (!totalDisponibleCell) {
+                console.warn(`Fila ${index + 1} no tiene una celda 'Total Disponible'.`);
                 return;
             }
 
@@ -2859,20 +2869,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!variety || !tipoRamo || !long) {
                 console.warn(`Fila ${index + 1} tiene campos incompletos. Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
                 sobranteCell.innerText = '0';
-                procesoCell.innerText = '0';
+                procesoCell.innerText = '';
+                totalDisponibleCell.innerText = '0';
                 return;
             }
 
             if (totalEmpaque < 0) {
                 console.warn(`Fila ${index + 1} tiene un Total Empaque negativo.`);
                 sobranteCell.innerText = '0';
-                procesoCell.innerText = '0';
+                procesoCell.innerText = '';
+                totalDisponibleCell.innerText = '0';
                 return;
             }
 
             const key = `${variety}_${tipoRamo}_${long}`;
             if (!groups[key]) {
-                groups[key] = { totalEmpaque: 0, sobranteCell, procesoCell };
+                groups[key] = { totalEmpaque: 0, sobranteCell, procesoCell, totalDisponibleCell };
             }
             groups[key].totalEmpaque += totalEmpaque;
         });
@@ -2905,6 +2917,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const totalEmpaque = group.totalEmpaque;
                 const sobranteCell = group.sobranteCell;
                 const procesoCell = group.procesoCell;
+                const totalDisponibleCell = group.totalDisponibleCell;
 
                 console.log(`Enviando actualización para: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
 
@@ -2912,7 +2925,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (totalEmpaque < 0) {
                     console.warn(`Total Empaque negativo para ${key}. Saltando actualización.`);
                     sobranteCell.innerText = '0';
-                    procesoCell.innerText = '0';
+                    procesoCell.innerText = '';
+                    totalDisponibleCell.innerText = '0';
                     continue;
                 }
 
@@ -2955,9 +2969,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         procesoCell.innerText = bunchesTotal;
                         console.log(`Bunches Total para ${key}: ${bunchesTotal}`);
                     } else {
-                        procesoCell.innerText = '0';
+                        procesoCell.innerText = '';
                         console.warn(`bunchesTotal para ${key} es undefined o no es un número.`);
                     }
+
+                    // Actualizar 'Total Disponible' como la suma de 'Sobrante' y 'Proceso'
+                    const totalDisponible = (sobrante || 0) + (bunchesTotal || 0);
+                    totalDisponibleCell.innerText = totalDisponible;
+                    console.log(`Total Disponible para ${key}: ${totalDisponible}`);
                 } else {
                     // Manejo de errores
                     let errorMessage = 'Error desconocido.';
@@ -2986,6 +3005,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
 
 
 
