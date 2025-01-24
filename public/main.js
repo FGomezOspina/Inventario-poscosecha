@@ -2745,41 +2745,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /**
-     * Función para actualizar la colección "Total Disponible" en Firebase.
-     * Crea o actualiza documentos basados en la variedad, tipo de ramo y longitud.
+     * Función para actualizar el Total Disponible y el Proceso en la tabla de Empaque.
+     * Agrupa las filas por Variety, TipoRamo y Long, suma el Total Empaque,
+     * envía los datos al servidor y actualiza las columnas Sobrante y Proceso
+     * con la respuesta recibida.
      */
-    // Función updateTotalDisponible CORREGIDA
-    // Función actualizada para actualizar Total Disponible
-    // Función updateTotalDisponible CORREGIDA
     async function updateTotalDisponible() {
-        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
-        if (!empaqueTableBody) {
+        // Seleccionar la tabla de Empaque
+        const empaqueTable = document.querySelector('#empaqueTable');
+        if (!empaqueTable) {
             showAlert('No se encontró la tabla de Empaque.', 'danger');
             return;
         }
 
-        const groups = {}; // Clave: `${variety}_${tipoRamo}_${long}`, Valor: { totalEmpaque, sobranteCell }
+        const empaqueTableBody = empaqueTable.querySelector('tbody');
+        if (!empaqueTableBody) {
+            showAlert('No se encontró el cuerpo de la tabla de Empaque.', 'danger');
+            return;
+        }
 
-        // Iterar sobre cada fila de la tabla de Empaque
+        // Establecer índices de columnas de manera estática
+        const varietyIndex = 0;         // Ajusta si es necesario
+        const tipoRamoIndex = 1;        // Ajusta si es necesario
+        const longIndex = 2;            // Ajusta si es necesario
+        const totalEmpaqueIndex = 6;    // Estático: Total Empaque está en la columna 7 (índice 6)
+        const sobranteIndex = 7;        // Estático: Sobrante está en la columna 8 (índice 7)
+        const procesoIndex = 8;          // Estático: Proceso está en la columna 9 (índice 8)
+
+        console.log(`Índices de columnas establecidos:
+            Variety: ${varietyIndex},
+            TipoRamo: ${tipoRamoIndex},
+            Long: ${longIndex},
+            Total Empaque: ${totalEmpaqueIndex},
+            Sobrante: ${sobranteIndex},
+            Proceso: ${procesoIndex}
+        `);
+
+        // Determinar el índice máximo requerido para validar las filas
+        const maxRequiredIndex = Math.max(procesoIndex, totalEmpaqueIndex, sobranteIndex);
+
         const rows = empaqueTableBody.querySelectorAll('tr');
         console.log(`Número de filas encontradas: ${rows.length}`);
+
+        const groups = {}; // Clave: `${variety}_${tipoRamo}_${long}`, Valor: { totalEmpaque, sobranteCell, procesoCell }
+
         rows.forEach((row, index) => {
-            // Asegurarse de que la fila tiene suficientes celdas
-            if (row.cells.length < 11) {
-                console.warn(`Fila ${index + 1} tiene menos de 11 celdas. Saltando.`);
+            // Verificar si la fila tiene suficientes celdas
+            if (row.cells.length <= maxRequiredIndex) {
+                console.warn(`Fila ${index + 1} tiene menos de ${maxRequiredIndex + 1} celdas. Saltando.`);
                 return;
             }
 
             // Acceder a las celdas por índice
-            const varietyCell = row.cells[0];
-            const tipoRamoCell = row.cells[1];
-            const longCell = row.cells[2];
-            const totalEmpaqueCell = row.cells[6];
-            const sobranteCell = row.cells[7]; // Asegurarse de que esta celda existe
+            const varietyCell = row.cells[varietyIndex];
+            const tipoRamoCell = row.cells[tipoRamoIndex];
+            const longCell = row.cells[longIndex];
+            const totalEmpaqueCell = row.cells[totalEmpaqueIndex];
+            const sobranteCell = row.cells[sobranteIndex];
+            const procesoCell = row.cells[procesoIndex];
 
-            // Verificar que 'sobranteCell' está definido
+            // Verificar que las celdas existen
             if (!sobranteCell) {
                 console.warn(`Fila ${index + 1} no tiene una celda 'Sobrante'.`);
+                return;
+            }
+
+            if (!procesoCell) {
+                console.warn(`Fila ${index + 1} no tiene una celda 'Proceso'.`);
                 return;
             }
 
@@ -2816,22 +2848,33 @@ document.addEventListener('DOMContentLoaded', () => {
             // Obtener el valor de Total Empaque
             const totalEmpaqueInput = totalEmpaqueCell.querySelector('input');
             if (totalEmpaqueInput) {
-                totalEmpaque = parseInt(totalEmpaqueInput.value.trim()) || 0;
+                totalEmpaque = parseInt(totalEmpaqueInput.value.trim(), 10) || 0;
             } else {
-                totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim()) || 0;
+                totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0;
             }
 
             console.log(`Fila ${index + 1}: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
 
-            if (variety && tipoRamo && long) {
-                const key = `${variety}_${tipoRamo}_${long}`;
-                if (!groups[key]) {
-                    groups[key] = { totalEmpaque: 0, sobranteCell: sobranteCell };
-                }
-                groups[key].totalEmpaque += totalEmpaque;
-            } else {
+            // Validaciones adicionales
+            if (!variety || !tipoRamo || !long) {
                 console.warn(`Fila ${index + 1} tiene campos incompletos. Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
+                sobranteCell.innerText = '0';
+                procesoCell.innerText = '0';
+                return;
             }
+
+            if (totalEmpaque < 0) {
+                console.warn(`Fila ${index + 1} tiene un Total Empaque negativo.`);
+                sobranteCell.innerText = '0';
+                procesoCell.innerText = '0';
+                return;
+            }
+
+            const key = `${variety}_${tipoRamo}_${long}`;
+            if (!groups[key]) {
+                groups[key] = { totalEmpaque: 0, sobranteCell, procesoCell };
+            }
+            groups[key].totalEmpaque += totalEmpaque;
         });
 
         // Convertir el objeto groups a un array para procesar cada documento
@@ -2849,8 +2892,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loadingSpinner) {
             loadingSpinner.style.display = 'inline-block';
         }
-        updateTableBtn.disabled = true;
-        showAlert('Actualizando Total Disponible...', 'info');
+        const updateTableBtn = document.getElementById('updateTableBtn'); // Asegúrate de tener este elemento
+        if (updateTableBtn) {
+            updateTableBtn.disabled = true;
+        }
+        showAlert('Actualizando Total Disponible y Proceso...', 'info');
 
         try {
             // Iterar sobre cada grupo y enviar la información al servidor
@@ -2858,6 +2904,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const [variety, tipoRamo, long] = key.split('_');
                 const totalEmpaque = group.totalEmpaque;
                 const sobranteCell = group.sobranteCell;
+                const procesoCell = group.procesoCell;
 
                 console.log(`Enviando actualización para: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
 
@@ -2865,6 +2912,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (totalEmpaque < 0) {
                     console.warn(`Total Empaque negativo para ${key}. Saltando actualización.`);
                     sobranteCell.innerText = '0';
+                    procesoCell.innerText = '0';
                     continue;
                 }
 
@@ -2891,14 +2939,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
                     console.log(`Datos recibidos del servidor para ${key}:`, data);
                     const sobrante = data.sobrante;
+                    const bunchesTotal = data.bunchesTotal;
 
-                    // Validar que 'sobrante' está definido y es un número
+                    // Validar y actualizar 'sobrante'
                     if (sobrante !== undefined && typeof sobrante === 'number') {
                         sobranteCell.innerText = sobrante;
                         console.log(`Calculado sobrante para ${key}: ${sobrante}`);
                     } else {
                         sobranteCell.innerText = '0';
                         console.warn(`Sobrante para ${key} es undefined o no es un número.`);
+                    }
+
+                    // Validar y actualizar 'proceso' con 'bunchesTotal'
+                    if (bunchesTotal !== undefined && typeof bunchesTotal === 'number') {
+                        procesoCell.innerText = bunchesTotal;
+                        console.log(`Bunches Total para ${key}: ${bunchesTotal}`);
+                    } else {
+                        procesoCell.innerText = '0';
+                        console.warn(`bunchesTotal para ${key} es undefined o no es un número.`);
                     }
                 } else {
                     // Manejo de errores
@@ -2914,22 +2972,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            showAlert('Total Disponible actualizado correctamente.', 'success');
+            showAlert('Total Disponible y Proceso actualizados correctamente.', 'success');
         } catch (error) {
             console.error('Error en updateTotalDisponible:', error);
-            showAlert('Ocurrió un error al actualizar Total Disponible.', 'danger');
+            showAlert('Ocurrió un error al actualizar Total Disponible y Proceso.', 'danger');
         } finally {
             // Ocultar el spinner y habilitar el botón
             if (loadingSpinner) {
                 loadingSpinner.style.display = 'none';
             }
-            updateTableBtn.disabled = false;
+            if (updateTableBtn) {
+                updateTableBtn.disabled = false;
+            }
         }
     }
 
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 });
