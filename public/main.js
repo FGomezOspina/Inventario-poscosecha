@@ -597,267 +597,297 @@ document.addEventListener('DOMContentLoaded', () => {
     function addGroupEmpaque() {
         const empaqueTableBody = document.querySelector('#empaqueTable tbody');
         const groupId = Date.now().toString(); // ID único para el grupo
-        const numRows = 3; // Creamos un grupo de 3 filas
-    
-        // 1) --- Fila Principal ---
+        const numRows = 1; // Número de filas por grupo (ajusta si es necesario)
+
+        // Crear la fila principal del grupo
         const mainRow = empaqueTableBody.insertRow();
         mainRow.setAttribute('data-group-id', groupId);
-    
-        // (a) Columna 1: Variety (select), con rowSpan=3
+
+        // (a) Columna 1: Variety (select), con rowSpan=1
         const varietyCell = document.createElement('td');
-        varietyCell.rowSpan = numRows;
-        const varietySelect = createVarietySelect(); // Tu función para crear el select de Variety
+        const varietySelect = createVarietySelect(); // Asegúrate de tener esta función
         varietyCell.appendChild(varietySelect);
         mainRow.appendChild(varietyCell);
-    
-        // (b) Columna 2: Tipo de Ramo (select) – sin rowSpan, aparecerá en cada fila
-        const tipoCell = document.createElement('td');
-        const tipoSelect = createTJRegSelect(); // Tu función para crear el select TJ - REG - WS10 - NF
-        tipoCell.appendChild(tipoSelect);
-        mainRow.appendChild(tipoCell);
-    
-        // (c) Columna 3: Long (editable) – sin rowSpan
+
+        // (b) Columna 2: Tipo de Ramo (select)
+        const tipoRamoCell = document.createElement('td');
+        const tipoRamoSelect = createTJRegSelect(); // Asegúrate de tener esta función
+        tipoRamoCell.appendChild(tipoRamoSelect);
+        mainRow.appendChild(tipoRamoCell);
+
+        // (c) Columna 3: Long (editable)
         const longCell = document.createElement('td');
         longCell.contentEditable = true;
         longCell.innerText = '';
         mainRow.appendChild(longCell);
-    
+
         // (d) Columna 4: Caja (select)
         const cajaCell = document.createElement('td');
         const cajaSelect = document.createElement('select');
         cajaSelect.classList.add('form-select', 'form-select-sm');
         ["HB", "QB", "EB"].forEach(optVal => {
-          const opt = document.createElement('option');
-          opt.value = optVal;
-          opt.text = optVal;
-          cajaSelect.appendChild(opt);
+            const opt = document.createElement('option');
+            opt.value = optVal;
+            opt.text = optVal;
+            cajaSelect.appendChild(opt);
         });
         cajaCell.appendChild(cajaSelect);
         mainRow.appendChild(cajaCell);
-    
+
         // (e) Columna 5: # Cajas (editable)
         const numCajasCell = document.createElement('td');
         numCajasCell.contentEditable = true;
         numCajasCell.innerText = '';
         mainRow.appendChild(numCajasCell);
-    
+
         // (f) Columna 6: Total UND (NO editable)
         const totalUNDCell = document.createElement('td');
-        totalUNDCell.innerText = '';
+        totalUNDCell.innerText = '0';
         mainRow.appendChild(totalUNDCell);
-    
-        // === LISTENERS en la PRIMERA FILA (mainRow) ===
-        numCajasCell.addEventListener('input', () => {
-          updateEmpaqueRow(mainRow);
-          updateEmpaqueGroupTotal(groupId);
-          saveEmpaqueGroupData();
-        });
-        cajaSelect.addEventListener('change', () => {
-          updateEmpaqueRow(mainRow);
-          updateEmpaqueGroupTotal(groupId);
-          saveEmpaqueGroupData();
-        });
-        longCell.addEventListener('input', () => {
-          updateEmpaqueRow(mainRow);
-          updateEmpaqueGroupTotal(groupId);
-          saveEmpaqueGroupData();
-        });
-        tipoSelect.addEventListener('change', () => {
-          // Se actualiza “Total Empaque” a 0 (evita que aparezca 'REG')
-          totalEmpaqueCell.innerText = '0';
-          updateEmpaqueRow(mainRow);
-          updateEmpaqueGroupTotal(groupId);
-          saveEmpaqueGroupData();
-        });
-    
-        // (g) Columna 7: Total Empaque (rowSpan=3)
+
+        // (g) Columna 7: Total Empaque
         const totalEmpaqueCell = document.createElement('td');
-        totalEmpaqueCell.rowSpan = numRows;
         totalEmpaqueCell.classList.add('text-center');
-        // Inicia en 0, no en 'REG'
         totalEmpaqueCell.innerText = '0';
         mainRow.appendChild(totalEmpaqueCell);
-    
-        // (h) Columna 8: Sobrante (rowSpan=3)
+
+        // (h) Columna 8: Sobrante
         const sobranteCell = document.createElement('td');
-        sobranteCell.rowSpan = numRows;
         sobranteCell.classList.add('text-center');
         sobranteCell.innerText = '';
         mainRow.appendChild(sobranteCell);
-    
-        // (i) Columna 9: Proceso (rowSpan=3, editable)
+
+        // (i) Columna 9: Proceso (editable)
         const procesoCell = document.createElement('td');
-        procesoCell.rowSpan = numRows;
         procesoCell.contentEditable = true;
         procesoCell.classList.add('text-center');
-        // Opcional: inicia con el mismo valor que 'cajaSelect'
-        procesoCell.innerText = cajaSelect.value || '';
+        procesoCell.innerText = '';
         mainRow.appendChild(procesoCell);
-    
-        // (j) Columna 10: Total Sobrante Futuro (rowSpan=3)
-        const totalSobranteFCell = document.createElement('td');
-        totalSobranteFCell.rowSpan = numRows;
-        totalSobranteFCell.classList.add('text-center');
-        totalSobranteFCell.innerText = '';
-        mainRow.appendChild(totalSobranteFCell);
-    
-        // (k) Columna 11: Acciones (rowSpan=3)
+
+        // (j) Columna 10: Total Disponible
+        const totalDisponibleCell = document.createElement('td');
+        totalDisponibleCell.classList.add('text-center');
+        totalDisponibleCell.innerText = '0';
+        mainRow.appendChild(totalDisponibleCell);
+
+        // (k) Columna 11: Acciones
         const accionesCell = document.createElement('td');
-        accionesCell.rowSpan = numRows;
         accionesCell.classList.add('text-center');
-        const deleteGroupBtn = document.createElement('button');
-        deleteGroupBtn.innerHTML = '<i class="fa fa-trash"></i>';
-        deleteGroupBtn.classList.add('delete-btn');
-        deleteGroupBtn.title = 'Eliminar grupo de Empaque';
-        deleteGroupBtn.addEventListener('click', () => {
-          if (confirm('¿Está seguro de eliminar este grupo de empaque?')) {
-            const rowsToDelete = empaqueTableBody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-            rowsToDelete.forEach(r => r.remove());
-            saveEmpaqueGroupData();
-            showAlert('Grupo de Empaque eliminado.', 'warning');
-          }
+
+        // Botón Eliminar Grupo
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'me-2'); // me-2 para margen derecho
+        deleteBtn.title = 'Eliminar grupo de Empaque';
+
+        deleteBtn.addEventListener('click', () => {
+            if (confirm('¿Está seguro de eliminar este grupo de Empaque?')) {
+                const rowsToDelete = empaqueTableBody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+                rowsToDelete.forEach(r => r.remove());
+                saveEmpaqueGroupData();
+                // Remover del estado de grupos bloqueados
+                let lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
+                if (lockedGroups.includes(groupId)) {
+                    lockedGroups = lockedGroups.filter(id => id !== groupId);
+                    localStorage.setItem('empaqueLockedGroups', JSON.stringify(lockedGroups));
+                }
+                showAlert('Grupo de Empaque eliminado.', 'warning');
+            }
         });
-        accionesCell.appendChild(deleteGroupBtn);
+
+        accionesCell.appendChild(deleteBtn);
+
+        // Botón de Bloqueo
+        const lockBtn = document.createElement('button');
+        lockBtn.innerHTML = '<i class="fa fa-lock-open"></i>'; // Icono inicial desbloqueado
+        lockBtn.classList.add('btn', 'btn-secondary', 'btn-sm');
+        lockBtn.title = 'Bloquear este grupo';
+
+        lockBtn.addEventListener('click', () => {
+            toggleGroupLock(groupId, lockBtn);
+        });
+
+        accionesCell.appendChild(lockBtn);
+
         mainRow.appendChild(accionesCell);
-    
-        // 2) --- Creación de las SUBFILAS (filas 2 y 3) ---
-        for (let i = 1; i < numRows; i++) {
-          const subRow = empaqueTableBody.insertRow();
-          subRow.setAttribute('data-group-id', groupId);
-    
-          // Columna: Tipo de Ramo (select)
-          const subTipoCell = document.createElement('td');
-          const subTipoSelect = createTJRegSelect();
-          subTipoCell.appendChild(subTipoSelect);
-          subRow.appendChild(subTipoCell);
-    
-          // Columna: Long (editable)
-          const subLongCell = document.createElement('td');
-          subLongCell.contentEditable = true;
-          subLongCell.innerText = '';
-          subRow.appendChild(subLongCell);
-    
-          // Columna: Caja (select)
-          const subCajaCell = document.createElement('td');
-          const subCajaSelect = document.createElement('select');
-          subCajaSelect.classList.add('form-select', 'form-select-sm');
-          ["HB", "QB", "EB"].forEach(optVal => {
-            const opt = document.createElement('option');
-            opt.value = optVal;
-            opt.text = optVal;
-            subCajaSelect.appendChild(opt);
-          });
-          subCajaCell.appendChild(subCajaSelect);
-          subRow.appendChild(subCajaCell);
-    
-          // Columna: # Cajas (editable)
-          const subNumCajasCell = document.createElement('td');
-          subNumCajasCell.contentEditable = true;
-          subNumCajasCell.innerText = '';
-          subRow.appendChild(subNumCajasCell);
-    
-          // Columna: Total UND (NO editable)
-          const subTotalUNDCell = document.createElement('td');
-          subTotalUNDCell.innerText = '';
-          subRow.appendChild(subTotalUNDCell);
-    
-          // === LISTENERS en las SUBFILAS (2.ª y 3.ª) ===
-          subTipoSelect.addEventListener('change', () => {
-            updateEmpaqueRow(subRow);
+
+        // Agregar event listeners para actualizar cálculos y guardar datos
+        varietySelect.addEventListener('change', () => {
+            updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
-          });
-          subLongCell.addEventListener('input', () => {
-            updateEmpaqueRow(subRow);
+        });
+        tipoRamoSelect.addEventListener('change', () => {
+            updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
-          });
-          subCajaSelect.addEventListener('change', () => {
-            updateEmpaqueRow(subRow);
+        });
+        longCell.addEventListener('input', () => {
+            updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
-          });
-          subNumCajasCell.addEventListener('input', () => {
-            updateEmpaqueRow(subRow);
+        });
+        cajaSelect.addEventListener('change', () => {
+            updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
-          });
-        }
-    
-        // 3) Guardamos en localStorage y mostramos alerta
+        });
+        numCajasCell.addEventListener('input', () => {
+            updateEmpaqueRow(mainRow);
+            updateEmpaqueGroupTotal(groupId);
+            saveEmpaqueGroupData();
+        });
+        procesoCell.addEventListener('input', () => {
+            updateEmpaqueRow(mainRow);
+            updateEmpaqueGroupTotal(groupId);
+            saveEmpaqueGroupData();
+        });
+
+        // Establecer el estado de bloqueo según localStorage
+        setGroupLockState(groupId, lockBtn);
+
+        // Guardar los datos del grupo
         saveEmpaqueGroupData();
         showAlert('Grupo de Empaque agregado correctamente.', 'success');
     }
     
   
-    
+    // Función para alternar el estado de bloqueo de un grupo
+    function toggleGroupLock(groupId, lockBtn) {
+        let lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
+        const isLocked = lockedGroups.includes(groupId);
+
+        if (isLocked) {
+            // Desbloquear el grupo
+            lockedGroups = lockedGroups.filter(id => id !== groupId);
+            lockBtn.innerHTML = '<i class="fa fa-lock-open"></i>';
+            lockBtn.title = 'Bloquear este grupo';
+
+            // Quitar clase de bloqueado y habilitar inputs
+            const groupRows = document.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+            groupRows.forEach(row => {
+                row.classList.remove('locked-group');
+                const inputs = row.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                });
+            });
+        } else {
+            // Bloquear el grupo
+            lockedGroups.push(groupId);
+            lockBtn.innerHTML = '<i class="fa fa-lock"></i>';
+            lockBtn.title = 'Desbloquear este grupo';
+
+            // Añadir clase de bloqueado y deshabilitar inputs
+            const groupRows = document.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+            groupRows.forEach(row => {
+                row.classList.add('locked-group');
+                const inputs = row.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                });
+            });
+        }
+
+        localStorage.setItem('empaqueLockedGroups', JSON.stringify(lockedGroups));
+    }
+
+    // Función para establecer el estado de bloqueo al cargar grupos
+    function setGroupLockState(groupId, lockBtn) {
+        let lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
+        const isLocked = lockedGroups.includes(groupId);
+        if (isLocked) {
+            lockBtn.innerHTML = '<i class="fa fa-lock"></i>';
+            lockBtn.title = 'Desbloquear este grupo';
+            const groupRows = document.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+            groupRows.forEach(row => {
+                row.classList.add('locked-group');
+                const inputs = row.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                });
+            });
+        } else {
+            lockBtn.innerHTML = '<i class="fa fa-lock-open"></i>';
+            lockBtn.title = 'Bloquear este grupo';
+            const groupRows = document.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+            groupRows.forEach(row => {
+                row.classList.remove('locked-group');
+                const inputs = row.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                });
+            });
+        }
+    }
+
     
       
         
-    // =====================
-    // Función para guardar datos del grupo de Empaque
-    // =====================
+     // ============================
+    // Función para Guardar Datos de Empaque
+    // ============================
     function saveEmpaqueGroupData() {
         const empaqueTableBody = document.querySelector('#empaqueTable tbody');
         const groups = {};
-      
+
         Array.from(empaqueTableBody.rows).forEach(row => {
-          const groupId = row.getAttribute('data-group-id');
-          if (!groupId) return;
-          groups[groupId] = {
-            variety: row.cells[0].querySelector('select').value,
-            tipoRamo: row.cells[1].querySelector('select').value,
-            long: row.cells[2].innerText.trim(),
-            caja: row.cells[3].querySelector('select').value,
-            numCajas: row.cells[4].innerText.trim(),
-            totalEmpaque: row.cells[5].innerText.trim(),
-            sobrante: row.cells[6].innerText.trim(),
-            proceso: row.cells[7].innerText.trim(),
-            totalSobranteFuturo: row.cells[8].innerText.trim()
-          };
+            const groupId = row.getAttribute('data-group-id');
+            if (!groupId) return;
+            if (!groups[groupId]) {
+                groups[groupId] = {
+                    variety: row.cells[0].querySelector('select').value,
+                    tipoRamo: row.cells[1].querySelector('select').value,
+                    long: row.cells[2].innerText.trim(),
+                    caja: row.cells[3].querySelector('select').value,
+                    numCajas: row.cells[4].innerText.trim(),
+                    totalUND: row.cells[5].innerText.trim(),
+                    totalEmpaque: row.cells[6].innerText.trim(),
+                    sobrante: row.cells[7].innerText.trim(),
+                    proceso: row.cells[8].innerText.trim(),
+                    totalDisponible: row.cells[9].innerText.trim()
+                };
+            }
         });
-        
+
         localStorage.setItem('empaqueData', JSON.stringify(groups));
     }
       
-    // =====================
-    // Función para cargar la tabla de Empaque desde localStorage (opcional)
-    // =====================
+    // ============================
+    // Función para Cargar Datos de Empaque
+    // ============================
     function loadEmpaqueTableData() {
         const data = JSON.parse(localStorage.getItem('empaqueData')) || {};
         const empaqueTableBody = document.querySelector('#empaqueTable tbody');
         empaqueTableBody.innerHTML = '';
-    
+
         // Recorremos cada groupId en el objeto data
         Object.keys(data).forEach(groupId => {
             const group = data[groupId];
-    
-            // Creamos la fila principal
-            const row = empaqueTableBody.insertRow();
-            row.setAttribute('data-group-id', groupId);
-    
-            // Col 1: Variety
+
+            // Crear la fila principal
+            const mainRow = empaqueTableBody.insertRow();
+            mainRow.setAttribute('data-group-id', groupId);
+
+            // (a) Columna 1: Variety (select)
             const varietyCell = document.createElement('td');
-            varietyCell.rowSpan = 1; 
-            varietyCell.classList.add('editable');
-            const varietySelect = createVarietySelect(group.variety);
+            const varietySelect = createVarietySelect(group.variety); // Asegúrate de tener esta función
             varietyCell.appendChild(varietySelect);
-            row.appendChild(varietyCell);
-    
-            // Col 2: Tipo de Ramo
-            const tipoCell = document.createElement('td');
-            const tipoSelect = createTJRegSelect(group.tipoRamo);
-            tipoCell.appendChild(tipoSelect);
-            row.appendChild(tipoCell);
-    
-            // Col 3: Long
+            mainRow.appendChild(varietyCell);
+
+            // (b) Columna 2: Tipo de Ramo (select)
+            const tipoRamoCell = document.createElement('td');
+            const tipoRamoSelect = createTJRegSelect(group.tipoRamo); // Asegúrate de tener esta función
+            tipoRamoCell.appendChild(tipoRamoSelect);
+            mainRow.appendChild(tipoRamoCell);
+
+            // (c) Columna 3: Long (editable)
             const longCell = document.createElement('td');
             longCell.contentEditable = true;
-            longCell.setAttribute('data-col', 'Long');
             longCell.innerText = group.long;
-            row.appendChild(longCell);
-    
-            // Col 4: Caja
+            mainRow.appendChild(longCell);
+
+            // (d) Columna 4: Caja (select)
             const cajaCell = document.createElement('td');
             const cajaSelect = document.createElement('select');
             cajaSelect.classList.add('form-select', 'form-select-sm');
@@ -869,78 +899,137 @@ document.addEventListener('DOMContentLoaded', () => {
                 cajaSelect.appendChild(opt);
             });
             cajaCell.appendChild(cajaSelect);
-            row.appendChild(cajaCell);
-    
-            // Col 5: # Cajas
+            mainRow.appendChild(cajaCell);
+
+            // (e) Columna 5: # Cajas (editable)
             const numCajasCell = document.createElement('td');
             numCajasCell.contentEditable = true;
-            numCajasCell.setAttribute('data-col', 'NumCajas');
             numCajasCell.innerText = group.numCajas;
-            row.appendChild(numCajasCell);
-    
-            // Col 6: Total UND (NO editable)
+            mainRow.appendChild(numCajasCell);
+
+            // (f) Columna 6: Total UND
             const totalUNDCell = document.createElement('td');
-            totalUNDCell.setAttribute('data-col', 'Total UND');
-            totalUNDCell.classList.add('text-center');
-            totalUNDCell.innerText = ''; // Se recalcula abajo
-            row.appendChild(totalUNDCell);
-    
-            // Col 7: Total Empaque
+            totalUNDCell.innerText = group.totalUND || '0';
+            mainRow.appendChild(totalUNDCell);
+
+            // (g) Columna 7: Total Empaque
             const totalEmpaqueCell = document.createElement('td');
-            totalEmpaqueCell.setAttribute('data-col', 'Total Empaque');
             totalEmpaqueCell.classList.add('text-center');
             totalEmpaqueCell.innerText = group.totalEmpaque || '0';
-            row.appendChild(totalEmpaqueCell);
-    
-            // Col 8: Sobrante
+            mainRow.appendChild(totalEmpaqueCell);
+
+            // (h) Columna 8: Sobrante
             const sobranteCell = document.createElement('td');
-            sobranteCell.setAttribute('data-col', 'Sobrante');
             sobranteCell.classList.add('text-center');
-            sobranteCell.innerText = group.sobrante || '0';
-            row.appendChild(sobranteCell);
-    
-            // Col 9: Proceso
+            sobranteCell.innerText = group.sobrante || '';
+            mainRow.appendChild(sobranteCell);
+
+            // (i) Columna 9: Proceso (editable)
             const procesoCell = document.createElement('td');
             procesoCell.contentEditable = true;
-            procesoCell.setAttribute('data-col', 'Proceso');
             procesoCell.classList.add('text-center');
             procesoCell.innerText = group.proceso || '';
-            row.appendChild(procesoCell);
-    
-            // Col 10: Total Sobrante Futuro
-            const totalSobranteFCell = document.createElement('td');
-            totalSobranteFCell.setAttribute('data-col', 'Total Sobrante Futuro');
-            totalSobranteFCell.classList.add('text-center');
-            totalSobranteFCell.innerText = group.totalSobranteFuturo || '0';
-            row.appendChild(totalSobranteFCell);
-    
-            // Col 11: Acciones (botón eliminar grupo)
+            mainRow.appendChild(procesoCell);
+
+            // (j) Columna 10: Total Disponible
+            const totalDisponibleCell = document.createElement('td');
+            totalDisponibleCell.classList.add('text-center');
+            totalDisponibleCell.innerText = group.totalDisponible || '0';
+            mainRow.appendChild(totalDisponibleCell);
+
+            // (k) Columna 11: Acciones
             const accionesCell = document.createElement('td');
             accionesCell.classList.add('text-center');
-            const deleteGroupBtn = document.createElement('button');
-            deleteGroupBtn.innerHTML = '<i class="fa fa-trash"></i>';
-            deleteGroupBtn.classList.add('delete-btn');
-            deleteGroupBtn.title = 'Eliminar grupo de Empaque';
-            deleteGroupBtn.addEventListener('click', () => {
-                if (confirm('¿Está seguro de eliminar este grupo de empaque?')) {
-                    row.remove();
-                    saveEmpaqueGroupData(); 
+
+            // Botón Eliminar Grupo
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
+            deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'me-2'); // me-2 para margen derecho
+            deleteBtn.title = 'Eliminar grupo de Empaque';
+
+            deleteBtn.addEventListener('click', () => {
+                if (confirm('¿Está seguro de eliminar este grupo de Empaque?')) {
+                    const rowsToDelete = empaqueTableBody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+                    rowsToDelete.forEach(r => r.remove());
+                    saveEmpaqueGroupData();
+                    // Remover del estado de grupos bloqueados
+                    let lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
+                    if (lockedGroups.includes(groupId)) {
+                        lockedGroups = lockedGroups.filter(id => id !== groupId);
+                        localStorage.setItem('empaqueLockedGroups', JSON.stringify(lockedGroups));
+                    }
                     showAlert('Grupo de Empaque eliminado.', 'warning');
                 }
             });
-            accionesCell.appendChild(deleteGroupBtn);
-            row.appendChild(accionesCell);
-    
-            // --------------------------------------
-            // AHORA que la fila está completa,
-            // recalculamos su "Total UND"
-            updateEmpaqueRow(row);
-            // y luego actualizamos la sumatoria "Total Empaque" del grupo
-            updateEmpaqueGroupTotal(groupId);
-            // --------------------------------------
+
+            accionesCell.appendChild(deleteBtn);
+
+            // Botón de Bloqueo
+            const lockBtn = document.createElement('button');
+            lockBtn.innerHTML = '<i class="fa fa-lock-open"></i>'; // Icono inicial desbloqueado
+            lockBtn.classList.add('btn', 'btn-secondary', 'btn-sm');
+            lockBtn.title = 'Bloquear este grupo';
+
+            lockBtn.addEventListener('click', () => {
+                toggleGroupLock(groupId, lockBtn);
+            });
+
+            accionesCell.appendChild(lockBtn);
+
+            mainRow.appendChild(accionesCell);
+
+            // Establecer el estado de bloqueo según localStorage
+            setGroupLockState(groupId, lockBtn);
+
+            // Agregar event listeners para actualizar cálculos y guardar datos
+            varietySelect.addEventListener('change', () => {
+                updateEmpaqueRow(mainRow);
+                updateEmpaqueGroupTotal(groupId);
+                saveEmpaqueGroupData();
+            });
+            tipoRamoSelect.addEventListener('change', () => {
+                updateEmpaqueRow(mainRow);
+                updateEmpaqueGroupTotal(groupId);
+                saveEmpaqueGroupData();
+            });
+            longCell.addEventListener('input', () => {
+                updateEmpaqueRow(mainRow);
+                updateEmpaqueGroupTotal(groupId);
+                saveEmpaqueGroupData();
+            });
+            cajaSelect.addEventListener('change', () => {
+                updateEmpaqueRow(mainRow);
+                updateEmpaqueGroupTotal(groupId);
+                saveEmpaqueGroupData();
+            });
+            numCajasCell.addEventListener('input', () => {
+                updateEmpaqueRow(mainRow);
+                updateEmpaqueGroupTotal(groupId);
+                saveEmpaqueGroupData();
+            });
+            procesoCell.addEventListener('input', () => {
+                updateEmpaqueRow(mainRow);
+                updateEmpaqueGroupTotal(groupId);
+                saveEmpaqueGroupData();
+            });
+        })
+    }
+
+    // ============================
+    // Función para Inicializar el Estado de Bloqueo al Cargar la Página
+    // ============================
+    function initializeLockStates() {
+        const lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
+        lockedGroups.forEach(groupId => {
+            const lockBtn = document.querySelector(`tr[data-group-id="${groupId}"] td:last-child .btn-secondary`);
+            if (lockBtn) {
+                toggleGroupLock(groupId, lockBtn);
+            }
         });
     }
-    
+
+    loadEmpaqueTableData();
+    initializeLockStates();
 
     /**
      * Recalcula "Total UND" de una fila de Empaque,
@@ -2759,146 +2848,81 @@ document.addEventListener('DOMContentLoaded', () => {
             showAlert('No se encontró la tabla de Empaque.', 'danger');
             return;
         }
-
+    
         const empaqueTableBody = empaqueTable.querySelector('tbody');
         if (!empaqueTableBody) {
             showAlert('No se encontró el cuerpo de la tabla de Empaque.', 'danger');
             return;
         }
-
-        // Establecer índices de columnas de manera estática
-        const varietyIndex = 0;         // Ajusta si es necesario
-        const tipoRamoIndex = 1;        // Ajusta si es necesario
-        const longIndex = 2;            // Ajusta si es necesario
-        const totalEmpaqueIndex = 6;    // Estático: Total Empaque está en la columna 7 (índice 6)
-        const sobranteIndex = 7;        // Estático: Sobrante está en la columna 8 (índice 7)
-        const procesoIndex = 8;          // Estático: Proceso está en la columna 9 (índice 8)
-        const totalDisponibleIndex = 9;  // Estático: Total Disponible está en la columna 10 (índice 9)
-
-        console.log(`Índices de columnas establecidos:
-            Variety: ${varietyIndex},
-            TipoRamo: ${tipoRamoIndex},
-            Long: ${longIndex},
-            Total Empaque: ${totalEmpaqueIndex},
-            Sobrante: ${sobranteIndex},
-            Proceso: ${procesoIndex},
-            Total Disponible: ${totalDisponibleIndex}
-        `);
-
-        // Determinar el índice máximo requerido para validar las filas
-        const maxRequiredIndex = Math.max(totalDisponibleIndex, procesoIndex, sobranteIndex, totalEmpaqueIndex);
-
+    
+        // Obtener grupos bloqueados
+        const lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
+    
+        // Obtener todas las filas
         const rows = empaqueTableBody.querySelectorAll('tr');
         console.log(`Número de filas encontradas: ${rows.length}`);
-
-        const groups = {}; // Clave: `${variety}_${tipoRamo}_${long}`, Valor: { totalEmpaque, sobranteCell, procesoCell, totalDisponibleCell }
-
-        rows.forEach((row, index) => {
-            // Verificar si la fila tiene suficientes celdas
-            if (row.cells.length <= maxRequiredIndex) {
-                console.warn(`Fila ${index + 1} tiene menos de ${maxRequiredIndex + 1} celdas. Saltando.`);
+    
+        const groups = {}; // Key: groupId, Value: { variety, tipoRamo, long, totalEmpaque, sobranteCell, procesoCell, totalDisponibleCell }
+    
+        rows.forEach(row => {
+            const groupId = row.getAttribute("data-group-id");
+            if (!groupId) {
+                console.warn("Fila sin groupId. Saltando.");
                 return;
             }
-
-            // Acceder a las celdas por índice
-            const varietyCell = row.cells[varietyIndex];
-            const tipoRamoCell = row.cells[tipoRamoIndex];
-            const longCell = row.cells[longIndex];
-            const totalEmpaqueCell = row.cells[totalEmpaqueIndex];
-            const sobranteCell = row.cells[sobranteIndex];
-            const procesoCell = row.cells[procesoIndex];
-            const totalDisponibleCell = row.cells[totalDisponibleIndex];
-
-            // Verificar que las celdas existen
-            if (!sobranteCell) {
-                console.warn(`Fila ${index + 1} no tiene una celda 'Sobrante'.`);
+    
+            if (lockedGroups.includes(groupId)) {
+                console.log(`Grupo ${groupId} está bloqueado. Saltando.`);
                 return;
             }
-
-            if (!procesoCell) {
-                console.warn(`Fila ${index + 1} no tiene una celda 'Proceso'.`);
-                return;
-            }
-
-            if (!totalDisponibleCell) {
-                console.warn(`Fila ${index + 1} no tiene una celda 'Total Disponible'.`);
-                return;
-            }
-
-            // Extraer los valores
-            let variety = '';
-            let tipoRamo = '';
-            let long = '';
-            let totalEmpaque = 0;
-
-            // Obtener el valor de Variety
-            const varietySelect = varietyCell.querySelector('select');
-            if (varietySelect) {
-                variety = varietySelect.value.trim();
+    
+            // Si el grupo no está en el objeto, inicializarlo
+            if (!groups[groupId]) {
+                // Suponiendo que la primera fila de cada grupo es la principal
+                const varietyCell = row.cells[0];
+                const tipoRamoCell = row.cells[1];
+                const longCell = row.cells[2];
+                const totalEmpaqueCell = row.cells[6];
+                const sobranteCell = row.cells[7];
+                const procesoCell = row.cells[8];
+                const totalDisponibleCell = row.cells[9];
+    
+                // Obtener los valores
+                const varietySelect = varietyCell.querySelector('select');
+                const variety = varietySelect ? varietySelect.value.trim() : varietyCell.innerText.trim();
+    
+                const tipoRamoSelect = tipoRamoCell.querySelector('select');
+                const tipoRamo = tipoRamoSelect ? tipoRamoSelect.value.trim() : tipoRamoCell.innerText.trim();
+    
+                const longInput = longCell.querySelector('input');
+                const long = longInput ? longInput.value.trim() : longCell.innerText.trim();
+    
+                const totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0;
+    
+                groups[groupId] = {
+                    variety,
+                    tipoRamo,
+                    long,
+                    totalEmpaque,
+                    sobranteCell,
+                    procesoCell,
+                    totalDisponibleCell
+                };
             } else {
-                variety = varietyCell.innerText.trim();
+                // Si ya existe, sumar el totalEmpaque
+                const totalEmpaqueCell = row.cells[6];
+                const totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0;
+                groups[groupId].totalEmpaque += totalEmpaque;
             }
-
-            // Obtener el valor de TipoRamo
-            const tipoRamoSelect = tipoRamoCell.querySelector('select');
-            if (tipoRamoSelect) {
-                tipoRamo = tipoRamoSelect.value.trim();
-            } else {
-                tipoRamo = tipoRamoCell.innerText.trim();
-            }
-
-            // Obtener el valor de Long
-            const longInput = longCell.querySelector('input');
-            if (longInput) {
-                long = longInput.value.trim();
-            } else {
-                long = longCell.innerText.trim();
-            }
-
-            // Obtener el valor de Total Empaque
-            const totalEmpaqueInput = totalEmpaqueCell.querySelector('input');
-            if (totalEmpaqueInput) {
-                totalEmpaque = parseInt(totalEmpaqueInput.value.trim(), 10) || 0;
-            } else {
-                totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0;
-            }
-
-            console.log(`Fila ${index + 1}: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
-
-            // Validaciones adicionales
-            if (!variety || !tipoRamo || !long) {
-                console.warn(`Fila ${index + 1} tiene campos incompletos. Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
-                sobranteCell.innerText = '0';
-                procesoCell.innerText = '';
-                totalDisponibleCell.innerText = '0';
-                return;
-            }
-
-            if (totalEmpaque < 0) {
-                console.warn(`Fila ${index + 1} tiene un Total Empaque negativo.`);
-                sobranteCell.innerText = '0';
-                procesoCell.innerText = '';
-                totalDisponibleCell.innerText = '0';
-                return;
-            }
-
-            const key = `${variety}_${tipoRamo}_${long}`;
-            if (!groups[key]) {
-                groups[key] = { totalEmpaque: 0, sobranteCell, procesoCell, totalDisponibleCell };
-            }
-            groups[key].totalEmpaque += totalEmpaque;
         });
-
-        // Convertir el objeto groups a un array para procesar cada documento
-        const groupEntries = Object.entries(groups);
-        console.log(`Grupos únicos encontrados: ${groupEntries.length}`);
-        console.log(groups);
-
-        if (groupEntries.length === 0) {
-            showAlert('No se encontraron grupos válidos en la tabla de Empaque.', 'warning');
+    
+        console.log(`Grupos únicos a procesar: ${Object.keys(groups).length}`);
+    
+        if (Object.keys(groups).length === 0) {
+            showAlert('No hay grupos válidos para actualizar.', 'warning');
             return;
         }
-
+    
         // Mostrar el spinner y deshabilitar el botón durante la operación
         const loadingSpinner = document.getElementById('loadingSpinner');
         if (loadingSpinner) {
@@ -2909,27 +2933,23 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTableBtn.disabled = true;
         }
         showAlert('Actualizando Total Disponible y Proceso...', 'info');
-
+    
         try {
             // Iterar sobre cada grupo y enviar la información al servidor
-            for (const [key, group] of groupEntries) {
-                const [variety, tipoRamo, long] = key.split('_');
-                const totalEmpaque = group.totalEmpaque;
-                const sobranteCell = group.sobranteCell;
-                const procesoCell = group.procesoCell;
-                const totalDisponibleCell = group.totalDisponibleCell;
-
+            for (const [groupId, group] of Object.entries(groups)) {
+                const { variety, tipoRamo, long, totalEmpaque, sobranteCell, procesoCell, totalDisponibleCell } = group;
+    
                 console.log(`Enviando actualización para: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
-
+    
                 // Validar que totalEmpaque es positivo
                 if (totalEmpaque < 0) {
-                    console.warn(`Total Empaque negativo para ${key}. Saltando actualización.`);
+                    console.warn(`Total Empaque negativo para ${groupId}. Saltando actualización.`);
                     sobranteCell.innerText = '0';
                     procesoCell.innerText = '';
                     totalDisponibleCell.innerText = '0';
                     continue;
                 }
-
+    
                 // Preparar el payload para el servidor
                 const payload = {
                     variety,
@@ -2937,7 +2957,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     long,
                     totalEmpaque
                 };
-
+    
                 // Enviar la solicitud al servidor para crear o actualizar el documento en Firebase
                 const response = await fetch('/api/total-disponible', {
                     method: 'POST',
@@ -2946,37 +2966,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify(payload)
                 });
-
-                console.log(`Respuesta del servidor para ${key}:`, response);
-
+    
+                console.log(`Respuesta del servidor para ${groupId}:`, response);
+    
                 if (response.ok) {
                     const data = await response.json();
-                    console.log(`Datos recibidos del servidor para ${key}:`, data);
+                    console.log(`Datos recibidos del servidor para ${groupId}:`, data);
                     const sobrante = data.sobrante;
                     const bunchesTotal = data.bunchesTotal;
-
+    
                     // Validar y actualizar 'sobrante'
                     if (sobrante !== undefined && typeof sobrante === 'number') {
                         sobranteCell.innerText = sobrante;
-                        console.log(`Calculado sobrante para ${key}: ${sobrante}`);
+                        console.log(`Calculado sobrante para ${groupId}: ${sobrante}`);
                     } else {
                         sobranteCell.innerText = '0';
-                        console.warn(`Sobrante para ${key} es undefined o no es un número.`);
+                        console.warn(`Sobrante para ${groupId} es undefined o no es un número.`);
                     }
-
+    
                     // Validar y actualizar 'proceso' con 'bunchesTotal'
                     if (bunchesTotal !== undefined && typeof bunchesTotal === 'number') {
                         procesoCell.innerText = bunchesTotal;
-                        console.log(`Bunches Total para ${key}: ${bunchesTotal}`);
+                        console.log(`Bunches Total para ${groupId}: ${bunchesTotal}`);
                     } else {
                         procesoCell.innerText = '';
-                        console.warn(`bunchesTotal para ${key} es undefined o no es un número.`);
+                        console.warn(`bunchesTotal para ${groupId} es undefined o no es un número.`);
                     }
-
+    
                     // Actualizar 'Total Disponible' como la suma de 'Sobrante' y 'Proceso'
                     const totalDisponible = (sobrante || 0) + (bunchesTotal || 0);
                     totalDisponibleCell.innerText = totalDisponible;
-                    console.log(`Total Disponible para ${key}: ${totalDisponible}`);
+                    console.log(`Total Disponible para ${groupId}: ${totalDisponible}`);
                 } else {
                     // Manejo de errores
                     let errorMessage = 'Error desconocido.';
@@ -2990,7 +3010,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showAlert(`Error al actualizar Total Disponible para ${variety}, ${tipoRamo}, ${long}: ${errorMessage}`, 'danger');
                 }
             }
-
+    
             showAlert('Total Disponible y Proceso actualizados correctamente.', 'success');
         } catch (error) {
             console.error('Error en updateTotalDisponible:', error);
@@ -3005,13 +3025,5 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-
-
-
-
-
-
-
 
 });
