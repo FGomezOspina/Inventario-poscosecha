@@ -594,92 +594,110 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGrandTotal();
     }
 
+
     function addGroupEmpaque() {
         const empaqueTableBody = document.querySelector('#empaqueTable tbody');
         const groupId = Date.now().toString(); // ID único para el grupo
-        const numRows = 1; // Número de filas por grupo (ajusta si es necesario)
-
+    
         // Crear la fila principal del grupo
         const mainRow = empaqueTableBody.insertRow();
         mainRow.setAttribute('data-group-id', groupId);
-
-        // (a) Columna 1: Variety (select), con rowSpan=1
+    
+        // (a) Columna 1: Variety (select), con rowspan=1
         const varietyCell = document.createElement('td');
+        varietyCell.setAttribute('data-col', 'Variety');
         const varietySelect = createVarietySelect(); // Asegúrate de tener esta función
         varietyCell.appendChild(varietySelect);
+        varietyCell.setAttribute('rowspan', 1); // Inicialmente 1, se incrementará al agregar filas
         mainRow.appendChild(varietyCell);
-
-        // (b) Columna 2: Tipo de Ramo (select)
+    
+        // (b) Columna 2: Tipo de Ramo (select), con rowspan=1
         const tipoRamoCell = document.createElement('td');
+        tipoRamoCell.setAttribute('data-col', 'Tipo de Ramo');
         const tipoRamoSelect = createTJRegSelect(); // Asegúrate de tener esta función
         tipoRamoCell.appendChild(tipoRamoSelect);
+        tipoRamoCell.setAttribute('rowspan', 1); // Inicialmente 1, se incrementará al agregar filas
         mainRow.appendChild(tipoRamoCell);
-
+    
         // (c) Columna 3: Long (editable)
         const longCell = document.createElement('td');
+        longCell.setAttribute('data-col', 'Long');
         longCell.contentEditable = true;
         longCell.innerText = '';
         mainRow.appendChild(longCell);
-
-        // (d) Columna 4: Caja (select)
-        const cajaCell = document.createElement('td');
-        const cajaSelect = document.createElement('select');
-        cajaSelect.classList.add('form-select', 'form-select-sm');
+    
+        // (d) Columna 4: Tipo de Caja (select)
+        const tipoCajaCell = document.createElement('td');
+        tipoCajaCell.setAttribute('data-col', 'Tipo de Caja');
+        const tipoCajaSelect = document.createElement('select');
+        tipoCajaSelect.classList.add('form-select', 'form-select-sm');
         ["HB", "QB", "EB"].forEach(optVal => {
             const opt = document.createElement('option');
             opt.value = optVal;
             opt.text = optVal;
-            cajaSelect.appendChild(opt);
+            tipoCajaSelect.appendChild(opt);
         });
-        cajaCell.appendChild(cajaSelect);
-        mainRow.appendChild(cajaCell);
-
+        tipoCajaCell.appendChild(tipoCajaSelect);
+        mainRow.appendChild(tipoCajaCell);
+    
         // (e) Columna 5: # Cajas (editable)
         const numCajasCell = document.createElement('td');
+        numCajasCell.setAttribute('data-col', '# Cajas');
         numCajasCell.contentEditable = true;
         numCajasCell.innerText = '';
         mainRow.appendChild(numCajasCell);
-
+    
         // (f) Columna 6: Total UND (NO editable)
         const totalUNDCell = document.createElement('td');
+        totalUNDCell.setAttribute('data-col', 'Total UND');
+        totalUNDCell.classList.add('text-center');
         totalUNDCell.innerText = '0';
         mainRow.appendChild(totalUNDCell);
-
-        // (g) Columna 7: Total Empaque
+    
+        // (g) Columna 7: Total Empaque (rowspan=1)
         const totalEmpaqueCell = document.createElement('td');
+        totalEmpaqueCell.setAttribute('data-col', 'Total Empaque');
         totalEmpaqueCell.classList.add('text-center');
         totalEmpaqueCell.innerText = '0';
+        totalEmpaqueCell.setAttribute('rowspan', 1); // Inicialmente 1, se incrementará al agregar filas
         mainRow.appendChild(totalEmpaqueCell);
-
-        // (h) Columna 8: Sobrante
+    
+        // (h) Columna 8: Sobrante (rowspan=1)
         const sobranteCell = document.createElement('td');
+        sobranteCell.setAttribute('data-col', 'Sobrante');
         sobranteCell.classList.add('text-center');
-        sobranteCell.innerText = '';
+        sobranteCell.innerText = '0';
+        sobranteCell.setAttribute('rowspan', 1); // Inicialmente 1, se incrementará al agregar filas
         mainRow.appendChild(sobranteCell);
-
-        // (i) Columna 9: Proceso (editable)
+    
+        // (i) Columna 9: Proceso (editable, rowspan=1)
         const procesoCell = document.createElement('td');
-        procesoCell.contentEditable = true;
+        procesoCell.setAttribute('data-col', 'Proceso');
         procesoCell.classList.add('text-center');
+        procesoCell.contentEditable = true;
         procesoCell.innerText = '';
+        procesoCell.setAttribute('rowspan', 1); // Inicialmente 1, se incrementará al agregar filas
         mainRow.appendChild(procesoCell);
-
-        // (j) Columna 10: Total Disponible
+    
+        // (j) Columna 10: Total Disponible (rowspan=1)
         const totalDisponibleCell = document.createElement('td');
+        totalDisponibleCell.setAttribute('data-col', 'Total Disponible');
         totalDisponibleCell.classList.add('text-center');
         totalDisponibleCell.innerText = '0';
+        totalDisponibleCell.setAttribute('rowspan', 1); // Inicialmente 1, se incrementará al agregar filas
         mainRow.appendChild(totalDisponibleCell);
-
+    
         // (k) Columna 11: Acciones
         const accionesCell = document.createElement('td');
+        accionesCell.setAttribute('data-col', 'Acciones');
         accionesCell.classList.add('text-center');
-
+    
         // Botón Eliminar Grupo
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
-        deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'me-2'); // me-2 para margen derecho
+        deleteBtn.classList.add('delete-btn', 'btn', 'btn-danger', 'btn-sm');
         deleteBtn.title = 'Eliminar grupo de Empaque';
-
+    
         deleteBtn.addEventListener('click', () => {
             if (confirm('¿Está seguro de eliminar este grupo de Empaque?')) {
                 const rowsToDelete = empaqueTableBody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
@@ -694,64 +712,251 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAlert('Grupo de Empaque eliminado.', 'warning');
             }
         });
-
+    
         accionesCell.appendChild(deleteBtn);
-
+    
+        // Botón "Más" para Agregar Filas
+        const addRowBtn = document.createElement('button');
+        addRowBtn.innerHTML = '<i class="fa fa-plus"></i>'; // Icono de "más"
+        addRowBtn.classList.add('btn', 'btn-success', 'btn-sm', 'ms-2'); // ms-2 para margen izquierdo
+        addRowBtn.title = 'Agregar fila al grupo de Empaque';
+    
+        addRowBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            addExtraEmpaqueRow(groupId);
+        });
+    
+        accionesCell.appendChild(addRowBtn);
+    
         // Botón de Bloqueo
         const lockBtn = document.createElement('button');
-        lockBtn.innerHTML = '<i class="fa fa-lock-open"></i>'; // Icono inicial desbloqueado
-        lockBtn.classList.add('btn', 'btn-secondary', 'btn-sm');
+        lockBtn.innerHTML = '<i class="fa fa-lock-open"></i>'; // Estado inicial desbloqueado
+        lockBtn.classList.add('lock-btn', 'btn', 'btn-secondary', 'btn-sm', 'ms-2'); // ms-2 para margen izquierdo
         lockBtn.title = 'Bloquear este grupo';
-
+    
         lockBtn.addEventListener('click', () => {
             toggleGroupLock(groupId, lockBtn);
         });
-
+    
         accionesCell.appendChild(lockBtn);
-
+    
         mainRow.appendChild(accionesCell);
-
-        // Agregar event listeners para actualizar cálculos y guardar datos
+    
+        // **Agregar event listeners para actualizar cálculos y guardar datos**
         varietySelect.addEventListener('change', () => {
             updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
         });
+    
         tipoRamoSelect.addEventListener('change', () => {
             updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
         });
+    
         longCell.addEventListener('input', () => {
             updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
         });
-        cajaSelect.addEventListener('change', () => {
+    
+        tipoCajaSelect.addEventListener('change', () => {
             updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
         });
+    
         numCajasCell.addEventListener('input', () => {
             updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
         });
+    
         procesoCell.addEventListener('input', () => {
             updateEmpaqueRow(mainRow);
             updateEmpaqueGroupTotal(groupId);
             saveEmpaqueGroupData();
         });
-
-        // Establecer el estado de bloqueo según localStorage
+    
+        // **Establecer el estado de bloqueo según localStorage**
         setGroupLockState(groupId, lockBtn);
-
+    
         // Guardar los datos del grupo
         saveEmpaqueGroupData();
         showAlert('Grupo de Empaque agregado correctamente.', 'success');
     }
     
-  
+
+    function addExtraEmpaqueRow(groupId) {
+        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+        const groupRows = empaqueTableBody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+        const mainRow = groupRows[0]; // Asumimos que la primera fila es la principal
+    
+        // Incrementar el rowspan de las celdas que abarcan múltiples filas
+        ['Variety', 'Total Empaque', 'Sobrante', 'Proceso', 'Total Disponible'].forEach(col => {
+            const cell = mainRow.querySelector(`td[data-col="${col}"]`);
+            if (cell) {
+                const currentRowSpan = parseInt(cell.getAttribute('rowspan')) || 1;
+                cell.setAttribute('rowspan', currentRowSpan + 1);
+            }
+        });
+    
+        // Crear la nueva fila
+        const newRow = empaqueTableBody.insertRow();
+        newRow.setAttribute('data-group-id', groupId);
+    
+        // **Agregar solo las celdas independientes en el orden correcto**
+    
+        // (a) Columna 2: Tipo de Ramo (select)
+        const tipoRamoCell = document.createElement('td');
+        tipoRamoCell.setAttribute('data-col', 'Tipo de Ramo');
+        const tipoRamoSelect = createTJRegSelect(); // Asegúrate de tener esta función definida
+        tipoRamoCell.appendChild(tipoRamoSelect);
+        newRow.appendChild(tipoRamoCell);
+    
+        // (b) Columna 3: Long (editable)
+        const longCell = document.createElement('td');
+        longCell.setAttribute('data-col', 'Long');
+        longCell.contentEditable = true;
+        longCell.innerText = '';
+        newRow.appendChild(longCell);
+    
+        // (c) Columna 4: Tipo de Caja (select)
+        const tipoCajaCell = document.createElement('td');
+        tipoCajaCell.setAttribute('data-col', 'Tipo de Caja');
+        const tipoCajaSelect = document.createElement('select');
+        tipoCajaSelect.classList.add('form-select', 'form-select-sm');
+        ["HB", "QB", "EB"].forEach(optVal => {
+            const opt = document.createElement('option');
+            opt.value = optVal;
+            opt.text = optVal;
+            tipoCajaSelect.appendChild(opt);
+        });
+        tipoCajaCell.appendChild(tipoCajaSelect);
+        newRow.appendChild(tipoCajaCell);
+    
+        // (d) Columna 5: # Cajas (editable)
+        const numCajasCell = document.createElement('td');
+        numCajasCell.setAttribute('data-col', '# Cajas');
+        numCajasCell.contentEditable = true;
+        numCajasCell.innerText = '';
+        newRow.appendChild(numCajasCell);
+    
+        // (e) Columna 6: Total UND (NO editable)
+        const totalUNDCell = document.createElement('td');
+        totalUNDCell.setAttribute('data-col', 'Total UND');
+        totalUNDCell.classList.add('text-center');
+        totalUNDCell.innerText = '0';
+        newRow.appendChild(totalUNDCell);
+    
+        // (f) Columna 11: Acciones (solo botón Eliminar Fila)
+        const accionesCell = document.createElement('td');
+        accionesCell.setAttribute('data-col', 'Acciones');
+        accionesCell.classList.add('text-center');
+    
+        // Botón Eliminar Fila
+        const deleteLineBtn = document.createElement('button');
+        deleteLineBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        deleteLineBtn.classList.add('delete-line-btn', 'btn', 'btn-danger', 'btn-sm');
+        deleteLineBtn.title = 'Eliminar esta línea';
+    
+        deleteLineBtn.addEventListener('click', () => {
+            removeEmpaqueRow(newRow, groupId);
+        });
+    
+        accionesCell.appendChild(deleteLineBtn);
+        newRow.appendChild(accionesCell);
+    
+        // **Agregar event listeners para actualizar cálculos y guardar datos**
+        tipoRamoSelect.addEventListener('change', () => {
+            updateEmpaqueRow(newRow);
+            updateEmpaqueGroupTotal(groupId);
+            saveEmpaqueGroupData();
+        });
+    
+        longCell.addEventListener('input', () => {
+            updateEmpaqueRow(newRow);
+            updateEmpaqueGroupTotal(groupId);
+            saveEmpaqueGroupData();
+        });
+    
+        tipoCajaSelect.addEventListener('change', () => {
+            updateEmpaqueRow(newRow);
+            updateEmpaqueGroupTotal(groupId);
+            saveEmpaqueGroupData();
+        });
+    
+        numCajasCell.addEventListener('input', () => {
+            updateEmpaqueRow(newRow);
+            updateEmpaqueGroupTotal(groupId);
+            saveEmpaqueGroupData();
+        });
+    
+        // Calcular Total UND para la nueva fila
+        updateEmpaqueRow(newRow);
+    
+        // Actualizar el Total Empaque del grupo
+        updateEmpaqueGroupTotal(groupId);
+    
+        // Guardar los datos del grupo
+        saveEmpaqueGroupData();
+    
+        // Actualizar resúmenes y totales generales
+        populateSummaryTables();
+        updateGrandTotal();
+    
+        // **Gestionar el estado de bloqueo**
+        const isLocked = isGroupLocked(groupId);
+        if (isLocked) {
+            lockEmpaqueRow(newRow);
+        }
+    
+        showAlert('Nueva fila agregada al grupo de Empaque.', 'success');
+    }
+    
+
+    function removeEmpaqueRow(row, groupId) {
+        const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+        const groupRows = empaqueTableBody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+        const currentCount = groupRows.length;
+    
+        if (currentCount <= 1) {
+            showAlert('No se puede eliminar la única fila del grupo. Debe haber al menos una fila.', 'warning');
+            return;
+        }
+    
+        // Remover la fila
+        row.remove();
+    
+        // Reducir el rowspan de las celdas que abarcan múltiples filas
+        const mainRow = empaqueTableBody.querySelector(`tr[data-group-id="${groupId}"]`);
+        ['Variety', 'Total Empaque', 'Sobrante', 'Proceso', 'Total Disponible'].forEach(col => {
+            const cell = mainRow.querySelector(`td[data-col="${col}"]`);
+            if (cell) {
+                const currentRowSpan = parseInt(cell.getAttribute('rowspan')) || 1;
+                cell.setAttribute('rowspan', currentRowSpan - 1);
+            }
+        });
+    
+        // Actualizar los cálculos y guardar los datos
+        updateEmpaqueGroupTotal(groupId);
+        updateAllCalculations();
+        populateSummaryTables();
+        updateGrandTotal();
+        saveEmpaqueGroupData();
+    
+        // **Gestionar el estado de bloqueo**
+        const isLocked = isGroupLocked(groupId);
+        if (isLocked) {
+            lockEmpaqueGroup(groupId);
+        }
+    
+        showAlert('Fila eliminada del grupo de Empaque.', 'success');
+    }
+    
+    
+
     // Función para alternar el estado de bloqueo de un grupo
     function toggleGroupLock(groupId, lockBtn) {
         let lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
@@ -1115,15 +1320,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!allRows.length) return;
     
         let sum = 0;
-        let mainRow = allRows[0]; // asumiendo que allRows[0] es la fila principal
+        let mainRow = allRows[0]; // Asumiendo que allRows[0] es la fila principal
     
         // Recorremos cada fila (principal y subfilas)
         allRows.forEach(row => {
             // ¿Es la fila principal?
             const isMainRow = (row === mainRow);
     
-            // localizamos el “Total UND”
-            // repetimos la misma lógica de índices:
+            // Localizamos la “Total UND”
+            // Repetimos la misma lógica de índices:
             let totalUNDCol = isMainRow ? 5 : 4; 
             // (coincidiendo con lo que hiciste en updateEmpaqueRow)
     
@@ -1135,13 +1340,16 @@ document.addEventListener('DOMContentLoaded', () => {
             sum += undValue;
         });
     
-        // Ahora asignamos ese sum a la columna “Total Empaque” (digamos col 6) de la fila principal
-        // Ajusta el índice según tu tabla
+        // Ahora asignamos ese sum a la columna “Total Empaque” (columna 6) de la fila principal
         const totalEmpaqueCell = mainRow.cells[6];
         if (totalEmpaqueCell) {
             totalEmpaqueCell.innerText = sum.toString();
         }
+    
+        // Actualizar otros totales si es necesario
+        updateStemsTotal(groupId);
     }
+    
     
 
       
@@ -2876,16 +3084,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
     
-            // Si el grupo no está en el objeto, inicializarlo
+            // Si el grupo no está en el objeto, inicializarlo (fila principal)
             if (!groups[groupId]) {
-                // Suponiendo que la primera fila de cada grupo es la principal
-                const varietyCell = row.cells[0];
-                const tipoRamoCell = row.cells[1];
-                const longCell = row.cells[2];
-                const totalEmpaqueCell = row.cells[6];
-                const sobranteCell = row.cells[7];
-                const procesoCell = row.cells[8];
-                const totalDisponibleCell = row.cells[9];
+                // Acceder a las celdas usando data-col en lugar de índices
+                const varietyCell = row.querySelector('td[data-col="Variety"]');
+                const tipoRamoCell = row.querySelector('td[data-col="Tipo de Ramo"]');
+                const longCell = row.querySelector('td[data-col="Long"]');
+                const totalEmpaqueCell = row.querySelector('td[data-col="Total Empaque"]');
+                const sobranteCell = row.querySelector('td[data-col="Sobrante"]');
+                const procesoCell = row.querySelector('td[data-col="Proceso"]');
+                const totalDisponibleCell = row.querySelector('td[data-col="Total Disponible"]');
     
                 // Obtener los valores
                 const varietySelect = varietyCell.querySelector('select');
@@ -2894,8 +3102,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tipoRamoSelect = tipoRamoCell.querySelector('select');
                 const tipoRamo = tipoRamoSelect ? tipoRamoSelect.value.trim() : tipoRamoCell.innerText.trim();
     
-                const longInput = longCell.querySelector('input');
-                const long = longInput ? longInput.value.trim() : longCell.innerText.trim();
+                const longInput = longCell.querySelector('[contenteditable="true"]');
+                const long = longInput ? longInput.innerText.trim() : longCell.innerText.trim();
     
                 const totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0;
     
@@ -2909,9 +3117,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalDisponibleCell
                 };
             } else {
-                // Si ya existe, sumar el totalEmpaque
-                const totalEmpaqueCell = row.cells[6];
-                const totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0;
+                // Si ya existe, sumar el totalEmpaque desde 'Total UND' de las filas adicionales
+                const totalUndCell = row.querySelector('td[data-col="Total UND"]');
+                const totalEmpaque = totalUndCell ? parseInt(totalUndCell.innerText.trim(), 10) || 0 : 0;
                 groups[groupId].totalEmpaque += totalEmpaque;
             }
         });
@@ -3025,5 +3233,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+    
 
 });
