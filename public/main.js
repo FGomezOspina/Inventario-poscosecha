@@ -3125,10 +3125,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalDisponibleCell
                 };
             } else {
-                // Si ya existe, sumar el totalEmpaque desde 'Total UND' de las filas adicionales
-                const totalUndCell = row.querySelector('td[data-col="Total UND"]');
-                const totalEmpaque = totalUndCell
-                    ? parseInt(totalUndCell.innerText.trim(), 10) || 0
+                // Si ya existe, sumar el Total Empaque desde las filas adicionales
+                const totalEmpaqueCell = row.querySelector('td[data-col="Total Empaque"]');
+                const totalEmpaque = totalEmpaqueCell
+                    ? parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0
                     : 0;
                 groups[groupId].totalEmpaque += totalEmpaque;
             }
@@ -3235,6 +3235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+    
     
     
 
