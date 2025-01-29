@@ -3056,57 +3056,65 @@ document.addEventListener('DOMContentLoaded', () => {
             showAlert('No se encontró la tabla de Empaque.', 'danger');
             return;
         }
-    
+        
         const empaqueTableBody = empaqueTable.querySelector('tbody');
         if (!empaqueTableBody) {
             showAlert('No se encontró el cuerpo de la tabla de Empaque.', 'danger');
             return;
         }
-    
+        
         // Obtener grupos bloqueados
         const lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
-    
+        
         // Obtener todas las filas
         const rows = empaqueTableBody.querySelectorAll('tr');
         console.log(`Número de filas encontradas: ${rows.length}`);
-    
-        const groups = {}; // Key: groupId, Value: { variety, tipoRamo, long, totalEmpaque, sobranteCell, procesoCell, totalDisponibleCell }
-    
+        
+        const groups = {}; 
+        // Estructura: 
+        // groups[groupId] = { variety, tipoRamo, long, totalEmpaque, sobranteCell, procesoCell, totalDisponibleCell }
+        
         rows.forEach(row => {
             const groupId = row.getAttribute("data-group-id");
             if (!groupId) {
-                console.warn("Fila sin groupId. Saltando.");
+                // Fila sin groupId
                 return;
             }
-    
+        
             if (lockedGroups.includes(groupId)) {
-                console.log(`Grupo ${groupId} está bloqueado. Saltando.`);
+                // Fila bloqueada
                 return;
             }
-    
+        
             // Si el grupo no está en el objeto, inicializarlo (fila principal)
             if (!groups[groupId]) {
-                // Acceder a las celdas usando data-col en lugar de índices
-                const varietyCell = row.querySelector('td[data-col="Variety"]');
-                const tipoRamoCell = row.querySelector('td[data-col="Tipo de Ramo"]');
-                const longCell = row.querySelector('td[data-col="Long"]');
-                const totalEmpaqueCell = row.querySelector('td[data-col="Total Empaque"]');
-                const sobranteCell = row.querySelector('td[data-col="Sobrante"]');
-                const procesoCell = row.querySelector('td[data-col="Proceso"]');
-                const totalDisponibleCell = row.querySelector('td[data-col="Total Disponible"]');
-    
+                // Acceder a las celdas usando data-col
+                const varietyCell           = row.querySelector('td[data-col="Variety"]');
+                const tipoRamoCell         = row.querySelector('td[data-col="Tipo de Ramo"]');
+                const longCell             = row.querySelector('td[data-col="Long"]');
+                const totalEmpaqueCell     = row.querySelector('td[data-col="Total Empaque"]');
+                const sobranteCell         = row.querySelector('td[data-col="Sobrante"]');
+                const procesoCell          = row.querySelector('td[data-col="Proceso"]');
+                const totalDisponibleCell  = row.querySelector('td[data-col="Total Disponible"]');
+        
                 // Obtener los valores
                 const varietySelect = varietyCell.querySelector('select');
-                const variety = varietySelect ? varietySelect.value.trim() : varietyCell.innerText.trim();
-    
+                const variety = varietySelect
+                    ? varietySelect.value.trim()
+                    : varietyCell.innerText.trim();
+        
                 const tipoRamoSelect = tipoRamoCell.querySelector('select');
-                const tipoRamo = tipoRamoSelect ? tipoRamoSelect.value.trim() : tipoRamoCell.innerText.trim();
-    
+                const tipoRamo = tipoRamoSelect
+                    ? tipoRamoSelect.value.trim()
+                    : tipoRamoCell.innerText.trim();
+        
                 const longInput = longCell.querySelector('[contenteditable="true"]');
-                const long = longInput ? longInput.innerText.trim() : longCell.innerText.trim();
-    
+                const long = longInput
+                    ? longInput.innerText.trim()
+                    : longCell.innerText.trim();
+        
                 const totalEmpaque = parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0;
-    
+        
                 groups[groupId] = {
                     variety,
                     tipoRamo,
@@ -3119,37 +3127,45 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Si ya existe, sumar el totalEmpaque desde 'Total UND' de las filas adicionales
                 const totalUndCell = row.querySelector('td[data-col="Total UND"]');
-                const totalEmpaque = totalUndCell ? parseInt(totalUndCell.innerText.trim(), 10) || 0 : 0;
+                const totalEmpaque = totalUndCell
+                    ? parseInt(totalUndCell.innerText.trim(), 10) || 0
+                    : 0;
                 groups[groupId].totalEmpaque += totalEmpaque;
             }
         });
-    
+        
         console.log(`Grupos únicos a procesar: ${Object.keys(groups).length}`);
-    
+        
         if (Object.keys(groups).length === 0) {
             showAlert('No hay grupos válidos para actualizar.', 'warning');
             return;
         }
-    
+        
         // Mostrar el spinner y deshabilitar el botón durante la operación
         const loadingSpinner = document.getElementById('loadingSpinner');
         if (loadingSpinner) {
             loadingSpinner.style.display = 'inline-block';
         }
-        const updateTableBtn = document.getElementById('updateTableBtn'); // Asegúrate de tener este elemento
+        const updateTableBtn = document.getElementById('updateTableBtn');
         if (updateTableBtn) {
             updateTableBtn.disabled = true;
         }
         showAlert('Actualizando Total Disponible y Proceso...', 'info');
-    
+        
         try {
             // Iterar sobre cada grupo y enviar la información al servidor
             for (const [groupId, group] of Object.entries(groups)) {
-                const { variety, tipoRamo, long, totalEmpaque, sobranteCell, procesoCell, totalDisponibleCell } = group;
-    
-                console.log(`Enviando actualización para: Variety=${variety}, TipoRamo=${tipoRamo}, Long=${long}, TotalEmpaque=${totalEmpaque}`);
-    
-                // Validar que totalEmpaque es positivo
+                const {
+                    variety,
+                    tipoRamo,
+                    long,
+                    totalEmpaque,
+                    sobranteCell,
+                    procesoCell,
+                    totalDisponibleCell
+                } = group;
+        
+                // Validar que totalEmpaque sea al menos 0
                 if (totalEmpaque < 0) {
                     console.warn(`Total Empaque negativo para ${groupId}. Saltando actualización.`);
                     sobranteCell.innerText = '0';
@@ -3157,54 +3173,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalDisponibleCell.innerText = '0';
                     continue;
                 }
-    
+        
                 // Preparar el payload para el servidor
-                const payload = {
-                    variety,
-                    tipoRamo,
-                    long,
-                    totalEmpaque
-                };
-    
-                // Enviar la solicitud al servidor para crear o actualizar el documento en Firebase
+                const payload = { variety, tipoRamo, long, totalEmpaque };
+        
+                // Enviar la solicitud al servidor
                 const response = await fetch('/api/total-disponible', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-    
-                console.log(`Respuesta del servidor para ${groupId}:`, response);
-    
+        
                 if (response.ok) {
                     const data = await response.json();
-                    console.log(`Datos recibidos del servidor para ${groupId}:`, data);
-                    const sobrante = data.sobrante;
-                    const bunchesTotal = data.bunchesTotal;
-    
-                    // Validar y actualizar 'sobrante'
-                    if (sobrante !== undefined && typeof sobrante === 'number') {
+                    const { sobrante, bunchesTotal } = data;
+        
+                    // Actualizar celdas:
+                    // 1. Sobrante
+                    if (typeof sobrante === 'number') {
                         sobranteCell.innerText = sobrante;
-                        console.log(`Calculado sobrante para ${groupId}: ${sobrante}`);
                     } else {
                         sobranteCell.innerText = '0';
-                        console.warn(`Sobrante para ${groupId} es undefined o no es un número.`);
                     }
-    
-                    // Validar y actualizar 'proceso' con 'bunchesTotal'
-                    if (bunchesTotal !== undefined && typeof bunchesTotal === 'number') {
+        
+                    // 2. Proceso (bunchesTotal)
+                    if (typeof bunchesTotal === 'number') {
                         procesoCell.innerText = bunchesTotal;
-                        console.log(`Bunches Total para ${groupId}: ${bunchesTotal}`);
                     } else {
                         procesoCell.innerText = '';
-                        console.warn(`bunchesTotal para ${groupId} es undefined o no es un número.`);
                     }
-    
-                    // Actualizar 'Total Disponible' como la suma de 'Sobrante' y 'Proceso'
+        
+                    // 3. Total Disponible = sobrante + bunchesTotal
                     const totalDisponible = (sobrante || 0) + (bunchesTotal || 0);
                     totalDisponibleCell.innerText = totalDisponible;
-                    console.log(`Total Disponible para ${groupId}: ${totalDisponible}`);
+        
                 } else {
                     // Manejo de errores
                     let errorMessage = 'Error desconocido.';
@@ -3218,7 +3220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showAlert(`Error al actualizar Total Disponible para ${variety}, ${tipoRamo}, ${long}: ${errorMessage}`, 'danger');
                 }
             }
-    
+        
             showAlert('Total Disponible y Proceso actualizados correctamente.', 'success');
         } catch (error) {
             console.error('Error en updateTotalDisponible:', error);
@@ -3233,6 +3235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+    
     
 
 });

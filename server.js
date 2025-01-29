@@ -165,74 +165,49 @@ app.post('/api/inventario', async (req, res) => {
  */
 app.post('/api/total-disponible', async (req, res) => {
   try {
-    console.log('Solicitud POST a /api/total-disponible recibida');
-    console.log('Payload:', req.body);
-
     const { variety, tipoRamo, long, totalEmpaque } = req.body;
 
-    // Validar campos requeridos
+    // 1. Validaciones básicas
     if (!variety || !tipoRamo || !long || totalEmpaque === undefined) {
-      console.log('Faltan campos requeridos en la solicitud.');
       return res.status(400).json({ error: 'Faltan campos requeridos.' });
     }
-
-    // Validar que totalEmpaque es un número y positivo
     if (isNaN(totalEmpaque)) {
-      console.log('totalEmpaque no es un número válido.');
-      return res.status(400).json({ error: 'totalEmpaque debe ser un número válido.' });
+      return res.status(400).json({ error: 'totalEmpaque debe ser un número.' });
     }
 
-    if (Number(totalEmpaque) < 0) {
-      console.log('totalEmpaque no puede ser negativo.');
-      return res.status(400).json({ error: 'totalEmpaque no puede ser negativo.' });
-    }
-
-    // Construir el ID del documento basado en variedad, tipoRamo y longitud
+    // 2. IDs y referencias
     const docId = `${variety.toUpperCase()}_${tipoRamo.toUpperCase()}_${long}`;
-
-    console.log(`Procesando documento con docId: ${docId}`);
-
-    // Referencias a las colecciones
     const totalDisponibleRef = db.collection('totalDisponible').doc(docId);
     const inventarioRef = db.collection('inventario').doc(docId);
 
-    // Recuperar documentos de totalDisponible e inventario
+    // 3. Leer documentos en paralelo
     const [totalDisponibleDoc, inventarioDoc] = await Promise.all([
       totalDisponibleRef.get(),
       inventarioRef.get()
     ]);
 
-    // Verificar existencia del documento en 'inventario'
+    // 4. Verificar que exista en inventario
     if (!inventarioDoc.exists) {
-      console.warn(`Documento no existente en 'inventario': ${docId}.`);
-      return res.status(400).json({ error: 'Documento correspondiente en inventario no existe.' });
+      return res.status(400).json({ error: 'Documento no existe en inventario.' });
     }
 
     const inventarioData = inventarioDoc.data();
-    console.log(`Datos del documento en 'inventario':`, inventarioData);
-
-    // Validar consistencia entre totalDisponible e inventario
+    // Validar consistencia con inventario
     if (
       inventarioData.variety.toUpperCase() !== variety.toUpperCase() ||
       inventarioData.tipoRamo.toUpperCase() !== tipoRamo.toUpperCase() ||
       inventarioData.long !== long
     ) {
-      console.warn(`Inconsistencia encontrada en el documento ${docId} entre 'inventario' y 'totalDisponible'.`);
       return res.status(400).json({ error: 'Inconsistencia entre inventario y totalDisponible.' });
     }
 
-    // Recuperar 'disponible' de totalDisponible
-    let disponible = 0;
+    // 5. Obtener disponible actual (o crearlo en 0 si no existe)
+    let disponibleActual = 0;
     if (totalDisponibleDoc.exists) {
-      disponible = Number(totalDisponibleDoc.data().disponible);
-      if (isNaN(disponible)) {
-        console.log(`Valor de 'disponible' inválido en el documento ${docId}. Reiniciando a 0.`);
-        disponible = 0;
-      }
-      console.log(`Documento existente en 'totalDisponible': ${docId}. Disponible actual: ${disponible}`);
+      const data = totalDisponibleDoc.data();
+      disponibleActual = Number(data.disponible) || 0;
     } else {
-      console.log(`Documento no existente en 'totalDisponible': ${docId}. Inicializando disponible a 0.`);
-      // Inicializar documento con 'disponible' = 0
+      // Si no existe, lo creamos en 0
       await totalDisponibleRef.set({
         variety,
         tipoRamo,
@@ -243,49 +218,35 @@ app.post('/api/total-disponible', async (req, res) => {
       });
     }
 
-    // Calcular sobrante y actualizar disponible correctamente
-    let sobrante = 0;
-    if (Number(totalEmpaque) <= Number(disponible)) {
-      sobrante = Number(disponible) - Number(totalEmpaque);
-      disponible = Number(disponible) - Number(totalEmpaque);
-      console.log(`totalEmpaque (${totalEmpaque}) <= disponible (${disponible + Number(totalEmpaque)}). Nuevo Disponible: ${disponible}`);
-    } else {
-      sobrante = 0;
-      disponible = 0;
-      console.log(`totalEmpaque (${totalEmpaque}) > disponible (${disponible}). Sobrante: ${sobrante}. Nuevo Disponible: ${disponible}`);
-    }
+    // 6. Calcular "sobrante" = (disponibleActual - totalEmpaque), forzando a 0 si es negativo
+    let sobrante = disponibleActual - Number(totalEmpaque);
+    if (sobrante < 0) sobrante = 0;
 
-    // Asegurar que sobrante es positivo
-    sobrante = Math.max(sobrante, 0);
+    // 7. Obtener bunchesTotal del inventario
+    let bunchesTotal = Number(inventarioData.bunchesTotal) || 0;
 
-    console.log(`Sobrante calculado: ${sobrante}`);
+    // 8. Calcular el nuevo disponible = sobrante + bunchesTotal
+    const nuevoDisponible = sobrante + bunchesTotal;
 
-    // Actualizar 'disponible' en Firestore
+    // 9. Actualizar en Firestore
     await totalDisponibleRef.update({
-      disponible: disponible,
+      disponible: nuevoDisponible,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    console.log(`Disponible para ${docId} actualizado a ${disponible}`);
+    // 10. Responder al frontend con sobrante y bunchesTotal
+    return res.status(200).json({
+      sobrante,
+      bunchesTotal
+    });
 
-    // Recuperar 'bunchesTotal' desde la colección 'inventario'
-    let bunchesTotal = 0;
-    if (inventarioDoc.exists) {
-      bunchesTotal = Number(inventarioData.bunchesTotal);
-      if (isNaN(bunchesTotal)) {
-        console.warn(`Valor de 'bunchesTotal' inválido en el documento ${docId}. Estableciendo a 0.`);
-        bunchesTotal = 0;
-      }
-      console.log(`Bunches Total para ${docId}: ${bunchesTotal}`);
-    }
-
-    // Enviar 'sobrante' y 'bunchesTotal' en la respuesta
-    res.status(200).json({ sobrante, bunchesTotal });
   } catch (error) {
     console.error('Error al actualizar Total Disponible:', error);
-    res.status(500).json({ error: 'Error al actualizar Total Disponible.' });
+    return res.status(500).json({ error: 'Error al actualizar Total Disponible.' });
   }
 });
+
+
 
 
 // ========== 7. CONFIGURAR EL PUERTO Y ARRANCAR EL SERVIDOR ==========
