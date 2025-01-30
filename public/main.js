@@ -3041,7 +3041,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-   
+    // Función para resetear la tabla de Empaque
+    function resetEmpaqueTable() {
+        if (confirm('¿Estás seguro de que deseas eliminar TODOS los grupos de Empaque? Esta acción no se puede deshacer.')) {
+            const empaqueTableBody = document.querySelector('#empaqueTable tbody');
+            if (empaqueTableBody) {
+                empaqueTableBody.innerHTML = ''; // Eliminar todas las filas de la tabla
+            }
+
+            // Eliminar los datos de Empaque almacenados en localStorage
+            localStorage.removeItem('empaqueData');
+            localStorage.removeItem('empaqueLockedGroups');
+
+            // Actualizar tablas resumidas si existen (ajusta según tu implementación)
+            // Por ejemplo, si tienes tablas resumidas específicas para Empaque, limítalas aquí
+            // Si las tablas resumidas de Empaque están integradas en populateSummaryTables, simplemente llámala
+            populateSummaryTables();
+
+            // Actualizar el Gran Total si es necesario
+            updateGrandTotal();
+
+            // Mostrar una alerta de confirmación
+            showAlert('Todos los grupos de Empaque han sido eliminados.', 'warning');
+        }
+    }
+
+    // Asignar el event listener al botón de resetear Empaque
+    const resetEmpaqueTableBtn = document.getElementById('resetEmpaqueTableBtn');
+    if (resetEmpaqueTableBtn) {
+        resetEmpaqueTableBtn.addEventListener('click', resetEmpaqueTable);
+    } else {
+        console.error('No se encontró el botón con id "resetEmpaqueTableBtn".');
+    }
+
+
 
     /**
      * Función para actualizar el Total Disponible y el Proceso en la tabla de Empaque.

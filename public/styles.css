@@ -1,5 +1,3 @@
-/* styles.css */
-
 /* ============================
    Estilos generales para el menú lateral
    ============================ */
@@ -441,6 +439,12 @@ th[data-col="Fecha"] {
     background-color: #ffffff;
 }
 
+#resetEmpaqueTableBtn {
+    color: #ffffff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
 /* ============================
    Estilos para la Tabla de Empaque
    ============================ */
@@ -468,13 +472,154 @@ th[data-col="Fecha"] {
 /* Asegurar que la columna "Sobrante" esté visible */
 #empaqueTable th:nth-child(7),
 #empaqueTable td:nth-child(7) {
-  display: table-cell;
-  /* Puedes agregar estilos adicionales si lo deseas */
-  background-color: #FFF2CC; /* Color de fondo claro */
-  font-weight: bold;
-  text-align: center;
+    display: table-cell;
+    /* Puedes agregar estilos adicionales si lo deseas */
+    background-color: #FFF2CC; /* Color de fondo claro */
+    font-weight: bold;
+    text-align: center;
 }
 
+/* ============================
+   Estilos para la Tabla Pack Rate
+   ============================ */
+
+/* Contenedor de la tabla Pack Rate con altura fija y desplazamiento */
+.packrate-table-container {
+    max-height: 60vh; /* Ajusta la altura según tus necesidades */
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid #dee2e6; /* Borde sutil alrededor del contenedor */
+    border-radius: 4px; /* Bordes redondeados */
+    margin-bottom: 20px; /* Espaciado inferior */
+}
+
+/* Estilos generales de la tabla Pack Rate */
+#packrateTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px; /* Tamaño de fuente más pequeño para un diseño minimalista */
+    background-color: #fff; /* Fondo blanco para una apariencia limpia */
+    border: 1px solid #dee2e6; /* Borde completo alrededor de la tabla */
+}
+
+/* Encabezado fijo */
+#packrateTable thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f1f1f1; /* Fondo sutil para el encabezado */
+    z-index: 2;
+    border-bottom: 2px solid #dee2e6; /* Línea inferior del encabezado */
+    padding: 8px; /* Padding reducido */
+    text-align: center;
+    font-weight: bold;
+    font-size: 13px; /* Tamaño de fuente ligeramente más pequeño */
+    border-right: 1px solid #dee2e6; /* Borde derecho para las columnas */
+}
+
+/* Celdas del cuerpo de la tabla */
+#packrateTable tbody td {
+    padding: 6px; /* Padding reducido */
+    border-bottom: 1px solid #dee2e6; /* Bordes sutiles entre filas */
+    text-align: center;
+    font-size: 12px; /* Tamaño de fuente más pequeño */
+    border-right: 1px solid #dee2e6; /* Borde derecho para las columnas */
+}
+
+/* Eliminar el borde derecho de la última columna */
+#packrateTable thead th:last-child,
+#packrateTable tbody td:last-child {
+    border-right: none;
+}
+
+/* Alternar colores de filas para mejorar la legibilidad */
+#packrateTable tbody tr:nth-child(odd) {
+    background-color: #fafafa;
+}
+
+#packrateTable tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+/* ============================
+   Ancho de las tres primeras columnas de Pack Rate
+   ============================ */
+#packrateTable th:nth-child(1),
+#packrateTable td:nth-child(1) {
+    width: 60px; /* Ancho reducido para STEMS */
+    min-width: 60px;
+    max-width: 60px;
+}
+
+#packrateTable th:nth-child(2),
+#packrateTable td:nth-child(2) {
+    width: 120px; /* Ancho reducido para Variety */
+    min-width: 120px;
+    max-width: 120px;
+}
+
+#packrateTable th:nth-child(3),
+#packrateTable td:nth-child(3) {
+    width: 20px; /* Ancho reducido para la columna en blanco */
+    min-width: 20px;
+    max-width: 20px;
+}
+
+/* ============================
+   Ancho uniforme para las columnas 70, 60, 55, 50 en Pack Rate
+   ============================ */
+#packrateTable th:nth-child(4),
+#packrateTable th:nth-child(5),
+#packrateTable th:nth-child(6),
+#packrateTable th:nth-child(7),
+#packrateTable td:nth-child(4),
+#packrateTable td:nth-child(5),
+#packrateTable td:nth-child(6),
+#packrateTable td:nth-child(7) {
+    width: 80px; /* Ancho uniforme para las columnas 70, 60, 55, 50 */
+    min-width: 80px;
+    max-width: 80px;
+}
+
+@media (max-width: 768px) {
+    #packrateTable {
+        font-size: 12px;
+    }
+
+    #packrateTable thead th,
+    #packrateTable tbody td {
+        padding: 4px;
+    }
+
+    .packrate-table-container {
+        max-height: 40vh; /* Reducir la altura en pantallas pequeñas */
+    }
+
+    /* Ajustar los anchos de las primeras tres columnas en pantallas pequeñas */
+    #packrateTable th:nth-child(1),
+    #packrateTable td:nth-child(1),
+    #packrateTable th:nth-child(2),
+    #packrateTable td:nth-child(2),
+    #packrateTable th:nth-child(3),
+    #packrateTable td:nth-child(3) {
+        width: 50px; /* Ajusta según necesites */
+        min-width: 50px;
+        max-width: 50px;
+    }
+
+    /* Ajustar los anchos de las columnas 70, 60, 55, 50 en pantallas pequeñas */
+    #packrateTable th:nth-child(4),
+    #packrateTable th:nth-child(5),
+    #packrateTable th:nth-child(6),
+    #packrateTable th:nth-child(7),
+    #packrateTable td:nth-child(4),
+    #packrateTable td:nth-child(5),
+    #packrateTable td:nth-child(6),
+    #packrateTable td:nth-child(7) {
+        width: 60px; /* Ancho uniforme reducido para pantallas pequeñas */
+        min-width: 60px;
+        max-width: 60px;
+    }
+}
 
 /* ============================
    Fin del archivo styles.css
