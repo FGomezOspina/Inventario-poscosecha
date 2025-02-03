@@ -2537,15 +2537,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tBody) return;
         tBody.innerHTML = "";
     
-        const longColumns = [70, 60, 55, 50, 40]; // Añadido 40
-        const rowDefinitions = [
-            { label: "HB", editable: true },
-            { label: "STEMS", editable: false },
-            { label: "QB", editable: true },
-            { label: "STEMS", editable: false },
-            { label: "EB", editable: true },
-            { label: "STEMS", editable: false }
-        ];
+        // Definimos las longitudes y los tipos de caja que usaremos
+        const longColumns = [70, 60, 55, 50, 40]; // 5 filas por bloque
+        const boxTypes = ["HB", "QB", "EB"];
     
         // Se generan las filas base usando las variedades definidas en 'varietyOptions'
         let allVarieties = [];
@@ -2553,148 +2547,124 @@ document.addEventListener('DOMContentLoaded', () => {
             allVarieties = allVarieties.concat(varietyOptions[tipo]);
         });
     
-        // Se asigna un “order” (índice) para cada variedad y se crea la tabla base.
+        // Para cada variedad se crea un bloque de 5 filas (una por cada longitud)
         allVarieties.forEach((varName, orderIndex) => {
-            let multiplierCellCreated = false;
-            let varietyCellCreated = false;
-    
-            rowDefinitions.forEach((def, index) => {
+            for (let i = 0; i < longColumns.length; i++) {
                 const row = tBody.insertRow();
     
-                // En la primera fila del bloque se añade la celda del multiplicador (con rowspan)
-                if (!multiplierCellCreated) {
-                    const cellMultiplier = row.insertCell();
-                    cellMultiplier.contentEditable = true;
-                    cellMultiplier.innerText = "25"; // Valor por defecto
-                    cellMultiplier.style.textAlign = "center";
-                    cellMultiplier.style.minWidth = "30px";
-                    cellMultiplier.rowSpan = rowDefinitions.length;
-                    multiplierCellCreated = true;
-                }
-                // En la primera fila del bloque se añade la celda de variedad (con rowspan)
-                if (!varietyCellCreated) {
+                // En la primera fila del bloque se añade la celda de STEMS (multiplicador) con rowspan=5
+                // y la celda de Variety (nombre) también con rowspan=5.
+                if (i === 0) {
+                    const cellStems = row.insertCell();
+                    cellStems.contentEditable = true;
+                    cellStems.innerText = "25"; // Valor por defecto
+                    cellStems.style.textAlign = "center";
+                    cellStems.style.minWidth = "30px";
+                    cellStems.rowSpan = longColumns.length;
+    
                     const cellVariety = row.insertCell();
                     cellVariety.innerText = varName;
                     cellVariety.style.textAlign = "center";
-                    cellVariety.rowSpan = rowDefinitions.length;
-                    // Guardamos el order para preservar la posición
+                    cellVariety.rowSpan = longColumns.length;
                     row.setAttribute("data-order", orderIndex);
-                    // El data-group-id se asignará cuando se guarde en Firebase.
-                    varietyCellCreated = true;
                 }
+                // En cada fila (del bloque) se crea la celda para mostrar la longitud
+                const cellLong = row.insertCell();
+                cellLong.innerText = longColumns[i];
+                cellLong.style.textAlign = "center";
+                cellLong.contentEditable = false;
+                cellLong.setAttribute("data-col", "long");
     
-                // Se crea la celda de etiqueta usando el objeto actual def
-                const cellLabel = row.insertCell();
-                cellLabel.innerText = def.label; // Ahora se usa def.label (HB, STEMS, QB, STEMS, EB, STEMS)
-                cellLabel.style.fontWeight = "bold";
-                cellLabel.style.textAlign = "center";
-    
-                // Se crean las celdas correspondientes para cada longitud
-                longColumns.forEach(long => {
+                // Se crean las celdas para cada uno de los tipos: HB, QB y EB
+                boxTypes.forEach(type => {
                     const cell = row.insertCell();
                     cell.style.textAlign = "center";
-                    cell.contentEditable = def.editable; // STEMS tendrá false, cajas true
+                    cell.contentEditable = true; // Se espera que el usuario ingrese valores (cajas)
                     cell.innerText = "0";
-                    cell.setAttribute('data-col', long); // Asignar data-col
+                    cell.setAttribute("data-type", type);
+                    cell.setAttribute("data-col", longColumns[i]); // Para identificar la longitud
                 });
-            });
+            }
         });
     
         attachPackRateEvents();
     }
+    
 
 
     // Función para renderizar la tabla a partir de los bloques obtenidos desde Firebase.
     function renderPackRateBlocks(blocks) {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return;
-      
+    
         const tBody = packrateTable.querySelector("tbody");
         tBody.innerHTML = "";
-      
-        const longColumns = [70, 60, 55, 50, 40]; // Añadido 40
-        const rowDefinitions = [
-          { type: "HB", label: "HB", editable: true },
-          { type: "HB", label: "STEMS", editable: false },
-          { type: "QB", label: "QB", editable: true },
-          { type: "QB", label: "STEMS", editable: false },
-          { type: "EB", label: "EB", editable: true },
-          { type: "EB", label: "STEMS", editable: false }
-        ];
-      
-        // Ordenar los bloques según un campo "order" si existe
+    
+        const longColumns = [70, 60, 55, 50, 40];
+        const boxTypes = ["HB", "QB", "EB"];
+    
+        // Ordenar los bloques según el campo "order" si existe
         blocks.sort((a, b) => {
-          if (a.order === undefined || b.order === undefined) return 0;
-          return a.order - b.order;
+            if (a.order === undefined || b.order === undefined) return 0;
+            return a.order - b.order;
         });
-      
+    
         blocks.forEach(block => {
-          const groupId = block.groupId; // Puede ser undefined si aún no se asignó
-          let multiplierCellCreated = false;
-          let varietyCellCreated = false;
-      
-          rowDefinitions.forEach(def => {
-            const row = tBody.insertRow();
-            if (groupId) {
-              row.setAttribute("data-group-id", groupId);
+            const groupId = block.groupId; // Puede ser undefined si aún no se asignó
+            // Para cada bloque (variedad) creamos 5 filas (una por cada longitud)
+            for (let i = 0; i < longColumns.length; i++) {
+                const row = tBody.insertRow();
+                if (groupId) {
+                    row.setAttribute("data-group-id", groupId);
+                }
+                // En la primera fila del bloque se añade la celda del multiplicador (STEMS) y la celda de variety
+                if (i === 0) {
+                    const cellStems = row.insertCell();
+                    cellStems.contentEditable = true;
+                    cellStems.innerText = (block.multiplier !== undefined) ? block.multiplier.toString() : "25";
+                    cellStems.style.textAlign = "center";
+                    cellStems.style.minWidth = "30px";
+                    cellStems.rowSpan = longColumns.length;
+    
+                    const cellVariety = row.insertCell();
+                    cellVariety.innerText = block.variety ? block.variety : "";
+                    cellVariety.style.textAlign = "center";
+                    cellVariety.rowSpan = longColumns.length;
+                    if (block.order !== undefined) {
+                        row.setAttribute("data-order", block.order);
+                    }
+                }
+                // Celda para la longitud (si no se agregó en las celdas fusionadas)
+                const cellLong = row.insertCell();
+                cellLong.innerText = longColumns[i];
+                cellLong.style.textAlign = "center";
+                cellLong.contentEditable = false;
+                cellLong.setAttribute("data-col", "long");
+    
+                // Para cada tipo (HB, QB, EB) se agregan las celdas correspondientes.
+                boxTypes.forEach(type => {
+                    const cell = row.insertCell();
+                    cell.style.textAlign = "center";
+                    cell.contentEditable = true;
+                    let value = "0";
+                    if (
+                        block.cajas &&
+                        block.cajas[type] &&
+                        block.cajas[type][longColumns[i]] !== undefined
+                    ) {
+                        value = block.cajas[type][longColumns[i]].toString();
+                    }
+                    cell.innerText = value;
+                    cell.setAttribute("data-type", type);
+                    cell.setAttribute("data-col", longColumns[i]);
+                });
             }
-            // Primera fila: celda del multiplicador con rowspan
-            if (!multiplierCellCreated) {
-              const cellMultiplier = row.insertCell();
-              cellMultiplier.contentEditable = true;
-              cellMultiplier.innerText = (block.multiplier !== undefined) ? block.multiplier.toString() : "25";
-              cellMultiplier.style.textAlign = "center";
-              cellMultiplier.style.minWidth = "30px";
-              cellMultiplier.rowSpan = rowDefinitions.length;
-              multiplierCellCreated = true;
-            }
-            // Primera fila: celda de variedad con rowspan
-            if (!varietyCellCreated) {
-              const cellVariety = row.insertCell();
-              cellVariety.innerText = block.variety ? block.variety : "";
-              cellVariety.style.textAlign = "center";
-              cellVariety.rowSpan = rowDefinitions.length;
-              if (block.order !== undefined) {
-                row.setAttribute("data-order", block.order);
-              }
-              varietyCellCreated = true;
-            }
-            // Celda de etiqueta
-            const cellLabel = row.insertCell();
-            cellLabel.innerText = def.label;
-            cellLabel.style.fontWeight = "bold";
-            cellLabel.style.textAlign = "center";
-            // Celdas para cada longitud
-            longColumns.forEach(long => {
-              const cell = row.insertCell();
-              cell.style.textAlign = "center";
-              cell.contentEditable = def.editable;
-              if (def.editable) {
-                const value =
-                  (block.cajas &&
-                    block.cajas[def.type] &&
-                    block.cajas[def.type][long] !== undefined)
-                    ? block.cajas[def.type][long]
-                    : "0";
-                cell.innerText = value.toString();
-              } else {
-                const value =
-                  (block.stems &&
-                    block.stems[def.type] &&
-                    block.stems[def.type][long] !== undefined)
-                    ? block.stems[def.type][long]
-                    : "0";
-                cell.innerText = value.toString();
-              }
-              cell.setAttribute('data-col', long); // Asignar data-col
-            });
-          });
         });
-      
-        // Una vez renderizada la tabla, aseguramos que se configuren los eventos y cálculos
+    
         attachPackRateEvents();
         updateAllCalculations();
     }
+    
     
 
     // Función que extrae los datos de la tabla (asumiendo bloques de 6 filas).
@@ -2706,49 +2676,56 @@ document.addEventListener('DOMContentLoaded', () => {
         const tBody = packrateTable.querySelector("tbody");
         const rows = Array.from(tBody.querySelectorAll("tr"));
         const blocks = [];
+        const longColumns = [70, 60, 55, 50, 40];
+        const boxTypes = ["HB", "QB", "EB"];
     
-        for (let i = 0; i < rows.length; i += 6) { // Incremento basado en el número de filas por bloque
-            const blockRows = rows.slice(i, i + 6);
-            if (blockRows.length < 6) break;
+        // Iteramos en bloques de 5 filas
+        for (let i = 0; i < rows.length; i += 5) {
+            const blockRows = rows.slice(i, i + 5);
+            if (blockRows.length < 5) break;
     
             const mainRow = blockRows[0];
             const groupId = mainRow.getAttribute("data-group-id") || undefined;
+            // En la primera fila, las dos primeras celdas son STEMS y Variety
             const multiplier = parseFloat(mainRow.cells[0].innerText) || 25;
             const variety = mainRow.cells[1].innerText.trim();
             let order = mainRow.getAttribute("data-order");
             order = order !== null ? parseInt(order, 10) : undefined;
     
-            const longColumns = [70, 60, 55, 50, 40]; // Incluye la nueva columna 40
-            const tipos = ["HB", "QB", "EB"];
+            // Inicializamos objetos para las cajas y para los STEMS
             const cajas = {};
             const stems = {};
-    
-            tipos.forEach((tipo, tipoIdx) => {
+            boxTypes.forEach(tipo => {
                 cajas[tipo] = {};
                 stems[tipo] = {};
-    
-                // Asignar filas de cajas y stems basadas en índices
-                const rowCajas = blockRows[tipoIdx * 2];
-                const rowStems = blockRows[tipoIdx * 2 + 1];
-    
-                if (!rowCajas || !rowStems) {
-                    console.warn(`No se encontraron las filas de cajas o STEMS para tipo ${tipo}`);
-                    return;
-                }
-    
-                longColumns.forEach(long => {
-                    const cajaCell = rowCajas.querySelector(`td[data-col="${long}"]`);
-                    const stemCell = rowStems.querySelector(`td[data-col="${long}"]`);
-    
-                    const cajaValue = cajaCell ? parseFloat(cajaCell.innerText.trim()) || 0 : 0;
-                    const stemValue = stemCell ? parseFloat(stemCell.innerText.trim()) || 0 : 0;
-    
-                    cajas[tipo][long] = cajaValue.toString();
-                    stems[tipo][long] = stemValue.toString();
-    
-                    console.log(`Tipo: ${tipo}, Longitud: ${long}, Cajas: ${cajaValue}, STEMS: ${stemValue}`);
-                });
             });
+    
+            // Recorremos cada fila del bloque para extraer los valores por longitud
+            for (let j = 0; j < blockRows.length; j++) {
+                const currentRow = blockRows[j];
+                let longValue, baseIndex;
+                if (j === 0) {
+                    // La primera fila tiene 6 celdas:
+                    // [0]: STEMS, [1]: Variety, [2]: Long, [3]: HB, [4]: QB, [5]: EB
+                    longValue = currentRow.cells[2].innerText.trim();
+                    baseIndex = 3;
+                } else {
+                    // Las filas restantes tienen 4 celdas:
+                    // [0]: Long, [1]: HB, [2]: QB, [3]: EB
+                    longValue = currentRow.cells[0].innerText.trim();
+                    baseIndex = 1;
+                }
+                longValue = parseInt(longValue) || 0;
+    
+                // Para cada tipo, extraemos el valor de la celda correspondiente
+                boxTypes.forEach((tipo, idx) => {
+                    const cell = currentRow.cells[baseIndex + idx];
+                    const value = cell ? parseFloat(cell.innerText.trim()) || 0 : 0;
+                    cajas[tipo][longValue] = value.toString();
+                    // Calculamos STEMS como (multiplicador × valor de cajas)
+                    stems[tipo][longValue] = (multiplier * value).toString();
+                });
+            }
     
             blocks.push({
                 groupId,
@@ -2756,14 +2733,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 variety,
                 cajas,
                 stems,
-                order, // Para preservar el orden.
+                order,
                 updatedAt: new Date().toISOString()
             });
         }
     
-        console.log("Datos extraídos para PackRate:", JSON.stringify(blocks, null, 2)); // Depuración
+        console.log("Datos extraídos para PackRate:", JSON.stringify(blocks, null, 2));
         return blocks;
     }
+    
     
 
     function extractInventarioData() {
@@ -2957,27 +2935,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return;
         const rows = packrateTable.querySelectorAll("tbody tr");
+        const totalRows = rows.length;
+        // Cada bloque está compuesto por 5 filas
+        for (let i = 0; i < totalRows; i += 5) {
+            const blockFirstRow = rows[i];
     
-        // Se asume que cada bloque está compuesto por 6 filas consecutivas.
-        for (let i = 0; i < rows.length; i += 6) {
-            [0, 2, 4].forEach(offset => {
-                const rowBoxes = rows[i + offset];
-                const rowStems = rows[i + offset + 1];
-                if (!rowBoxes || !rowStems) return;
-                rowBoxes.addEventListener("input", () => {
-                    recalcPackRateRow(rowBoxes, rowStems, rows[i]);
-                });
+            // Listener para el multiplicador (celda 0 de la primera fila)
+            const multiplierCell = blockFirstRow.cells[0];
+            multiplierCell.addEventListener("input", () => {
+                recalcPackRateRow(blockFirstRow);
             });
     
-            const firstRow = rows[i];
-            const cellMultiplier = firstRow.cells[0];
-            cellMultiplier.addEventListener("input", () => {
-                recalcPackRateRow(rows[i + 0], rows[i + 1], firstRow); // HB
-                recalcPackRateRow(rows[i + 2], rows[i + 3], firstRow); // QB
-                recalcPackRateRow(rows[i + 4], rows[i + 5], firstRow); // EB
-            });
+            // Para cada fila del bloque, asignar listener a las celdas editables de cajas
+            for (let j = 0; j < 5; j++) {
+                const row = rows[i + j];
+                let startIdx, endIdx;
+                if (j === 0) {
+                    // Primera fila: celdas 3, 4 y 5
+                    startIdx = 3;
+                    endIdx = 6;
+                } else {
+                    // Filas restantes: celdas 1, 2 y 3
+                    startIdx = 1;
+                    endIdx = 4;
+                }
+                for (let k = startIdx; k < endIdx; k++) {
+                    const cell = row.cells[k];
+                    if (cell) {
+                        cell.addEventListener("input", () => {
+                            recalcPackRateRow(blockFirstRow);
+                        });
+                    }
+                }
+            }
         }
     }
+    
     
 
     /**
@@ -2986,40 +2979,54 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {HTMLElement} rowStems - La fila que contiene las celdas de STEMS.
      * @param {HTMLElement} firstRow - La fila principal del bloque (HB).
      */
-    function recalcPackRateRow(rowBoxes, rowStems, firstRow) {
-        // Obtener el multiplicador desde la fila principal
+    function recalcPackRateRow(firstRow) {
+        // Asumimos que 'firstRow' es la primera fila de un bloque de 5 filas.
+        // Obtenemos el multiplicador desde la celda STEMS (celda 0 de la primera fila)
         const multiplierCell = firstRow.cells[0];
         const multiplier = parseFloat(multiplierCell.innerText) || 0;
         console.log(`Multiplicador: ${multiplier}`);
-
-        // Definir las longitudes incluyendo 40
-        const longColumns = [70, 60, 55, 50, 40];
-
-        // Iterar sobre cada longitud y calcular STEMS
-        longColumns.forEach(long => {
-            // Encontrar la celda de cajas correspondiente usando data-col
-            const cellBox = rowBoxes.querySelector(`td[data-col="${long}"]`);
-            if (!cellBox) {
-                console.warn(`No se encontró la celda de cajas para Longitud ${long}`);
-                return;
-            }
-            const valueBox = parseFloat(cellBox.innerText) || 0;
-            console.log(`Cajas Tipo ${rowBoxes.cells[1].innerText}, Longitud ${long}: ${valueBox}`);
-
-            // Calcular STEMS
-            const stems = valueBox * multiplier;
-            console.log(`STEMS Calculados para Longitud ${long}: ${stems}`);
-
-            // Encontrar la celda de STEMS correspondiente usando data-col
-            const stemCell = rowStems.querySelector(`td[data-col="${long}"]`);
-            if (stemCell) {
-                console.log(`Actualizando STEMS en celda con data-col=${long}`);
-                stemCell.innerText = stems.toString();
+    
+        // Obtenemos todas las filas del bloque (5 filas consecutivas)
+        const tbody = firstRow.parentElement;
+        const allRows = Array.from(tbody.querySelectorAll("tr"));
+        const startIndex = allRows.indexOf(firstRow);
+        const blockRows = allRows.slice(startIndex, startIndex + 5);
+    
+        // Los tipos de caja son: HB, QB y EB
+        const boxTypes = ["HB", "QB", "EB"];
+        let totalStems = 0;
+    
+        // Recorremos cada fila del bloque
+        blockRows.forEach((row, index) => {
+            let longValue;
+            if (index === 0) {
+                // Primera fila: estructura
+                // cell[0]: STEMS (multiplicador), [1]: Variety, [2]: Long, [3]: HB, [4]: QB, [5]: EB
+                longValue = parseInt(row.cells[2].innerText.trim()) || 0;
+                boxTypes.forEach((type, typeIndex) => {
+                    const cell = row.cells[3 + typeIndex];
+                    const boxValue = cell ? (parseFloat(cell.innerText.trim()) || 0) : 0;
+                    const stemsValue = boxValue * multiplier;
+                    totalStems += stemsValue;
+                });
             } else {
-                console.warn(`No se encontró la celda de STEMS para Longitud ${long}`);
+                // Filas 2 a 5: estructura
+                // cell[0]: Long, [1]: HB, [2]: QB, [3]: EB
+                longValue = parseInt(row.cells[0].innerText.trim()) || 0;
+                boxTypes.forEach((type, typeIndex) => {
+                    const cell = row.cells[1 + typeIndex];
+                    const boxValue = cell ? (parseFloat(cell.innerText.trim()) || 0) : 0;
+                    const stemsValue = boxValue * multiplier;
+                    totalStems += stemsValue;
+                });
             }
         });
+    
+        // Actualizar la celda del multiplicador en la primera fila para mostrar el total STEMS
+        multiplierCell.innerText = multiplier.toString() + " (Total: " + totalStems + ")";
+        console.log(`Total STEMS para el bloque: ${totalStems}`);
     }
+    
 
 
     
