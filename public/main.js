@@ -32,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryByBouquetType = document.getElementById('summaryByBouquetType').getElementsByTagName('tbody')[0];
     const summaryByBatch = document.getElementById('summaryByBatch').getElementsByTagName('tbody')[0];
 
+    const packrateCells = document.querySelectorAll('#packrateTable td[contenteditable="true"]');
+    // O, si necesitas distinguir:
+    const regCells = document.querySelectorAll('#packrateTable td[data-category="REG"]');
+    const ws10Cells = document.querySelectorAll('#packrateTable td[data-category="WS10"]');
+
+
     // Cargar config (si no existe, usa defaultConfig)
     let config = JSON.parse(localStorage.getItem('config')) || defaultConfig;
 
@@ -1245,23 +1251,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const groupId = row.getAttribute('data-group-id');
         if (!groupId) return;
     
-        // 2) localizamos la fila principal (mainRow) de ese grupo
+        // 2) Localizamos la fila principal (mainRow) de ese grupo
         const mainRow = document.querySelector(`#empaqueTable tr[data-group-id="${groupId}"]`);
         if (!mainRow) return;
     
-        // 3) Verificamos si la fila que recibimos ES la principal
+        // 3) Determinamos si la fila actual es la principal o una subfila
         const isMainRow = (row === mainRow);
     
-        // -- Si es la fila principal, asumimos que:
-        // col 0 = Variety, col 1 = Tipo Ramo, col 2 = Long, col 3 = Caja, col 4 = #Cajas, col 5 = Total UND, col 6 = ...
-        // -- Si es subfila, asumimos:
-        // col 0 = Tipo Ramo, col 1 = Long, col 2 = Caja, col 3 = #Cajas, col 4 = Total UND
-        let tipoRamoCol;
-        let longCol;
-        let cajaCol;
-        let numCajasCol;
-        let totalUNDCol;
-    
+        // Asumimos la siguiente estructura de columnas:
+        // - Si es fila principal:
+        //      col 0 = Variety, col 1 = Tipo Ramo, col 2 = Long, col 3 = Caja, col 4 = #Cajas, col 5 = Total UND, col 6 = ...
+        // - Si es subfila:
+        //      col 0 = Tipo Ramo, col 1 = Long, col 2 = Caja, col 3 = #Cajas, col 4 = Total UND
+        let tipoRamoCol, longCol, cajaCol, numCajasCol, totalUNDCol;
         if (isMainRow) {
             tipoRamoCol   = 1;
             longCol       = 2;
@@ -1276,12 +1278,11 @@ document.addEventListener('DOMContentLoaded', () => {
             totalUNDCol   = 4;
         }
     
-        // 4) Sacamos la variety (de la fila principal)
-        //    Suponiendo que el select de variety está en col 0 de la fila principal
+        // 4) Obtenemos el nombre de la variedad (de la fila principal)
         const varietySelect = mainRow.cells[0]?.querySelector('select');
-        const varietyName   = varietySelect ? varietySelect.value.trim() : '';
+        const varietyName = varietySelect ? varietySelect.value.trim() : '';
     
-        // 5) Obtenemos los elementos de la fila actual (sea principal o subfila)
+        // 5) Obtenemos los elementos de la fila actual (ya sea principal o subfila)
         const tipoRamoSelect = row.cells[tipoRamoCol]?.querySelector('select');
         const longCell       = row.cells[longCol];
         const cajaSelect     = row.cells[cajaCol]?.querySelector('select');
@@ -1292,23 +1293,30 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
     
-        // 6) Leemos los valores
+        // 6) Leemos los valores relevantes
+        // Se asume que el select de "Tipo Ramo" contiene los valores "REG" o "WS10"
         const tipoRamo  = tipoRamoSelect.value.trim();
         const longValue = parseInt(longCell.innerText.trim()) || 0;
         const cajaType  = cajaSelect.value.trim();
         const numCajas  = parseInt(numCajasCell.innerText.trim()) || 0;
     
-        // 7) Calculamos
+        // 7) Calculamos el Total UND según la categoría
         let totalUND = 0;
-        // Solo si es "REG"
         if (tipoRamo === "REG") {
-            const stemsPerCaja = getPackRateStems(varietyName, cajaType, longValue);
+            const stemsPerCaja = getPackRateStems(varietyName, "REG", cajaType, longValue);
             totalUND = numCajas * stemsPerCaja;
+        } else if (tipoRamo === "WS10") {
+            const stemsPerCaja = getPackRateStems(varietyName, "WS10", cajaType, longValue);
+            totalUND = numCajas * stemsPerCaja;
+        } else {
+            // Si fuera otro valor, se puede definir un comportamiento por defecto
+            totalUND = 0;
         }
     
-        // 8) Mostramos resultado en "Total UND" de esta fila
+        // 8) Actualizamos la celda de "Total UND" con el resultado
         totalUNDCell.innerText = totalUND.toString();
     }
+    
     
     
 
@@ -1320,35 +1328,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!allRows.length) return;
     
         let sum = 0;
-        let mainRow = allRows[0]; // Asumiendo que allRows[0] es la fila principal
+        const mainRow = allRows[0]; // Se asume que allRows[0] es la fila principal
     
-        // Recorremos cada fila (principal y subfilas)
+        // Recorremos cada fila (principal y subfilas) del grupo
         allRows.forEach(row => {
-            // ¿Es la fila principal?
             const isMainRow = (row === mainRow);
-    
-            // Localizamos la “Total UND”
-            // Repetimos la misma lógica de índices:
-            let totalUNDCol = isMainRow ? 5 : 4; 
-            // (coincidiendo con lo que hiciste en updateEmpaqueRow)
-    
-            // Leemos “Total UND”
+            // En la fila principal, "Total UND" está en la columna 5; en subfilas, en la columna 4
+            const totalUNDCol = isMainRow ? 5 : 4;
             const totalUNDCell = row.cells[totalUNDCol];
             if (!totalUNDCell) return;
-    
             const undValue = parseInt(totalUNDCell.innerText.trim()) || 0;
             sum += undValue;
         });
     
-        // Ahora asignamos ese sum a la columna “Total Empaque” (columna 6) de la fila principal
+        // Se asigna el total al "Total Empaque" (columna 6) de la fila principal
         const totalEmpaqueCell = mainRow.cells[6];
         if (totalEmpaqueCell) {
             totalEmpaqueCell.innerText = sum.toString();
         }
     
-        // Actualizar otros totales si es necesario
+        // Se actualizan otros totales si fuera necesario
         updateStemsTotal(groupId);
     }
+    
     
     
 
@@ -2499,10 +2501,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const blocks = await response.json();
                 console.log("loadPackRateData - Datos recibidos desde Firebase:", blocks);
     
-                // GUARDA EN LA VARIABLE GLOBAL
+                // Guarda en la variable global (si la utilizas para cálculos posteriores)
                 packRateData = blocks;
     
-                // Si existen bloques, se reconstruye la tabla packRate; si no, se genera la tabla base.
+                // Si existen bloques, reconstruye la tabla; si no, genera la tabla base
                 if (blocks && blocks.length > 0) {
                     renderPackRateBlocks(blocks);
                 } else {
@@ -2519,6 +2521,7 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePackRateTable();
         }
     }
+    
     
       
 
@@ -2575,20 +2578,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 cellLong.contentEditable = false;
                 cellLong.setAttribute("data-col", "long");
     
-                // Se crean las celdas para cada uno de los tipos: HB, QB y EB
+                // --- Se crean las celdas para los tipos de caja ---
+                // Primero para el grupo REG:
                 boxTypes.forEach(type => {
                     const cell = row.insertCell();
                     cell.style.textAlign = "center";
-                    cell.contentEditable = true; // Se espera que el usuario ingrese valores (cajas)
+                    cell.contentEditable = true; // El usuario ingresará valores (cajas)
                     cell.innerText = "0";
                     cell.setAttribute("data-type", type);
                     cell.setAttribute("data-col", longColumns[i]); // Para identificar la longitud
+                    cell.setAttribute("data-category", "REG"); // Pertenece a REG
+                });
+                // Luego para el grupo WS10:
+                boxTypes.forEach(type => {
+                    const cell = row.insertCell();
+                    cell.style.textAlign = "center";
+                    cell.contentEditable = true;
+                    cell.innerText = "0";
+                    cell.setAttribute("data-type", type);
+                    cell.setAttribute("data-col", longColumns[i]);
+                    cell.setAttribute("data-category", "WS10"); // Pertenece a WS10
                 });
             }
         });
     
         attachPackRateEvents();
     }
+    
     
 
 
@@ -2600,18 +2616,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const tBody = packrateTable.querySelector("tbody");
         tBody.innerHTML = "";
     
+        // Definimos las longitudes y los tipos de caja que usaremos
         const longColumns = [70, 60, 55, 50, 40];
         const boxTypes = ["HB", "QB", "EB"];
     
-        // Ordenar los bloques según el campo "order" si existe
+        // Ordenamos los bloques según el campo "order" (si existe)
         blocks.sort((a, b) => {
             if (a.order === undefined || b.order === undefined) return 0;
             return a.order - b.order;
         });
     
+        // Para cada bloque (cada variedad) se crean 5 filas (una por cada longitud)
         blocks.forEach(block => {
             const groupId = block.groupId; // Puede ser undefined si aún no se asignó
-            // Para cada bloque (variedad) creamos 5 filas (una por cada longitud)
             for (let i = 0; i < longColumns.length; i++) {
                 const row = tBody.insertRow();
                 if (groupId) {
@@ -2634,14 +2651,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         row.setAttribute("data-order", block.order);
                     }
                 }
-                // Celda para la longitud (si no se agregó en las celdas fusionadas)
+                // Celda para la longitud (si no se fusionó)
                 const cellLong = row.insertCell();
                 cellLong.innerText = longColumns[i];
                 cellLong.style.textAlign = "center";
                 cellLong.contentEditable = false;
                 cellLong.setAttribute("data-col", "long");
     
-                // Para cada tipo (HB, QB, EB) se agregan las celdas correspondientes.
+                // --- Celdas para el grupo REG ---
                 boxTypes.forEach(type => {
                     const cell = row.insertCell();
                     cell.style.textAlign = "center";
@@ -2649,14 +2666,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     let value = "0";
                     if (
                         block.cajas &&
-                        block.cajas[type] &&
-                        block.cajas[type][longColumns[i]] !== undefined
+                        block.cajas.REG &&
+                        block.cajas.REG[type] &&
+                        block.cajas.REG[type][longColumns[i]] !== undefined
                     ) {
-                        value = block.cajas[type][longColumns[i]].toString();
+                        value = block.cajas.REG[type][longColumns[i]].toString();
                     }
                     cell.innerText = value;
                     cell.setAttribute("data-type", type);
                     cell.setAttribute("data-col", longColumns[i]);
+                    cell.setAttribute("data-category", "REG");
+                });
+    
+                // --- Celdas para el grupo WS10 ---
+                boxTypes.forEach(type => {
+                    const cell = row.insertCell();
+                    cell.style.textAlign = "center";
+                    cell.contentEditable = true;
+                    let value = "0";
+                    if (
+                        block.cajas &&
+                        block.cajas.WS10 &&
+                        block.cajas.WS10[type] &&
+                        block.cajas.WS10[type][longColumns[i]] !== undefined
+                    ) {
+                        value = block.cajas.WS10[type][longColumns[i]].toString();
+                    }
+                    cell.innerText = value;
+                    cell.setAttribute("data-type", type);
+                    cell.setAttribute("data-col", longColumns[i]);
+                    cell.setAttribute("data-category", "WS10");
                 });
             }
         });
@@ -2666,81 +2705,86 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     
+    
+    
 
     // Función que extrae los datos de la tabla (asumiendo bloques de 6 filas).
     // Se corrige el offset: la primera fila del bloque tiene 7 celdas y el resto 5.
     function extractPackRateData() {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return null;
-    
         const tBody = packrateTable.querySelector("tbody");
+        if (!tBody) return null;
         const rows = Array.from(tBody.querySelectorAll("tr"));
         const blocks = [];
         const longColumns = [70, 60, 55, 50, 40];
         const boxTypes = ["HB", "QB", "EB"];
     
-        // Iteramos en bloques de 5 filas
+        // Suponemos que cada bloque está conformado por 5 filas consecutivas
         for (let i = 0; i < rows.length; i += 5) {
             const blockRows = rows.slice(i, i + 5);
-            if (blockRows.length < 5) break;
+            if (blockRows.length < 5) break; // en caso de bloque incompleto
     
-            const mainRow = blockRows[0];
-            const groupId = mainRow.getAttribute("data-group-id") || undefined;
-            // En la primera fila, las dos primeras celdas son STEMS y Variety
-            const multiplier = parseFloat(mainRow.cells[0].innerText) || 25;
-            const variety = mainRow.cells[1].innerText.trim();
-            let order = mainRow.getAttribute("data-order");
-            order = order !== null ? parseInt(order, 10) : undefined;
+            const firstRow = blockRows[0];
+            // En la primera fila, los índices son:
+            // [0]: STEMS (multiplicador), [1]: Variety, [2]: Long (valor de la primera longitud),
+            // [3–5]: celdas para REG y [6–8]: celdas para WS10.
+            const multiplierCell = firstRow.cells[0];
+            const multiplier = parseFloat(multiplierCell.innerText) || 0;
+            const varietyCell = firstRow.cells[1];
+            const variety = varietyCell ? varietyCell.innerText.trim() : "";
+            const order = firstRow.getAttribute("data-order") || null;
+            const groupId = firstRow.getAttribute("data-group-id") || null;
     
-            // Inicializamos objetos para las cajas y para los STEMS
-            const cajas = {};
-            const stems = {};
-            boxTypes.forEach(tipo => {
-                cajas[tipo] = {};
-                stems[tipo] = {};
-            });
+            // Inicializamos el objeto cajas para REG y WS10
+            const cajas = {
+                REG: { HB: {}, QB: {}, EB: {} },
+                WS10: { HB: {}, QB: {}, EB: {} }
+            };
     
-            // Recorremos cada fila del bloque para extraer los valores por longitud
+            // Iteramos sobre las 5 filas (correspondientes a cada valor de longColumns)
             for (let j = 0; j < blockRows.length; j++) {
                 const currentRow = blockRows[j];
-                let longValue, baseIndex;
+                let longValue;
                 if (j === 0) {
-                    // La primera fila tiene 6 celdas:
-                    // [0]: STEMS, [1]: Variety, [2]: Long, [3]: HB, [4]: QB, [5]: EB
-                    longValue = currentRow.cells[2].innerText.trim();
-                    baseIndex = 3;
+                    longValue = parseInt(currentRow.cells[2].innerText.trim()) || 0;
                 } else {
-                    // Las filas restantes tienen 4 celdas:
-                    // [0]: Long, [1]: HB, [2]: QB, [3]: EB
-                    longValue = currentRow.cells[0].innerText.trim();
-                    baseIndex = 1;
+                    longValue = parseInt(currentRow.cells[0].innerText.trim()) || 0;
                 }
-                longValue = parseInt(longValue) || 0;
-    
-                // Para cada tipo, extraemos el valor de la celda correspondiente
-                boxTypes.forEach((tipo, idx) => {
-                    const cell = currentRow.cells[baseIndex + idx];
-                    const value = cell ? parseFloat(cell.innerText.trim()) || 0 : 0;
-                    cajas[tipo][longValue] = value.toString();
-                    // Calculamos STEMS como (multiplicador × valor de cajas)
-                    stems[tipo][longValue] = (multiplier * value).toString();
+                // Para la categoría REG:
+                // En la primera fila, las celdas REG están en índices 3,4,5.
+                // En filas subsiguientes, están en índices 1,2,3.
+                const regStartIndex = (j === 0) ? 3 : 1;
+                // Para WS10:
+                // En la primera fila, WS10 está en índices 6,7,8.
+                // En filas subsiguientes, están en índices 4,5,6.
+                const ws10StartIndex = (j === 0) ? 6 : 4;
+                boxTypes.forEach((type, k) => {
+                    // Extraemos REG
+                    const cellREG = currentRow.cells[regStartIndex + k];
+                    const regValue = cellREG ? cellREG.innerText.trim() : "0";
+                    cajas.REG[type][longValue] = regValue;
+                    // Extraemos WS10
+                    const cellWS10 = currentRow.cells[ws10StartIndex + k];
+                    const ws10Value = cellWS10 ? cellWS10.innerText.trim() : "0";
+                    cajas.WS10[type][longValue] = ws10Value;
                 });
             }
     
-            blocks.push({
-                groupId,
-                multiplier,
-                variety,
-                cajas,
-                stems,
-                order,
-                updatedAt: new Date().toISOString()
-            });
-        }
+            const blockObj = {
+                groupId: groupId,
+                multiplier: multiplier,
+                variety: variety,
+                order: order,
+                cajas: cajas
+            };
     
+            blocks.push(blockObj);
+        }
         console.log("Datos extraídos para PackRate:", JSON.stringify(blocks, null, 2));
         return blocks;
     }
+    
     
     
 
@@ -2876,7 +2920,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showAlert("No se encontró información en la tabla PackRate.", "warning");
             return;
         }
-    
         try {
             for (const block of blocks) {
                 const response = await fetch('/api/packrate', {
@@ -2884,17 +2927,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(block)
                 });
-    
                 if (response.ok) {
                     const result = await response.json();
+                    // Si Firebase devuelve un ID y aún no se ha asignado groupId en la tabla,
+                    // se asigna a todas las filas del bloque.
                     if (result.id && !block.groupId) {
                         const tBody = document.getElementById("packrateTable").querySelector("tbody");
                         const rows = Array.from(tBody.querySelectorAll("tr"));
-                        for (let i = 0; i < rows.length; i += 6) {
-                            const currentVariety = rows[i].cells[1].innerText.trim();
-                            const currentOrder = rows[i].getAttribute("data-order");
-                            if (currentVariety === block.variety && (currentOrder == block.order)) {
-                                rows[i].setAttribute("data-group-id", result.id);
+                        // Iteramos en bloques de 5 filas
+                        for (let i = 0; i < rows.length; i += 5) {
+                            const firstRow = rows[i];
+                            const varietyCell = firstRow.cells[1];
+                            const orderAttr = firstRow.getAttribute("data-order");
+                            if (varietyCell &&
+                                varietyCell.innerText.trim() === block.variety &&
+                                orderAttr == block.order) {
+                                // Asignamos groupId a todas las filas del bloque
+                                for (let j = i; j < i + 5; j++) {
+                                    rows[j].setAttribute("data-group-id", result.id);
+                                }
                                 break;
                             }
                         }
@@ -2910,6 +2961,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showAlert("Error al guardar PackRate en Firebase.", "danger");
         }
     }
+    
     
     
     
@@ -2930,7 +2982,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Asigna los eventos para recalcular los valores de STEMS mientras se edita la tabla.
+    // Ejemplo de función para asignar eventos a todas las celdas (REG y WS10)
     function attachPackRateEvents() {
         const packrateTable = document.getElementById("packrateTable");
         if (!packrateTable) return;
@@ -2939,30 +2991,35 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cada bloque está compuesto por 5 filas
         for (let i = 0; i < totalRows; i += 5) {
             const blockFirstRow = rows[i];
-    
-            // Listener para el multiplicador (celda 0 de la primera fila)
+            // Listener para la celda de multiplicador (STEMS)
             const multiplierCell = blockFirstRow.cells[0];
             multiplierCell.addEventListener("input", () => {
                 recalcPackRateRow(blockFirstRow);
             });
-    
-            // Para cada fila del bloque, asignar listener a las celdas editables de cajas
+            // Para cada fila del bloque, asignamos listeners a las celdas de ambos grupos
             for (let j = 0; j < 5; j++) {
                 const row = rows[i + j];
-                let startIdx, endIdx;
+                let startIndexREG, startIndexWS10;
                 if (j === 0) {
-                    // Primera fila: celdas 3, 4 y 5
-                    startIdx = 3;
-                    endIdx = 6;
+                    // Primera fila: índices para REG: 3,4,5; WS10: 6,7,8
+                    startIndexREG = 3;
+                    startIndexWS10 = 6;
                 } else {
-                    // Filas restantes: celdas 1, 2 y 3
-                    startIdx = 1;
-                    endIdx = 4;
+                    // Filas siguientes: índices para REG: 1,2,3; WS10: 4,5,6
+                    startIndexREG = 1;
+                    startIndexWS10 = 4;
                 }
-                for (let k = startIdx; k < endIdx; k++) {
-                    const cell = row.cells[k];
-                    if (cell) {
-                        cell.addEventListener("input", () => {
+                // Asignar evento a celdas REG y WS10
+                for (let k = 0; k < 3; k++) {
+                    const cellREG = row.cells[startIndexREG + k];
+                    if (cellREG) {
+                        cellREG.addEventListener("input", () => {
+                            recalcPackRateRow(blockFirstRow);
+                        });
+                    }
+                    const cellWS10 = row.cells[startIndexWS10 + k];
+                    if (cellWS10) {
+                        cellWS10.addEventListener("input", () => {
                             recalcPackRateRow(blockFirstRow);
                         });
                     }
@@ -2970,6 +3027,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+    
     
     
 
@@ -2992,7 +3050,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const startIndex = allRows.indexOf(firstRow);
         const blockRows = allRows.slice(startIndex, startIndex + 5);
     
-        // Los tipos de caja son: HB, QB y EB
         const boxTypes = ["HB", "QB", "EB"];
         let totalStems = 0;
     
@@ -3001,23 +3058,35 @@ document.addEventListener('DOMContentLoaded', () => {
             let longValue;
             if (index === 0) {
                 // Primera fila: estructura
-                // cell[0]: STEMS (multiplicador), [1]: Variety, [2]: Long, [3]: HB, [4]: QB, [5]: EB
+                // cell[0]: STEMS, [1]: Variety, [2]: Long, [3-5]: REG, [6-8]: WS10
                 longValue = parseInt(row.cells[2].innerText.trim()) || 0;
+                // Sumar celdas REG (índices 3,4,5)
                 boxTypes.forEach((type, typeIndex) => {
                     const cell = row.cells[3 + typeIndex];
                     const boxValue = cell ? (parseFloat(cell.innerText.trim()) || 0) : 0;
-                    const stemsValue = boxValue * multiplier;
-                    totalStems += stemsValue;
+                    totalStems += boxValue * multiplier;
+                });
+                // Sumar celdas WS10 (índices 6,7,8)
+                boxTypes.forEach((type, typeIndex) => {
+                    const cell = row.cells[6 + typeIndex];
+                    const boxValue = cell ? (parseFloat(cell.innerText.trim()) || 0) : 0;
+                    totalStems += boxValue * multiplier;
                 });
             } else {
                 // Filas 2 a 5: estructura
-                // cell[0]: Long, [1]: HB, [2]: QB, [3]: EB
+                // cell[0]: Long, [1-3]: REG, [4-6]: WS10
                 longValue = parseInt(row.cells[0].innerText.trim()) || 0;
+                // Sumar celdas REG (índices 1,2,3)
                 boxTypes.forEach((type, typeIndex) => {
                     const cell = row.cells[1 + typeIndex];
                     const boxValue = cell ? (parseFloat(cell.innerText.trim()) || 0) : 0;
-                    const stemsValue = boxValue * multiplier;
-                    totalStems += stemsValue;
+                    totalStems += boxValue * multiplier;
+                });
+                // Sumar celdas WS10 (índices 4,5,6)
+                boxTypes.forEach((type, typeIndex) => {
+                    const cell = row.cells[4 + typeIndex];
+                    const boxValue = cell ? (parseFloat(cell.innerText.trim()) || 0) : 0;
+                    totalStems += boxValue * multiplier;
                 });
             }
         });
@@ -3027,49 +3096,42 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Total STEMS para el bloque: ${totalStems}`);
     }
     
-
-
     
 
     /**
-     * Dado un nombre de variedad, tipo de caja (HB, QB, EB) y longitud (70, 60, 55, 50, 40),
-     * retorna el valor configurado que hay en packRateData (por defecto 0 si no existe).
-     *
-     * Ajusta la lectura de 'cajas' o 'stems' según tu estructura real en Firebase.
+     * Obtiene el valor de stems por caja a partir de packRateData,
+     * según la variedad, la categoría de ramo (por ejemplo, "REG" o "WS10"),
+     * el tipo de caja (por ejemplo, "HB", "QB", "EB") y la longitud.
      */
-    function getPackRateStems(varietyName, cajaType, longValue) {
+    function getPackRateStems(varietyName, bouquetCategory, boxType, longValue) {
         if (!packRateData || packRateData.length === 0) {
             console.warn("packRateData está vacío o no está definido.");
             return 0;
         }
-
-        // Busca en packRateData el bloque que corresponda a la variedad
-        // (ignora mayúsculas/minúsculas)
-        const block = packRateData.find(b => 
-            (b.variety || '').toUpperCase() === varietyName.toUpperCase()
-        );
-
+        // Buscar el bloque correspondiente a la variedad (ignora mayúsculas/minúsculas)
+        const block = packRateData.find(b => (b.variety || '').toUpperCase() === varietyName.toUpperCase());
         if (!block) {
             console.warn(`Variedad "${varietyName}" no encontrada en packRateData.`);
-            return 0; // No se encontró variedad
-        }
-
-        // Validar que 'cajaType' y 'longValue' existan en 'cajas'
-        if (!block.cajas || !block.cajas[cajaType] || !block.cajas[cajaType][longValue]) {
-            console.warn(`Datos de cajas para Tipo "${cajaType}" y Longitud "${longValue}" no encontrados.`);
             return 0;
         }
-
-        const stemsStr = block.cajas[cajaType][longValue];
+        // Verificar que exista la categoría y el tipo solicitado en el bloque
+        if (!block.cajas ||
+            !block.cajas[bouquetCategory] ||
+            !block.cajas[bouquetCategory][boxType] ||
+            block.cajas[bouquetCategory][boxType][longValue] === undefined) {
+            console.warn(`No se encontraron datos para ${boxType} en longitud ${longValue} en la categoría "${bouquetCategory}".`);
+            return 0;
+        }
+        const stemsStr = block.cajas[bouquetCategory][boxType][longValue];
         const stems = parseFloat(stemsStr);
-
         if (isNaN(stems)) {
-            console.warn(`Valor de stems inválido para Tipo "${cajaType}" y Longitud "${longValue}":`, stemsStr);
+            console.warn(`Valor de stems inválido para ${boxType} en longitud ${longValue} y categoría "${bouquetCategory}":`, stemsStr);
             return 0;
         }
-
         return stems;
     }
+
+    
 
 
     
