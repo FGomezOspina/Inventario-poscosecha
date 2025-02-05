@@ -6,7 +6,7 @@
     top: 0;
     left: 0;
     height: 100vh;
-    width: 180px; /* Reducido de 200px a 180px para un diseño más compacto */
+    width: 180px; /* Ancho del sidebar */
     background-color: #f8f9fa;
     transition: all 0.3s ease;
     z-index: 1000;
@@ -16,31 +16,31 @@
 #sidebarMenu .nav-link {
     display: flex;
     align-items: center;
-    padding: 8px 12px; /* Reducido el padding */
+    padding: 8px 12px;
 }
 
 #sidebarMenu .nav-link .link-text {
-    margin-left: 8px; /* Reducido el margen */
+    margin-left: 8px;
     transition: opacity 0.3s ease, width 0.3s ease;
 }
 
 #sidebarMenu .nav-link i {
-    font-size: 1rem; /* Reducido el tamaño de la fuente */
-    width: 30px; /* Reducido el ancho */
+    font-size: 1rem;
+    width: 30px;
     text-align: center;
 }
 
 #sidebarMenu .btn {
     width: 100%;
-    padding: 8px; /* Reducido el padding */
-    font-size: 0.9rem; /* Reducido el tamaño de la fuente */
+    padding: 8px;
+    font-size: 0.9rem;
 }
 
 /* ============================
    Ajustar el contenido principal
    ============================ */
 .main-content {
-    margin-left: 180px; /* Ajustado al nuevo ancho del sidebar */
+    margin-left: 180px;
     transition: all 0.3s ease;
     position: relative;
     z-index: 1;
@@ -58,25 +58,22 @@
     background-color: #0d6efd;
     color: #fff;
     border: none;
-    padding: 8px; /* Reducido el padding */
+    padding: 8px;
     border-radius: 4px;
-    font-size: 1rem; /* Reducido el tamaño de la fuente */
+    font-size: 1rem;
 }
 
 @media (max-width: 768px) {
     #sidebarMenu {
-        width: 220px; /* Ajustado para pantallas más pequeñas */
+        width: 220px;
         left: -220px;
     }
-
     #sidebarMenu.show {
         left: 0;
     }
-
     .toggle-btn {
         display: block;
     }
-
     .main-content {
         margin-left: 0;
     }
@@ -87,54 +84,53 @@
    ============================ */
 .table-responsive {
     overflow: auto;
-    max-height: 60vh; /* Reducido para un diseño más compacto */
-    position: relative; /* Necesario para que el posicionamiento sticky funcione */
+    max-height: 60vh;
+    position: relative;
 }
 
 #dataTable {
-    table-layout: auto; /* Permitir que las celdas se adapten automáticamente */
-    width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
+    table-layout: auto;
+    width: 100%;
 }
 
-/* Hacer que el encabezado de la tabla sea sticky */
+/* Encabezado sticky */
 #dataTable thead th {
     position: sticky;
     top: 0;
-    background-color: #f8f9fa; /* Fondo del encabezado */
-    z-index: 2; /* Asegura que el encabezado esté por encima de las celdas */
-    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4); /* Añade una sombra para mayor claridad */
-    min-height: 50px; /* Ajusta este valor según tus necesidades */
-    vertical-align: middle; /* Centrar verticalmente el contenido */
-    padding-top: 12px; /* Aumenta el padding superior */
-    padding-bottom: 12px; /* Aumenta el padding inferior */
+    background-color: #f8f9fa;
+    z-index: 2;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    min-height: 50px;
+    vertical-align: middle;
+    padding-top: 12px;
+    padding-bottom: 12px;
     overflow: hidden;
 }
 
-/* Ajustar el ancho de las columnas en la tabla Inventario */
 #dataTable th, 
 #dataTable td {
-    padding: 4px; /* Reducido de 8px a 4px */
-    font-size: 12px; /* Reducido de 14px a 12px */
+    padding: 4px;
+    font-size: 12px;
     text-align: center;
     white-space: nowrap;
-    border: 1px solid black; /* Asegura que los bordes sean consistentes */
+    border: 1px solid black;
 }
 
-/* Ajustes específicos para cada columna Inventario */
+/* Columnas específicas en Inventario */
 .col-variety {
-    width: 180px; /* Más ancho para ver el contenido */
+    width: 180px;
     min-width: 160px;
     max-width: 200px;
 }
 
 .col-tipo {
-    width: 30px; /* Más pequeño, solo se verá una letra */
+    width: 30px;
     min-width: 30px;
     max-width: 50px;
 }
 
 .col-fecha {
-    width: 50px; /* Más pequeño */
+    width: 50px;
     min-width: 50px;
     max-width: 60px;
 }
@@ -148,59 +144,54 @@
 .col-r2,
 .col-r3,
 .col-r4 {
-    width: 60px; /* Aumentado unos pocos px */
+    width: 60px;
     min-width: 30px;
     max-width: 70px;
 }
 
 .col-bunches-procona {
-    width: 40px; /* Más pequeño */
+    width: 40px;
     min-width: 40px;
     max-width: 50px;
 }
 
 .col-bunches-total {
-    width: 50px; /* Más pequeño */
+    width: 50px;
     min-width: 50px;
     max-width: 60px;
 }
 
-/* Colores para las columnas P en Inventario */
+/* Colores para columnas P */
 td[data-col^="P"],
 th[data-col^="P"] {
     background-color: #D9E1F2;
     border: 1px solid black !important;
 }
 
-/* Colores para las columnas R en Inventario */
+/* Colores para columnas R */
 td[data-col^="R"],
 th[data-col^="R"] {
     background-color: #FCE4D6;
     border: 1px solid black !important;
 }
 
-/* Colores para la columna 'Long' en Inventario */
+/* Colores para 'Long' y 'Batch' */
 td[data-col="Long"],
-th[data-col="Long"] {
-    background-color: #FFFFCC;
-    border: 1px solid black !important;
-}
-
-/* Colores para la columna 'Batch' en Inventario */
+th[data-col="Long"],
 td[data-col="Batch"],
 th[data-col="Batch"] {
     background-color: #FFFFCC;
     border: 1px solid black !important;
 }
 
-/* Bordes negros para todas las celdas Inventario */
+/* Bordes negros en Inventario */
 .table-bordered th,
 .table-bordered td {
     border: 1px solid black !important;
 }
 
 /* ============================
-   Estilos para el botón de eliminar grupo
+   Botón de eliminar grupo
    ============================ */
 .delete-btn {
     background: none;
@@ -219,14 +210,14 @@ th[data-col="Batch"] {
 }
 
 /* ============================
-   Resaltar la celda enfocada
+   Resaltar celdas enfocadas
    ============================ */
 .editable:focus {
     outline: 2px solid #0d6efd;
 }
 
 /* ============================
-   Ajustar los inputs de tipo date
+   Inputs de tipo date
    ============================ */
 td[data-col="Fecha"] input[type="date"],
 th[data-col="Fecha"] {
@@ -244,40 +235,34 @@ th[data-col="Fecha"] {
 #dataTable tbody tr:nth-child(odd) {
     background-color: #f9f9f9;
 }
-
 #dataTable tbody tr:nth-child(even) {
     background-color: #ffffff;
 }
 
 /* ============================
-   Estilos para las Tablas Resumidas
+   Tablas Resumidas
    ============================ */
 #summaryTables {
     margin-top: 30px;
 }
-
 #summaryTables h3 {
     margin-bottom: 20px;
     text-align: center;
     color: #0d6efd;
 }
-
 #summaryTables h4 {
     margin-bottom: 10px;
     color: #0d6efd;
 }
-
 #summaryTables .table-responsive {
     overflow: auto;
     max-height: 50vh;
     margin-bottom: 20px;
 }
-
 #summaryTables table {
     width: 100%;
     border-collapse: collapse;
 }
-
 #summaryTables table th,
 #summaryTables table td {
     font-size: 12px;
@@ -285,25 +270,18 @@ th[data-col="Fecha"] {
     text-align: center;
     border: 1px solid #dee2e6;
 }
-
 #summaryTables table th {
     background-color: #e9ecef;
     font-weight: bold;
 }
-
 #summaryTables table tbody tr:nth-child(even) {
     background-color: #f2f2f2;
 }
-
 #summaryTables table tbody tr:hover {
     background-color: #e2e6ea;
 }
 
-/* ============================
-   Estilos específicos para cada tabla resumen
-   ============================ */
-
-/* Tabla Por Longitud */
+/* Resumen: Tabla Por Longitud */
 #summaryByLength th,
 #summaryByLength td {
     background-color: #ffffff;
@@ -312,7 +290,7 @@ th[data-col="Fecha"] {
     background-color: #e9ecef;
 }
 
-/* Tabla Por Tipo de Ramo */
+/* Resumen: Tabla Por Tipo de Ramo */
 #summaryByBouquetType th,
 #summaryByBouquetType td {
     background-color: #ffffff;
@@ -321,7 +299,7 @@ th[data-col="Fecha"] {
     background-color: #e9ecef;
 }
 
-/* Tabla Por Batch */
+/* Resumen: Tabla Por Batch */
 #summaryByBatch th,
 #summaryByBatch td {
     background-color: #ffffff;
@@ -330,38 +308,35 @@ th[data-col="Fecha"] {
     background-color: #e9ecef;
 }
 
-/* Responsividad para tablas resumen */
+/* Responsividad Tablas Resumidas */
 @media (max-width: 768px) {
     #summaryTables table th,
     #summaryTables table td {
         font-size: 10px;
         padding: 4px;
     }
-
     #summaryTables h3 {
         font-size: 1.2em;
     }
-
     #summaryTables h4 {
         font-size: 1em;
     }
 }
 
-/* Resaltar celdas en tablas resumen */
+/* Resaltar celdas en resumen */
 #summaryTables table td:focus {
     outline: none;
     border: 2px solid #0d6efd;
     background-color: #e7f1ff;
 }
 
-/* Celdas específicas en tablas resumen */
+/* Celdas específicas en resumen */
 #summaryTables #summaryByBouquetType th:nth-child(4),
 #summaryTables #summaryByBouquetType td:nth-child(4),
 #summaryTables #summaryByBatch th:nth-child(2),
 #summaryTables #summaryByBatch td:nth-child(2) {
     background-color: #FFEFD5;
 }
-
 #summaryTables #summaryByLength th:nth-child(3),
 #summaryTables #summaryByLength td:nth-child(3),
 #summaryTables #summaryByBouquetType th:nth-child(5),
@@ -403,7 +378,6 @@ th[data-col="Fecha"] {
 #dataTable tbody tr:nth-child(odd) {
     background-color: #f9f9f9;
 }
-
 #dataTable tbody tr:nth-child(even) {
     background-color: #ffffff;
 }
@@ -415,7 +389,7 @@ th[data-col="Fecha"] {
 }
 
 /* ============================
-   Estilos para la Tabla de Empaque
+   Tabla de Empaque
    ============================ */
 #empaqueTable {
     width: 100%;
@@ -432,13 +406,12 @@ th[data-col="Fecha"] {
     border: 1px solid black;
 }
 
-/* Asegura que las celdas con rowspan se centren */
 #empaqueTable td[rowspan] {
     text-align: center;
     vertical-align: middle;
 }
 
-/* Asegurar que la columna "Sobrante" esté visible */
+/* Asegurar columna "Sobrante" */
 #empaqueTable th:nth-child(7),
 #empaqueTable td:nth-child(7) {
     display: table-cell;
@@ -448,22 +421,10 @@ th[data-col="Fecha"] {
 }
 
 /* ============================
-   Estilos para la Tabla Pack Rate
+   Tabla Pack Rate (modificada para quitar STEMS)
    ============================ */
 
-/* Nuevo encabezado de dos filas en Pack Rate se define en el HTML */
-
-/* Contenedor de la tabla Pack Rate con altura fija y desplazamiento */
-.packrate-table-container {
-    max-height: 60vh; /* Ajusta la altura según tus necesidades */
-    overflow-y: auto;
-    position: relative;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
-/* Estilos generales de la tabla Pack Rate */
+/* Eliminamos la columna STEMS y reorganizamos el encabezado para que la primera columna sea Variety y la segunda Long */
 #packrateTable {
     width: 100%;
     border-collapse: collapse;
@@ -472,7 +433,6 @@ th[data-col="Fecha"] {
     border: 1px solid #dee2e6;
 }
 
-/* Encabezado fijo para ambas filas */
 #packrateTable thead th {
     position: sticky;
     top: 0;
@@ -486,7 +446,6 @@ th[data-col="Fecha"] {
     border-right: 1px solid #dee2e6;
 }
 
-/* Celdas del cuerpo de la tabla Pack Rate */
 #packrateTable tbody td {
     padding: 6px;
     border-bottom: 1px solid #dee2e6;
@@ -495,43 +454,29 @@ th[data-col="Fecha"] {
     border-right: 1px solid #dee2e6;
 }
 
-/* Quitar borde derecho de la última columna */
 #packrateTable thead th:last-child,
 #packrateTable tbody td:last-child {
     border-right: none;
 }
 
-/* Alternar colores de filas */
-#packrateTable tbody tr:nth-child(odd) {
-    background-color: #fafafa;
-}
-#packrateTable tbody tr:nth-child(even) {
-    background-color: #ffffff;
-}
-
-/* Ancho de las primeras tres columnas: STEMS, Variety, Long */
+/* Ajustar anchos de columnas */
+/* Primera columna: Variety */
 #packrateTable th:nth-child(1),
 #packrateTable td:nth-child(1) {
-    width: 60px;
-    min-width: 60px;
-    max-width: 60px;
-}
-#packrateTable th:nth-child(2),
-#packrateTable td:nth-child(2) {
     width: 120px;
     min-width: 120px;
     max-width: 120px;
 }
-#packrateTable th:nth-child(3),
-#packrateTable td:nth-child(3) {
+/* Segunda columna: Long */
+#packrateTable th:nth-child(2),
+#packrateTable td:nth-child(2) {
     width: 60px;
     min-width: 60px;
     max-width: 60px;
 }
-
-/* Ancho uniforme para las columnas 4 a 9 (3 para REG y 3 para WS10) */
-#packrateTable th:nth-child(n+4),
-#packrateTable td:nth-child(n+4) {
+/* Columnas 3 a 8: REG (3 columnas) y WS10 (3 columnas) */
+#packrateTable th:nth-child(n+3),
+#packrateTable td:nth-child(n+3) {
     width: 80px;
     min-width: 80px;
     max-width: 80px;
@@ -551,28 +496,24 @@ th[data-col="Fecha"] {
     .packrate-table-container {
         max-height: 40vh;
     }
-    /* Ajustar anchos de las primeras tres columnas */
+    /* Ajustar anchos en móvil */
+    /* Primera columna (Variety) */
     #packrateTable th:nth-child(1),
     #packrateTable td:nth-child(1) {
-        width: 50px;
-        min-width: 50px;
-        max-width: 50px;
-    }
-    #packrateTable th:nth-child(2),
-    #packrateTable td:nth-child(2) {
         width: 100px;
         min-width: 100px;
         max-width: 100px;
     }
-    #packrateTable th:nth-child(3),
-    #packrateTable td:nth-child(3) {
+    /* Segunda columna (Long) */
+    #packrateTable th:nth-child(2),
+    #packrateTable td:nth-child(2) {
         width: 50px;
         min-width: 50px;
         max-width: 50px;
     }
-    /* Ajustar anchos para columnas 4 a 9 */
-    #packrateTable th:nth-child(n+4),
-    #packrateTable td:nth-child(n+4) {
+    /* Columnas 3 a 8 */
+    #packrateTable th:nth-child(n+3),
+    #packrateTable td:nth-child(n+3) {
         width: 60px;
         min-width: 60px;
         max-width: 60px;
