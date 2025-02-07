@@ -17,6 +17,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ========== 2. INICIALIZAR FIREBASE ADMIN ==========
+// app.js o index.js (el archivo principal de tu servidor)
+const cron = require('node-cron');
 const admin = require('firebase-admin');
 
 // Verificar variable de entorno con credenciales Firebase
@@ -201,43 +203,53 @@ app.post('/api/total-disponible', async (req, res) => {
       return res.status(400).json({ error: 'Inconsistencia entre inventario y totalDisponible.' });
     }
 
-    // 5. Obtener disponible actual (o crearlo en 0 si no existe)
-    let disponibleActual = 0;
+    // 5. Obtenemos disponible_ayer y disponible_hoy actuales (o los creamos en 0)
+    let disponibleAyer = 0;
+    let disponibleHoy = 0;
+
     if (totalDisponibleDoc.exists) {
       const data = totalDisponibleDoc.data();
-      disponibleActual = Number(data.disponible) || 0;
+      disponibleAyer = Number(data.disponible_ayer) || 0;
+      disponibleHoy  = Number(data.disponible_hoy)  || 0;
     } else {
-      // Si no existe, lo creamos en 0
+      // Si no existe el doc, lo creamos con ambos campos en 0
       await totalDisponibleRef.set({
         variety,
         tipoRamo,
         long,
-        disponible: 0,
+        disponible_ayer: 0,
+        disponible_hoy:  0,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     }
 
-    // 6. Calcular "sobrante" = (disponibleActual - totalEmpaque), forzando a 0 si es negativo
-    let sobrante = disponibleActual - Number(totalEmpaque);
+    // 6. Calcular sobrante
+    //    sobrante = disponible_ayer - totalEmpaque (forzando a 0 si es negativo)
+    let sobrante = disponibleAyer - Number(totalEmpaque);
     if (sobrante < 0) sobrante = 0;
 
-    // 7. Obtener bunchesTotal del inventario
+    // 7. bunchesTotal del inventario
     let bunchesTotal = Number(inventarioData.bunchesTotal) || 0;
 
-    // 8. Calcular el nuevo disponible = sobrante + bunchesTotal
-    const nuevoDisponible = sobrante + bunchesTotal;
+    // 8. El "nuevo disponible hoy" es la suma de (sobrante + bunchesTotal)
+    const nuevoDisponibleHoy = sobrante + bunchesTotal;
 
     // 9. Actualizar en Firestore
+    //    - disponible_ayer se mantiene
+    //    - disponible_hoy se actualiza
     await totalDisponibleRef.update({
-      disponible: nuevoDisponible,
+      disponible_ayer: disponibleAyer,
+      disponible_hoy:  nuevoDisponibleHoy,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // 10. Responder al frontend con sobrante y bunchesTotal
+    // 10. Responder al frontend
     return res.status(200).json({
-      sobrante,
-      bunchesTotal
+      sobrante,          // ejemplo: 4
+      bunchesTotal,      // ejemplo: 16
+      disponibleAyer,    // ejemplo: 30
+      disponibleHoy: nuevoDisponibleHoy // ejemplo: 20
     });
 
   } catch (error) {
@@ -247,6 +259,38 @@ app.post('/api/total-disponible', async (req, res) => {
 });
 
 
+async function resetDisponiblesDiario() {
+  console.log('Inicio de resetDisponiblesDiario()...');
+  
+  const snapshot = await db.collection('totalDisponible').get();
+  const batch = db.batch();
+  
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    const disponibleHoy = data.disponible_hoy || 0;
+    batch.update(doc.ref, {
+      disponible_ayer: disponibleHoy,
+      disponible_hoy:  0,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    // Este console.log es extra, para ver ID y valores en la consola
+    console.log(`Documento ${doc.id}: disponible_ayer se setea a ${disponibleHoy}, y disponible_hoy a 0`);
+  });
+  
+  await batch.commit();
+  console.log('Reset diario completado satisfactoriamente.');
+}
+
+// Para pruebas, se ejecuta CADA MINUTO => '* * * * *'
+// (Nota: En producción, regrésalo a '1 0 * * *' o la hora que desees).
+cron.schedule('1 0 * * *', async () => {
+  try {
+    console.log('Ejecutando reset de prueba cada minuto...');
+    await resetDisponiblesDiario();
+  } catch (error) {
+    console.error('Error en el reset:', error);
+  }
+});
 
 
 // ========== 7. CONFIGURAR EL PUERTO Y ARRANCAR EL SERVIDOR ==========

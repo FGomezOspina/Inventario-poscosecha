@@ -114,21 +114,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
 
-    // ============================
-    // Función para mostrar alertas
-    // ============================
-    function showAlert(message, type = 'success') {
+    /**
+     * Muestra una alerta en el contenedor correspondiente.
+     * Si no se especifica el parámetro containerSelector, se detecta dinámicamente
+     * cuál de las secciones (Inventario, Empaque o Pack Rate) está visible y se usa su contenedor.
+     *
+     * @param {string} message - Mensaje a mostrar.
+     * @param {string} [type='success'] - Tipo de alerta (success, danger, warning, info, etc.).
+     * @param {string} [containerSelector] - (Opcional) Selector del contenedor donde se insertará la alerta.
+     */
+    function showAlert(message, type = 'success', containerSelector) {
+        let container;
+        
+        // Si se pasa un selector, lo usamos
+        if (containerSelector) {
+        container = document.querySelector(containerSelector);
+        } else {
+        // Detectamos dinámicamente cuál sección está visible:
+        // Usamos offsetParent para comprobar si el elemento es visible (no es display: none)
+        const inventarioSection = document.querySelector('#inventarioSection');
+        const empaqueSection = document.querySelector('#empaqueSection');
+        const packrateSection = document.querySelector('#packrateSection');
+    
+        if (inventarioSection && inventarioSection.offsetParent !== null) {
+            container = document.querySelector('#alertInventario');
+        } else if (empaqueSection && empaqueSection.offsetParent !== null) {
+            container = document.querySelector('#alertEmpaque');
+        } else if (packrateSection && packrateSection.offsetParent !== null) {
+            container = document.querySelector('#alertPackrate');
+        } else {
+            // Por defecto, si ninguna sección está visible, usamos el contenedor de Inventario
+            container = document.querySelector('#alertInventario');
+        }
+        }
+        
+        if (!container) return;
+        
         const wrapper = document.createElement('div');
         wrapper.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show mt-2" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>`;
-        alertPlaceholder.append(wrapper);
+        <div class="alert alert-${type} alert-dismissible fade show mt-2" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+        
+        container.appendChild(wrapper);
+        
         setTimeout(() => {
-            wrapper.remove();
+        wrapper.remove();
         }, 3000);
     }
+  
+
 
     // Función para crear el select de Variety
     function createVarietySelect(selectedVariety = '') {
@@ -680,7 +716,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const procesoCell = document.createElement('td');
         procesoCell.setAttribute('data-col', 'Proceso');
         procesoCell.classList.add('text-center');
-        procesoCell.contentEditable = true;
+        //procesoCell.contentEditable = true;
         procesoCell.innerText = '';
         procesoCell.setAttribute('rowspan', 1); // Inicialmente 1, se incrementará al agregar filas
         mainRow.appendChild(procesoCell);
@@ -1123,7 +1159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // (i) Columna 9: Proceso (editable)
             const procesoCell = document.createElement('td');
-            procesoCell.contentEditable = true;
+            //procesoCell.contentEditable = true;
             procesoCell.classList.add('text-center');
             procesoCell.innerText = group.proceso || '';
             mainRow.appendChild(procesoCell);
@@ -3113,14 +3149,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('No se encontró el botón con id "resetEmpaqueTableBtn".');
     }
 
-    /**
-     * Función para actualizar el Total Disponible y el Proceso en la tabla de Empaque.
-     * Agrupa las filas por Variety, TipoRamo y Long, suma el Total Empaque,
-     * envía los datos al servidor y actualiza las columnas Sobrante, Proceso y Total Disponible
-     * con la respuesta recibida.
-     */
+    /*************************************************************
+     * NUEVA FUNCIÓN
+     * updateTotalDisponibleAyerHoy()
+     *************************************************************/
     async function updateTotalDisponible() {
-        // Seleccionar la tabla de Empaque
+        // 1. Seleccionar la tabla de Empaque
         const empaqueTable = document.querySelector('#empaqueTable');
         if (!empaqueTable) {
             showAlert('No se encontró la tabla de Empaque.', 'danger');
@@ -3133,10 +3167,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Obtener grupos bloqueados
+        // 2. Obtener grupos bloqueados
         const lockedGroups = JSON.parse(localStorage.getItem('empaqueLockedGroups')) || [];
         
-        // Obtener todas las filas
+        // 3. Recorrer filas y agrupar por groupId
         const rows = empaqueTableBody.querySelectorAll('tr');
         console.log(`Número de filas encontradas: ${rows.length}`);
         
@@ -3146,19 +3180,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         rows.forEach(row => {
             const groupId = row.getAttribute("data-group-id");
-            if (!groupId) {
-                // Fila sin groupId
-                return;
-            }
+            if (!groupId) return; // Fila sin groupId
+            if (lockedGroups.includes(groupId)) return; // Fila bloqueada
         
-            if (lockedGroups.includes(groupId)) {
-                // Fila bloqueada
-                return;
-            }
-        
-            // Si el grupo no está en el objeto, inicializarlo (fila principal)
+            // Verificar si ya existe el grupo en "groups"
             if (!groups[groupId]) {
-                // Acceder a las celdas usando data-col
+                // Tomar celdas principales
                 const varietyCell           = row.querySelector('td[data-col="Variety"]');
                 const tipoRamoCell         = row.querySelector('td[data-col="Tipo de Ramo"]');
                 const longCell             = row.querySelector('td[data-col="Long"]');
@@ -3167,7 +3194,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const procesoCell          = row.querySelector('td[data-col="Proceso"]');
                 const totalDisponibleCell  = row.querySelector('td[data-col="Total Disponible"]');
         
-                // Obtener los valores
+                // Obtener valores
                 const varietySelect = varietyCell.querySelector('select');
                 const variety = varietySelect
                     ? varietySelect.value.trim()
@@ -3179,7 +3206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     : tipoRamoCell.innerText.trim();
         
                 const longInput = longCell.querySelector('[contenteditable="true"]');
-                const long = longInput
+                const longValue = longInput
                     ? longInput.innerText.trim()
                     : longCell.innerText.trim();
         
@@ -3188,14 +3215,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 groups[groupId] = {
                     variety,
                     tipoRamo,
-                    long,
+                    long: longValue,
                     totalEmpaque,
                     sobranteCell,
                     procesoCell,
                     totalDisponibleCell
                 };
             } else {
-                // Si ya existe, sumar el Total Empaque desde las filas adicionales
+                // Si ya existe, acumulamos el totalEmpaque para ese grupo
                 const totalEmpaqueCell = row.querySelector('td[data-col="Total Empaque"]');
                 const totalEmpaque = totalEmpaqueCell
                     ? parseInt(totalEmpaqueCell.innerText.trim(), 10) || 0
@@ -3204,14 +3231,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        console.log(`Grupos únicos a procesar: ${Object.keys(groups).length}`);
+        console.log(`Grupos únicos a procesar (Ayer/Hoy): ${Object.keys(groups).length}`);
         
         if (Object.keys(groups).length === 0) {
-            showAlert('No hay grupos válidos para actualizar.', 'warning');
+            showAlert('No hay grupos válidos para actualizar (Ayer/Hoy).', 'warning');
             return;
         }
         
-        // Mostrar el spinner y deshabilitar el botón durante la operación
+        // 4. Mostrar el spinner y deshabilitar el botón durante la operación
         const loadingSpinner = document.getElementById('loadingSpinner');
         if (loadingSpinner) {
             loadingSpinner.style.display = 'inline-block';
@@ -3220,10 +3247,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (updateTableBtn) {
             updateTableBtn.disabled = true;
         }
-        showAlert('Actualizando Total Disponible y Proceso...', 'info');
+        showAlert('Actualizando (disponible_ayer/disponible_hoy)...', 'info');
         
         try {
-            // Iterar sobre cada grupo y enviar la información al servidor
+            // 5. Iterar cada grupo y llamar al endpoint
             for (const [groupId, group] of Object.entries(groups)) {
                 const {
                     variety,
@@ -3235,19 +3262,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalDisponibleCell
                 } = group;
         
-                // Validar que totalEmpaque sea al menos 0
+                // Validar que totalEmpaque no sea negativo
                 if (totalEmpaque < 0) {
-                    console.warn(`Total Empaque negativo para ${groupId}. Saltando actualización.`);
+                    console.warn(`Total Empaque negativo para ${groupId}. Saltando actualización (Ayer/Hoy).`);
                     sobranteCell.innerText = '0';
                     procesoCell.innerText = '';
                     totalDisponibleCell.innerText = '0';
                     continue;
                 }
         
-                // Preparar el payload para el servidor
+                // Preparar los datos a enviar
                 const payload = { variety, tipoRamo, long, totalEmpaque };
         
-                // Enviar la solicitud al servidor
+                // Llamada al servidor
                 const response = await fetch('/api/total-disponible', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -3255,48 +3282,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         
                 if (response.ok) {
+                    // Ahora la respuesta incluye: sobrante, bunchesTotal, disponibleAyer, disponibleHoy
                     const data = await response.json();
-                    const { sobrante, bunchesTotal } = data;
+                    const { sobrante, bunchesTotal, disponibleAyer, disponibleHoy } = data;
         
-                    // Actualizar celdas:
-                    // 1. Sobrante
+                    // Actualizar celdas en la interfaz
                     if (typeof sobrante === 'number') {
                         sobranteCell.innerText = sobrante;
                     } else {
                         sobranteCell.innerText = '0';
                     }
-        
-                    // 2. Proceso (bunchesTotal)
+                    
                     if (typeof bunchesTotal === 'number') {
                         procesoCell.innerText = bunchesTotal;
                     } else {
                         procesoCell.innerText = '';
                     }
         
-                    // 3. Total Disponible = sobrante + bunchesTotal
-                    const totalDisponible = (sobrante || 0) + (bunchesTotal || 0);
-                    totalDisponibleCell.innerText = totalDisponible;
+                    // totalDisponible ahora vendría a ser "disponibleHoy"
+                    if (typeof disponibleHoy === 'number') {
+                        totalDisponibleCell.innerText = disponibleHoy;
+                    } else {
+                        totalDisponibleCell.innerText = '0';
+                    }
+                    
+                    console.log(
+                        `[${groupId}] Ayer: ${disponibleAyer}, Hoy: ${disponibleHoy}, sobrante: ${sobrante}, bTotal: ${bunchesTotal}`
+                    );
         
                 } else {
-                    // Manejo de errores
-                    let errorMessage = 'Error desconocido.';
+                    let errorMessage = 'Error desconocido (Ayer/Hoy).';
                     try {
                         const errorData = await response.json();
                         errorMessage = errorData.error || errorMessage;
                     } catch (e) {
-                        console.error('Error al parsear la respuesta de error:', e);
+                        console.error('Error al parsear la respuesta de error (Ayer/Hoy):', e);
                     }
-                    console.error(`Error en la actualización de Total Disponible para ${variety}, ${tipoRamo}, ${long}:`, errorMessage);
-                    showAlert(`Error al actualizar Total Disponible para ${variety}, ${tipoRamo}, ${long}: ${errorMessage}`, 'danger');
+                    console.error(`Error en la actualización (Ayer/Hoy) para ${variety}, ${tipoRamo}, ${long}:`, errorMessage);
+                    showAlert(
+                        `Error al actualizar (disponible_ayer/disponible_hoy) para ${variety}, ${tipoRamo}, ${long}: ${errorMessage}`,
+                        'danger'
+                    );
                 }
             }
-        
-            showAlert('Total Disponible y Proceso actualizados correctamente.', 'success');
+            
+            showAlert('(Ayer/Hoy) actualizados correctamente.', 'success');
         } catch (error) {
-            console.error('Error en updateTotalDisponible:', error);
-            showAlert('Ocurrió un error al actualizar Total Disponible y Proceso.', 'danger');
+            console.error('Error en updateTotalDisponibleAyerHoy:', error);
+            showAlert('Ocurrió un error al actualizar (Ayer/Hoy).', 'danger');
         } finally {
-            // Ocultar el spinner y habilitar el botón
+            // 6. Ocultar el spinner y habilitar el botón
             if (loadingSpinner) {
                 loadingSpinner.style.display = 'none';
             }
