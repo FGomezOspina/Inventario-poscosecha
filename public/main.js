@@ -256,35 +256,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para crear el select de TJ - REG - WS10 - NF
-    function createTJRegSelect(selectedValue = 'REG') { // 'REG' por defecto
+    function createTJRegSelect(selectedValue = '') {
+        // Si no se pasa un valor, se usa "REG" por defecto
+        const value = selectedValue || 'REG';
         const select = document.createElement('select');
         select.classList.add('form-select', 'form-select-sm');
         select.style.minWidth = '100px';
-
+        
         tjRegOptions.forEach(optionValue => {
             const option = document.createElement('option');
             option.value = optionValue;
             option.text = optionValue;
-            if (optionValue === selectedValue) {
+            if (optionValue === value) {
                 option.selected = true;
             }
             select.appendChild(option);
         });
-
-        // Event listener para actualizar cálculos al cambiar el valor de "TJ - REG"
+        
+        // Al cambiar el valor se actualizan los cálculos y se guarda la tabla
         select.addEventListener('change', () => {
             const row = getRowFromCell(select);
             updateCalculations(row);
             saveTableData();
-
-            // Actualizar las tablas resumidas
             populateSummaryTables();
-            // Actualizar el Gran Total
             updateGrandTotal();
         });
-
+        
         return select;
     }
+    
+    
+    
 
     // Función para obtener la fila desde una celda
     function getRowFromCell(cell) {
@@ -1643,11 +1645,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveTableData() {
         const table = document.getElementById('dataTable');
         const groups = {};
-
+    
         table.querySelectorAll('tbody tr').forEach(row => {
             const groupId = row.getAttribute('data-group-id');
             if (!groupId) return;
-
+    
             if (!groups[groupId]) {
                 groups[groupId] = {
                     variety: '',
@@ -1658,13 +1660,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     rows: []
                 };
             }
-
+    
             const group = groups[groupId];
             const isMainRow = row.cells[0].getAttribute('data-col') === 'Variety';
-
+    
             if (isMainRow) {
+                // Se guarda la variedad del select de la primera celda
                 group.variety = row.cells[0].querySelector('select').value;
-                group.tipo = row.querySelector('td[data-col="Tipo"]').innerText.trim();
+                // Se obtiene el valor del select "TJ - REG" para asignar el tipo (ej. WS10, REG, TJ, NF, etc.)
+                const tjRegSelect = row.querySelector('td[data-col="TJ - REG"] select');
+                group.tipo = tjRegSelect ? tjRegSelect.value.trim() : '';
                 group.batch = row.cells[2].innerText.trim();
                 const fechaCell = row.querySelector('td[data-col="Fecha"]');
                 const fechaInput = fechaCell ? fechaCell.querySelector('input') : null;
@@ -1672,11 +1677,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const stemsTotalCell = row.querySelector('td[data-col="Stems Total"]');
                 group.stemsTotal = stemsTotalCell ? parseInt(stemsTotalCell.innerText.trim()) : 0;
             }
-
+    
             const rowData = {};
             const startIndex = isMainRow ? 4 : 0;
             const endIndex = isMainRow ? row.cells.length - 2 : row.cells.length - 1;
-
+    
             for (let i = startIndex; i < endIndex; i++) {
                 const field = row.cells[i].getAttribute('data-col');
                 const select = row.cells[i].querySelector('select');
@@ -1684,70 +1689,72 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             group.rows.push(rowData);
         });
-
+    
         localStorage.setItem('tableData', JSON.stringify(groups));
         localStorage.setItem('responsable', responsableInput.value.trim());
     }
+    
+    
 
     function loadTableData() {
         const data = JSON.parse(localStorage.getItem('tableData'));
         const responsable = localStorage.getItem('responsable') || '';
         responsableInput.value = responsable;
-
+    
         if (data && Object.keys(data).length > 0) {
             Object.keys(data).forEach(groupId => {
                 const group = data[groupId];
                 if (group.rows.length > 0) {
                     const numRows = group.rows.length;
                     const longsArray = group.rows.map(row => row["Long"]);
-
+    
                     const mainRow = dataTable.insertRow();
                     mainRow.setAttribute('data-group-id', groupId);
-
-                    // Crear celdas "Variety" y "Tipo" con rowspan
+    
+                    // Crear celda "Variety" (select) con rowspan
                     const varietyCell = createVarietySelect(group.variety);
                     varietyCell.setAttribute('rowspan', numRows);
                     mainRow.appendChild(varietyCell);
-
+    
+                    // Crear celda "Tipo" (solo para mostrar en la fila principal)
+                    // Esta celda muestra el valor que se guardó en el grupo (de la primera fila)
                     const tipoCell = document.createElement('td');
                     tipoCell.setAttribute('data-col', 'Tipo');
                     tipoCell.setAttribute('rowspan', numRows);
-                    const selectedTipo = getTipoForVariety(group.variety);
-                    tipoCell.innerText = selectedTipo || '';
+                    tipoCell.innerText = group.tipo || '';
                     tipoCell.setAttribute('tabindex', '0');
                     mainRow.appendChild(tipoCell);
-
+    
                     const batchCell = createEditableCell('Batch', group.batch, numRows);
                     mainRow.appendChild(batchCell);
-
+    
                     const fechaValue = group.fecha || new Date().toISOString().split('T')[0];
                     const fechaCell = createDateCell('Fecha', fechaValue, numRows);
                     mainRow.appendChild(fechaCell);
-
+    
+                    // Agregar celdas de datos para la fila principal
                     addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
-
+    
                     const stemsTotalCell = document.createElement('td');
                     stemsTotalCell.setAttribute('rowspan', numRows);
                     stemsTotalCell.classList.add('text-center');
                     stemsTotalCell.setAttribute('data-col', 'Stems Total');
                     stemsTotalCell.innerText = group.stemsTotal || '';
                     stemsTotalCell.setAttribute('tabindex', '0');
-
+    
                     const notasCell = mainRow.querySelector('td[data-col="Notas"]');
                     const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
                     mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
-
-                    // Celda de Acciones (borrar grupo + agregar línea)
+    
+                    // Celda de Acciones (eliminar grupo + agregar línea)
                     const actionCell = document.createElement('td');
                     actionCell.setAttribute('rowspan', numRows);
                     actionCell.classList.add('text-center');
-
-                    // Botón Eliminar Grupo
+    
                     const deleteBtn = document.createElement('button');
                     deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
                     deleteBtn.classList.add('delete-btn');
                     deleteBtn.title = 'Eliminar grupo';
-
                     deleteBtn.addEventListener('click', () => {
                         if (confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
                             const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
@@ -1759,20 +1766,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                     actionCell.appendChild(deleteBtn);
-
-                    // Botón Agregar Línea (no para HYPERICUM)
+    
                     const addLineBtn = document.createElement('button');
                     addLineBtn.innerHTML = '<i class="fa fa-plus"></i>';
                     addLineBtn.classList.add('add-line-btn');
                     addLineBtn.title = 'Agregar línea';
-
                     addLineBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
-                        const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
-                        const tipo = tipoCell ? tipoCell.innerText.trim() : '';
-
-                        if (tipo === 'HYPERICUM') {
+                        // Usamos el valor que se muestra en la celda "Tipo" (aunque cada fila tendrá su propio select)
+                        const tipoVisual = mainRow.querySelector('td[data-col="Tipo"]').innerText.trim();
+                        if (tipoVisual === 'HYPERICUM') {
                             showAlert('No se pueden agregar líneas adicionales para el grupo HYPERICUM.', 'warning');
                             return;
                         }
@@ -1780,52 +1784,59 @@ document.addEventListener('DOMContentLoaded', () => {
                         showAlert('Se agregó una nueva línea al grupo.', 'success');
                     });
                     actionCell.appendChild(addLineBtn);
-
                     mainRow.appendChild(actionCell);
-
-                    const fieldsToUse = fields;
+    
+                    // Para la fila principal: asignar cada celda de datos según lo guardado
+                    const fieldsToUse = fields; // Asegúrate que fields contenga, entre otros, "TJ - REG"
                     fieldsToUse.forEach((field, idx) => {
-                        const cellIndex = idx + 4;
+                        const cellIndex = idx + 4; // asumiendo que a partir de la columna 4 están los datos
                         const cell = mainRow.cells[cellIndex];
                         if (cell) {
                             if (field === "TJ - REG") {
-                                cell.querySelector('select').value = group.rows[0][field] || '';
+                                // Se usa el valor guardado en group.rows[0] para la celda de la fila principal
+                                cell.querySelector('select').value = group.rows[0][field] || 'REG';
                             } else {
                                 cell.innerText = group.rows[0][field] || '';
                             }
                         }
                     });
-
+    
+                    // Para cada subfila, se reconstruye usando los datos guardados individualmente
                     for (let i = 1; i < numRows; i++) {
                         const subRow = dataTable.insertRow();
                         subRow.setAttribute('data-group-id', groupId);
                         addDataCellsToRow(subRow, i, groupId, false, longsArray);
-
+        
                         fieldsToUse.forEach((field, idx) => {
                             const cell = subRow.cells[idx];
                             if (cell) {
                                 if (field === "TJ - REG") {
-                                    cell.querySelector('select').value = group.rows[i][field] || '';
+                                    // Importante: se asigna el valor guardado en la subfila, no el de la fila principal
+                                    cell.querySelector('select').value = group.rows[i][field] || 'REG';
                                 } else {
                                     cell.innerText = group.rows[i][field] || '';
                                 }
                             }
                         });
                     }
-
+        
+                    // Actualizar cálculos para todo el grupo
                     const groupRowsLoaded = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
                     groupRowsLoaded.forEach(r => {
                         updateCalculations(r);
                     });
-
                     updateStemsTotal(groupId);
                 }
             });
-
+        
             updateAllCalculations();
             populateSummaryTables();
         }
     }
+    
+    
+    
+    
 
     // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
@@ -2792,114 +2803,116 @@ document.addEventListener('DOMContentLoaded', () => {
     function extractInventarioData() {
         const table = document.getElementById('dataTable');
         if (!table) return [];
-      
+    
         const rows = table.querySelectorAll('tbody tr');
         const result = [];
-      
+    
         rows.forEach(row => {
-          const groupId = row.getAttribute('data-group-id');
-          if (!groupId) return;
-      
-          // Se detecta si es la fila principal o una subfila
-          const isMainRow = row.cells[0]?.getAttribute('data-col') === 'Variety';
-      
-          let variety = "";
-          let tipoRamo = "";  // Aquí guardaremos el valor de "TJ - REG"
-          
-          if (isMainRow) {
-            // La primera celda es Variety (que tiene el <select>)
-            variety = row.cells[0]?.querySelector('select')?.value || '';
-      
-            // Buscamos en la misma fila el select de "TJ - REG"
-            const tjRegSelect = row.querySelector('td[data-col="TJ - REG"] select');
-            tipoRamo = tjRegSelect ? tjRegSelect.value : '';
-          } else {
-            // Si es subfila, encontramos la fila principal para Variety y TJ - REG
-            const mainRow = document.querySelector(`tr[data-group-id="${groupId}"]`);
-            if (mainRow) {
-              variety = mainRow.cells[0]?.querySelector('select')?.value || '';
-      
-              const tjRegSelect = mainRow.querySelector('td[data-col="TJ - REG"] select');
-              tipoRamo = tjRegSelect ? tjRegSelect.value : '';
+            const groupId = row.getAttribute('data-group-id');
+            if (!groupId) return;
+    
+            // Detectamos si es fila principal o subfila
+            const isMainRow = row.cells[0]?.getAttribute('data-col') === 'Variety';
+    
+            let variety = "";
+            let tipoRamo = ""; // Valor del select "TJ - REG"
+    
+            if (isMainRow) {
+                // Para la fila principal: obtenemos la variedad y el tipo del mismo row
+                variety = row.cells[0]?.querySelector('select')?.value || '';
+                const tjRegSelect = row.querySelector('td[data-col="TJ - REG"] select');
+                tipoRamo = tjRegSelect ? tjRegSelect.value : '';
+            } else {
+                // Para subfila: intentamos obtener el select "TJ - REG" de esta misma fila
+                const tjRegSelect = row.querySelector('td[data-col="TJ - REG"] select');
+                if (tjRegSelect) {
+                    tipoRamo = tjRegSelect.value;
+                } else {
+                    // Si no se encuentra, se puede optar por obtenerlo de la fila principal (como fallback)
+                    const mainRow = document.querySelector(`tr[data-group-id="${groupId}"]`);
+                    tipoRamo = mainRow ? (mainRow.querySelector('td[data-col="TJ - REG"] select')?.value || '') : '';
+                }
+                // La variedad probablemente no esté en la subfila (debido a rowspan) y se obtiene de la fila principal
+                const mainRow = document.querySelector(`tr[data-group-id="${groupId}"]`);
+                variety = mainRow ? (mainRow.cells[0]?.querySelector('select')?.value || '') : '';
             }
-          }
-      
-          // Ahora la celda "Long" sí existe en cada fila (principal o subfila)
-          const longCell = row.querySelector('td[data-col="Long"]');
-          const longVal = longCell ? longCell.innerText.trim() : '';
-      
-          // Bunches Total
-          const bunchesTotalCell = row.querySelector('td[data-col="Bunches Total"]');
-          const bunchesTotal = bunchesTotalCell 
-            ? parseInt(bunchesTotalCell.innerText.trim()) || 0 
-            : 0;
-      
-          // Solo empujamos si variety, tipoRamo y long tienen valor
-          if (variety && tipoRamo && longVal) {
-            result.push({
-              variety: variety,
-              tipoRamo: tipoRamo, // En este campo irá "REG", "TJ", "WS10", "NF", etc.
-              long: longVal,
-              bunchesTotal: bunchesTotal
-            });
-          }
+    
+            // Se obtiene el valor de "Long"
+            const longCell = row.querySelector('td[data-col="Long"]');
+            const longVal = longCell ? longCell.innerText.trim() : '';
+    
+            // Se extrae el valor de "Bunches Total"
+            const bunchesTotalCell = row.querySelector('td[data-col="Bunches Total"]');
+            const bunchesTotal = bunchesTotalCell
+                ? parseInt(bunchesTotalCell.innerText.trim()) || 0
+                : 0;
+    
+            // Solo se agrega si existen los tres valores
+            if (variety && tipoRamo && longVal) {
+                result.push({
+                    variety: variety,
+                    tipoRamo: tipoRamo, // Por ejemplo: "WS10", "REG", etc.
+                    long: longVal,
+                    bunchesTotal: bunchesTotal
+                });
+            }
         });
-      
+    
         return result;
     }
-      
-
+    
+    
     function extractInventarioDataSummarized() {
-        const rawData = extractInventarioData(); // la función anterior
+        const rawData = extractInventarioData(); // Utiliza la función anterior
         const mapKeyed = {};
-      
+    
         rawData.forEach(item => {
-          // item.tipoRamo ahora contiene "REG", "TJ", "WS10", "NF", etc.
-          const key = `${item.variety.toUpperCase()}_${item.tipoRamo.toUpperCase()}_${item.long}`;
-      
-          if (!mapKeyed[key]) {
-            mapKeyed[key] = {
-              variety: item.variety,
-              tipoRamo: item.tipoRamo,
-              long: item.long,
-              bunchesTotal: 0
-            };
-          }
-          mapKeyed[key].bunchesTotal += item.bunchesTotal;
+            // Se construye la clave: VARIEDAD_TIPODERAMO_LONG (por ejemplo, ARTIST_WS10_60)
+            const key = `${item.variety.toUpperCase()}_${item.tipoRamo.toUpperCase()}_${item.long}`;
+    
+            if (!mapKeyed[key]) {
+                mapKeyed[key] = {
+                    variety: item.variety,
+                    tipoRamo: item.tipoRamo,
+                    long: item.long,
+                    bunchesTotal: 0
+                };
+            }
+            mapKeyed[key].bunchesTotal += item.bunchesTotal;
         });
-      
+    
         return Object.values(mapKeyed);
     }
+    
         
     async function saveInventarioDataToFirebase() {
         const dataArray = extractInventarioDataSummarized();
         if (!dataArray.length) {
-          showAlert("No hay filas en la tabla de Inventario para guardar.", "warning");
-          return;
+            showAlert("No hay filas en la tabla de Inventario para guardar.", "warning");
+            return;
         }
-      
+    
         try {
-          // Podrías mandar todo en un solo request, o uno por uno.
-          // Aquí, uno por uno:
-          for (const item of dataArray) {
-            const response = await fetch('/api/inventario', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(item)
-            });
-            if (!response.ok) {
-              console.error('Error guardando item inventario:', item);
+            // Enviamos cada ítem por separado
+            for (const item of dataArray) {
+                const response = await fetch('/api/inventario', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(item)
+                });
+                if (!response.ok) {
+                    console.error('Error guardando item inventario:', item);
+                }
             }
-          }
-      
-          showAlert("Datos guardados.", "success");
+            showAlert("Datos guardados.", "success");
         } catch (error) {
-          console.error("Error al guardar inventario en Firebase:", error);
-          showAlert("Error al guardar inventario en Firebase.", "danger");
+            console.error("Error al guardar inventario en Firebase:", error);
+            showAlert("Error al guardar inventario en Firebase.", "danger");
         }
     }
+    
 
     const saveInventarioFirebaseBtn = document.getElementById('saveInventarioFirebaseBtn');
     if (saveInventarioFirebaseBtn) {
