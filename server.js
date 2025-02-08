@@ -262,34 +262,39 @@ app.post('/api/total-disponible', async (req, res) => {
 async function resetDisponiblesDiario() {
   console.log('Inicio de resetDisponiblesDiario()...');
   
-  const snapshot = await db.collection('totalDisponible').get();
-  const batch = db.batch();
-  
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    const disponibleHoy = data.disponible_hoy || 0;
-    batch.update(doc.ref, {
-      disponible_ayer: disponibleHoy,
-      disponible_hoy:  0,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  try {
+    const snapshot = await db.collection('totalDisponible').get();
+    const batch = db.batch();
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const disponibleHoy = data.disponible_hoy || 0;
+
+      batch.update(doc.ref, {
+        disponible_ayer: disponibleHoy,
+        disponible_hoy: 0,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`Documento ${doc.id}: disponible_ayer = ${disponibleHoy}, disponible_hoy = 0`);
     });
-    // Este console.log es extra, para ver ID y valores en la consola
-    console.log(`Documento ${doc.id}: disponible_ayer se setea a ${disponibleHoy}, y disponible_hoy a 0`);
-  });
-  
-  await batch.commit();
-  console.log('Reset diario completado satisfactoriamente.');
+
+    await batch.commit();
+    console.log('Reset diario completado satisfactoriamente.');
+    return { status: "ok", message: "Reset diario ejecutado con éxito" };
+  } catch (error) {
+    console.error('Error en resetDisponiblesDiario:', error);
+    return { status: "error", message: "Error al ejecutar el reset diario" };
+  }
 }
 
-// Para pruebas, se ejecuta CADA MINUTO => '* * * * *'
-// (Nota: En producción, regrésalo a '1 0 * * *' o la hora que desees).
-cron.schedule('1 0 * * *', async () => {
-  try {
-    console.log('Ejecutando reset de prueba cada minuto...');
-    await resetDisponiblesDiario();
-  } catch (error) {
-    console.error('Error en el reset:', error);
-  }
+// Endpoint para llamar manualmente desde cron-job.org
+app.get('/resetDisponiblesDiario', async (req, res) => {
+  const result = await resetDisponiblesDiario();
+  res.status(result.status === "ok" ? 200 : 500).json(result);
+
+  //console.log("🚀 Función de prueba ejecutada correctamente.");
+  //res.status(200).json({ status: "ok", message: "Reset diario ejecutado con éxito (prueba)" });
 });
 
 
