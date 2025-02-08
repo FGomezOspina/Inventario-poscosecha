@@ -290,11 +290,11 @@ async function resetDisponiblesDiario() {
 
 // Endpoint para llamar manualmente desde cron-job.org
 app.get('/resetDisponiblesDiario', async (req, res) => {
-  //const result = await resetDisponiblesDiario();
-  //res.status(result.status === "ok" ? 200 : 500).json(result);
+  const result = await resetDisponiblesDiario();
+  res.status(result.status === "ok" ? 200 : 500).json(result);
 
-  console.log("🚀 Función de prueba ejecutada correctamente.");
-  res.status(200).json({ status: "ok", message: "Reset diario ejecutado con éxito (prueba)" });
+  //console.log("🚀 Función de prueba ejecutada correctamente.");
+  //res.status(200).json({ status: "ok", message: "Reset diario ejecutado con éxito (prueba)" });
 });
 
 
