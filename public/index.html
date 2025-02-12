@@ -44,15 +44,12 @@
                                         <span class="link-text">Pack Rate</span>
                                     </a>
                                 </li>
-                                <!-- Nuevo elemento para configuración de STEMS -->
-                                <!--
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#" id="stemsConfigBtn" data-bs-toggle="modal" data-bs-target="#stemsConfigModal">
-                                        <i class="fas fa-sliders-h"></i>
-                                        <span class="link-text">Stems Config</span>
+                                    <a class="nav-link" href="#" id="packrateMixBtn">
+                                        <i class="fas fa-layer-group"></i>
+                                        <span class="link-text">Pack Rate Mix</span>
                                     </a>
-                                </li>
-                                -->
+                                  </li>
                             </ul>
                         </li>
 
@@ -309,6 +306,33 @@
                 </div>
                 <!-- Fin de packrateSection -->
 
+                <!-- =========================
+                    SECCIÓN DE PACK RATE MIX
+                    ========================= -->
+                <div id="packrateMixSection" style="display: none; margin-top: 2rem;">
+                    <h2>Pack Rate Mix</h2>
+                    <div class="table-responsive">
+                    <table id="packrateMixTable" class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>RAMO</th>
+                            <th>PACKRATE MIX BOXES</th>
+                            <th>LONG</th>
+                            <th>ARTIST</th>
+                            <th>CAYA</th>
+                            <th>JUNE</th>
+                            <th>NAVY</th>
+                            <th>ROSWITHA</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Se generará dinámicamente -->
+                        </tbody>
+                    </table>
+                    </div>
+                    <!-- Contenedor de alertas para Pack Rate Mix (opcional) -->
+                    <div id="alertPackrateMix"></div>
+                </div>
             </main>
         </div>
     </div>
@@ -384,65 +408,5 @@
     <script src="config.js"></script> 
     <script src="stemsConfig.js"></script>
     <script src="main.js"></script>
-    
-    <!-- Script para cargar y guardar la configuración de STEMS en el modal -->
-    <script>
-    // Función para cargar la configuración en el modal
-    function loadStemsConfigUI() {
-        const stemsTableBody = document.getElementById("stemsConfigTableBody");
-        if (!stemsTableBody) return;
-        stemsTableBody.innerHTML = "";
-        
-        // Usamos el objeto global stemsConfig (cargado en stemsConfig.js)
-        const config = window.stemsConfig || {};
-        for (const variety in config) {
-            const tr = document.createElement("tr");
-            // Columna para la variety
-            const tdVariety = document.createElement("td");
-            tdVariety.innerText = variety;
-            tr.appendChild(tdVariety);
-            // Columnas para cada longitud
-            const longitudes = [70, 60, 55, 50, 40];
-            longitudes.forEach(long => {
-                const td = document.createElement("td");
-                const input = document.createElement("input");
-                input.type = "number";
-                input.step = "0.01";
-                input.className = "form-control";
-                input.value = config[variety][long] !== undefined ? config[variety][long] : "";
-                input.setAttribute("data-variety", variety);
-                input.setAttribute("data-long", long);
-                td.appendChild(input);
-                tr.appendChild(td);
-            });
-            stemsTableBody.appendChild(tr);
-        }
-    }
-
-    // Guardar la configuración desde el modal
-    document.getElementById("saveStemsConfigBtn").addEventListener("click", () => {
-        const inputs = document.querySelectorAll("#stemsConfigTableBody input");
-        const newConfig = {};
-        inputs.forEach(input => {
-            const variety = input.getAttribute("data-variety");
-            const long = input.getAttribute("data-long");
-            const value = parseFloat(input.value);
-            if (!newConfig[variety]) {
-                newConfig[variety] = {};
-            }
-            newConfig[variety][long] = isNaN(value) ? 0 : value;
-        });
-        // Guardar la nueva configuración en localStorage y actualizar el objeto global
-        localStorage.setItem("stemsConfig", JSON.stringify(newConfig));
-        window.stemsConfig = newConfig;
-        // Cerrar el modal
-        const stemsModal = bootstrap.Modal.getInstance(document.getElementById("stemsConfigModal"));
-        stemsModal.hide();
-        alert("Configuración de STEMS actualizada.");
-    });
-
-    // Cargar la configuración cuando se abra el modal
-    document.getElementById("stemsConfigModal").addEventListener("show.bs.modal", loadStemsConfigUI);
-    </script>
 </body>
 </html>

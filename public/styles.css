@@ -521,5 +521,102 @@ th[data-col="Fecha"] {
 }
 
 /* ============================
+   Estilos para Pack Rate Mix
+   ============================ */
+   #packrateMixSection {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #fdfdfd; /* Fondo claro para diferenciar el módulo */
+}
+
+#packrateMixSection h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Tabla principal de Pack Rate Mix */
+#packrateMixTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    margin: 0 auto;
+    font-size: 14px;
+}
+
+/* Encabezado de la tabla */
+#packrateMixTable thead th {
+    background-color: #f1f1f1;
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Celdas del cuerpo */
+#packrateMixTable tbody td {
+    border: 1px solid #dee2e6;
+    padding: 6px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Anchos específicos para las 3 primeras columnas */
+#packrateMixTable th:nth-child(1),
+#packrateMixTable td:nth-child(1) {
+    width: 100px; /* Columna RAMO */
+}
+#packrateMixTable th:nth-child(2),
+#packrateMixTable td:nth-child(2) {
+    width: 160px; /* PACKRATE MIX BOXES */
+}
+#packrateMixTable th:nth-child(3),
+#packrateMixTable td:nth-child(3) {
+    width: 60px; /* LONG */
+}
+
+/* Para las columnas de ARTIST hasta ROSWiTHA (columnas 4 a 8), establecer un ancho pequeño */
+#packrateMixTable th:nth-child(n+4),
+#packrateMixTable td:nth-child(n+4) {
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+}
+
+/* Para las celdas editables (ARTIST, CAYA, JUNE, NAVY, ROSWiTHA) */
+#packrateMixTable td[contenteditable] {
+    background-color: #fff;
+    cursor: text;
+    transition: background-color 0.3s ease;
+}
+#packrateMixTable td[contenteditable]:focus {
+    outline: 2px solid #0d6efd;
+    background-color: #e7f1ff;
+}
+
+/* Colorear filas alternadas para mejorar la legibilidad */
+#packrateMixTable tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+#packrateMixTable tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+/* Responsividad para dispositivos móviles */
+@media (max-width: 768px) {
+    #packrateMixTable {
+        font-size: 12px;
+    }
+    #packrateMixTable thead th,
+    #packrateMixTable tbody td {
+        padding: 4px;
+    }
+}
+
+
+/* ============================
    Fin del archivo styles.css
    ============================ */

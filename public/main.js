@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const empaqueBtn = document.getElementById('empaqueBtn');
     const packrateBtn = document.getElementById('packrateBtn');
 
+    // Obtén el botón y la sección correspondiente
+    const packrateMixBtn = document.getElementById('packrateMixBtn');
+    const packrateMixSection = document.getElementById('packrateMixSection');
+
+
     // Elementos para las tablas resumidas
     const toggleSummaryBtn = document.getElementById('toggleSummaryBtn');
     const summaryTablesContainer = document.getElementById('summaryTables');
@@ -77,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (empaqueSection) empaqueSection.style.display = 'none';
             // Ocultar packrate
             if (packrateSection) packrateSection.style.display = 'none';
+            packrateMixSection.style.display = 'none';
         });
     }
 
@@ -94,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (empaqueSection) empaqueSection.style.display = 'block';
             if (inventarioSection) inventarioSection.style.display = 'none';
             if (packrateSection) packrateSection.style.display = 'none';
+            packrateMixSection.style.display = 'none';
         });
     }
     
@@ -110,8 +117,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (inventarioSection) inventarioSection.style.display = 'none';
             if (empaqueSection) empaqueSection.style.display = 'none';
+            packrateMixSection.style.display = 'none';
         });
     }
+
+    if (packrateMixBtn) {
+        packrateMixBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Ocultar otras secciones
+          inventarioSection.style.display = 'none';
+          empaqueSection.style.display = 'none';
+          packrateSection.style.display = 'none';
+          // Mostrar solo Pack Rate Mix
+          packrateMixSection.style.display = 'block';
+          generatePackRateMixTable();
+        });
+    }
+      
     
 
     /**
@@ -2617,7 +2639,81 @@ document.addEventListener('DOMContentLoaded', () => {
     
         attachPackRateEvents();
     }
-    
+
+    function generatePackRateMixTable() {
+        const table = document.getElementById("packrateMixTable");
+        if (!table) return;
+        const tbody = table.querySelector("tbody");
+        tbody.innerHTML = ""; // Limpia el contenido previo
+      
+        // Definimos un array con los nombres de las columnas editables
+        const editableCols = ["ARTIST", "CAYA", "JUNE", "NAVY", "ROSWiTHA"];
+      
+        // --- Función auxiliar para crear una fila ---
+        function createRow(ramo, boxes, longVal) {
+          const tr = document.createElement("tr");
+          // Columna RAMO
+          const tdRamo = document.createElement("td");
+          tdRamo.innerText = ramo;
+          tr.appendChild(tdRamo);
+          // Columna PACKRATE MIX BOXES
+          const tdBoxes = document.createElement("td");
+          tdBoxes.innerText = boxes;
+          tr.appendChild(tdBoxes);
+          // Columna LONG
+          const tdLong = document.createElement("td");
+          tdLong.innerText = longVal;
+          tr.appendChild(tdLong);
+          // Columnas editables
+          editableCols.forEach(colName => {
+            const td = document.createElement("td");
+            td.contentEditable = true;
+            td.innerText = ""; // valor inicial vacío
+            tr.appendChild(td);
+          });
+          return tr;
+        }
+      
+        // --- Generar filas según las indicaciones ---
+      
+        // 1. Para RAMO "TJ": 8 filas con LONG = 60
+        for (let i = 1; i <= 8; i++) {
+          tbody.appendChild(createRow("TJ", "Smart MIX TJ " + i, "60"));
+        }
+        // 2. Para RAMO "TJ": 8 filas con LONG = 55
+        for (let i = 1; i <= 8; i++) {
+          tbody.appendChild(createRow("TJ", "Smart MIX TJ " + i, "55"));
+        }
+        // 3. Para RAMO "NF": 8 filas con LONG = 55
+        for (let i = 1; i <= 8; i++) {
+          tbody.appendChild(createRow("NF", "Smart MIX NF " + i, "55"));
+        }
+        // 4. Para RAMO "NF": 8 filas con LONG = 50
+        for (let i = 1; i <= 8; i++) {
+          tbody.appendChild(createRow("NF", "Smart MIX NF " + i, "50"));
+        }
+        // 5. Para RAMO "REG": 3 filas para LONG = 60 (HB, QB, EB)
+        const regTypes = ["HB", "QB", "EB"];
+        regTypes.forEach(type => {
+          tbody.appendChild(createRow("REG", "Smart MIX " + type, "60"));
+        });
+        // 6. Para RAMO "REG": 3 filas para LONG = 55
+        regTypes.forEach(type => {
+          tbody.appendChild(createRow("REG", "Smart MIX " + type, "55"));
+        });
+        // 7. Para RAMO "REG": 3 filas para LONG = 50
+        regTypes.forEach(type => {
+          tbody.appendChild(createRow("REG", "Smart MIX " + type, "50"));
+        });
+        // 8. Para RAMO "WS10": 3 filas para cada LONG (60, 55, 50) – Total 9 filas.
+        const ws10Types = ["HB", "QB", "EB"];
+        [60, 55, 50].forEach(longVal => {
+          ws10Types.forEach(type => {
+            tbody.appendChild(createRow("WS10", "Smart MIX WS10 " + type, longVal.toString()));
+          });
+        });
+    }
+      
     // Función para renderizar la tabla a partir de los bloques obtenidos desde Firebase.
     function renderPackRateBlocks(blocks) {
         const packrateTable = document.getElementById("packrateTable");
