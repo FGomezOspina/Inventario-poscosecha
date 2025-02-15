@@ -616,6 +616,112 @@ th[data-col="Fecha"] {
     }
 }
 
+/* ============================
+   Estilos para Empaque Mix
+   ============================ */
+
+/* Contenedor principal del módulo Empaque Mix */
+#empaqueMixSection {
+    padding: 1.5rem;
+    /*background-color: #f8f9fa;*/
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);*/
+  }
+  
+  /* Título del módulo */
+  #empaqueMixSection h2 {
+    margin-bottom: 1rem;
+    font-size: 1.75rem;
+  }
+  
+  /* Tabla Empaque Mix */
+  #empaqueMixTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  /* Encabezado de la tabla */
+  #empaqueMixTable thead {
+    background-color: #0d6efd;
+    color: #ffffff;
+  }
+  
+  #empaqueMixTable thead th {
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid #dee2e6;
+  }
+  
+  /* Cuerpo de la tabla */
+  #empaqueMixTable tbody td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+    background-color: #ffffff;
+    vertical-align: middle;
+  }
+  
+  /* Filas alternadas */
+  #empaqueMixTable tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  /* Efecto hover en filas */
+  #empaqueMixTable tbody tr:hover {
+    background-color: #e9ecef;
+    cursor: pointer;
+  }
+  
+  /* Celdas editables: BOX y #BOXES (desde la fila header) y otras celdas con contentEditable */
+  #empaqueMixTable td[contenteditable] {
+    background-color: #fff;
+    transition: background-color 0.3s ease;
+    cursor: text;
+  }
+  
+  #empaqueMixTable td[contenteditable]:focus {
+    outline: 2px solid #0d6efd;
+    background-color: #e7f1ff;
+  }
+  
+  /* Botones en la columna de ACCIONES */
+  #empaqueMixTable td:last-child button {
+    margin: 0 2px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  #empaqueMixTable td:last-child button.btn-success {
+    color: #28a745;
+  }
+  
+  #empaqueMixTable td:last-child button.btn-danger {
+    color: #dc3545;
+  }
+  
+  #resetEmpaqueMixBtn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+  }
+
+  /* Responsividad para dispositivos móviles */
+  @media (max-width: 768px) {
+    #empaqueMixTable {
+      font-size: 12px;
+    }
+    #empaqueMixTable thead th,
+    #empaqueMixTable tbody td {
+      padding: 6px;
+    }
+  }
+  
+
 
 /* ============================
    Fin del archivo styles.css

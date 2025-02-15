@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const inventarioSection = document.getElementById('inventarioSection');
     const empaqueSection = document.getElementById('empaqueSection');
     const packrateSection = document.getElementById('packrateSection');
+    const empaqueMixBtn = document.getElementById('empaqueMixBtn');
+    const empaqueMixSection = document.getElementById('empaqueMixSection');
 
     // Elementos del menú lateral
     const sidebarMenu = document.getElementById('sidebarMenu');
@@ -24,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const inventarioBtn = document.getElementById('inventarioBtn');
     const empaqueBtn = document.getElementById('empaqueBtn');
     const packrateBtn = document.getElementById('packrateBtn');
+    const addEmpaqueMixGroupBtn = document.getElementById("addEmpaqueMixGroupBtn");
+    const resetEmpaqueMixBtn = document.getElementById("resetEmpaqueMixBtn");
 
     // Obtén el botón y la sección correspondiente
     const packrateMixBtn = document.getElementById('packrateMixBtn');
@@ -54,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variable global para guardar la configuración de PackRate (los "blocks") provenientes de Firebase
     let packRateData = [];
 
+    let empaqueMixGroupIdCounter = 1;
+
+
 
     // Campos de la tabla principal
     const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
@@ -83,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ocultar packrate
             if (packrateSection) packrateSection.style.display = 'none';
             packrateMixSection.style.display = 'none';
+            empaqueMixSection.style.display = 'none';
         });
     }
 
@@ -101,9 +109,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inventarioSection) inventarioSection.style.display = 'none';
             if (packrateSection) packrateSection.style.display = 'none';
             packrateMixSection.style.display = 'none';
+            empaqueMixSection.style.display = 'none';
         });
     }
-    
+
+    if (empaqueMixBtn) {
+        empaqueMixBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Ocultar otras secciones (suponiendo que ya tienes inventarioSection, empaqueSection, packrateSection)
+          inventarioSection.style.display = 'none';
+          empaqueSection.style.display = 'none';
+          packrateSection.style.display = 'none';
+          packrateMixSection.style.display = 'none';
+          // Mostrar Empaque Mix
+          empaqueMixSection.style.display = 'block';
+        });
+    }
 
     // Botón para mostrar Pack Rate
     if (packrateBtn) {
@@ -118,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inventarioSection) inventarioSection.style.display = 'none';
             if (empaqueSection) empaqueSection.style.display = 'none';
             packrateMixSection.style.display = 'none';
+            empaqueMixSection.style.display = 'none';
         });
     }
 
@@ -128,9 +150,24 @@ document.addEventListener('DOMContentLoaded', () => {
           inventarioSection.style.display = 'none';
           empaqueSection.style.display = 'none';
           packrateSection.style.display = 'none';
+          empaqueMixSection.style.display = 'none';
           // Mostrar solo Pack Rate Mix
           packrateMixSection.style.display = 'block';
           generatePackRateMixTable();
+        });
+    }
+
+    if (addEmpaqueMixGroupBtn) {
+        addEmpaqueMixGroupBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          createEmpaqueMixGroupFixed();
+        });
+    }
+
+    if (resetEmpaqueMixBtn) {
+        resetEmpaqueMixBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          resetEmpaqueMixTable();
         });
     }
       
@@ -2714,6 +2751,126 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
       
+    function createBoxSelect(selectedValue = "") {
+        const select = document.createElement("select");
+        select.classList.add("form-select", "form-select-sm");
+        // Ejemplo de opciones para packrate mix boxes
+        const packrateMixBoxes = [
+          "Smart MIX TJ 1", "Smart MIX TJ 2", "Smart MIX TJ 3", "Smart MIX TJ 4",
+          "Smart MIX TJ 5", "Smart MIX TJ 6", "Smart MIX TJ 7", "Smart MIX TJ 8",
+          "Smart MIX NF 1", "Smart MIX NF 2", "Smart MIX NF 3", "Smart MIX NF 4",
+          "Smart MIX NF 5", "Smart MIX NF 6", "Smart MIX NF 7", "Smart MIX NF 8",
+          "Smart MIX WS10 HB", "Smart MIX WS10 QB", "Smart MIX WS10 EB"
+        ];
+        // Opción vacía
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.text = "Seleccione BOX";
+        select.appendChild(emptyOption);
+        packrateMixBoxes.forEach(function(box) {
+          const option = document.createElement("option");
+          option.value = box;
+          option.text = box;
+          if (box === selectedValue) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+        return select;
+    }
+      
+
+    function createEmpaqueMixGroupFixed(data = {}) {
+        // Valores fijos para la columna VARIETY
+        const fixedVarieties = ["ARTIST", "CAYA", "JUNE", "NAVY", "ROSWITHA"];
+        
+        // Asigna un ID único al grupo
+        const groupId = "empaqueMixGroup-" + (empaqueMixGroupIdCounter++);
+        const tbody = document.querySelector("#empaqueMixTable tbody");
+        
+        // --- Crear la fila header (primera fila del grupo) ---
+        const trHeader = document.createElement("tr");
+        trHeader.setAttribute("data-group-id", groupId);
+        
+        // Columna BOX (primera) con rowspan=5
+        const tdBox = document.createElement("td");
+        tdBox.rowSpan = 5;  
+        tdBox.appendChild(createBoxSelect(data.box || ""));
+        trHeader.appendChild(tdBox);
+        
+        // Columna #BOXES (segunda) con rowspan=5
+        const tdNumBoxes = document.createElement("td");
+        tdNumBoxes.rowSpan = 5;
+        tdNumBoxes.contentEditable = true;
+        tdNumBoxes.innerText = data.numBoxes || "";
+        trHeader.appendChild(tdNumBoxes);
+        
+        // Columna VARIETY para la primera fila: asigna fixedVarieties[0] ("artist")
+        const tdVariety = document.createElement("td");
+        tdVariety.innerText = fixedVarieties[0];
+        trHeader.appendChild(tdVariety);
+        
+        // Columna BUNCHES/BOX para la primera fila
+        const tdBunches = document.createElement("td");
+        tdBunches.contentEditable = true;
+        tdBunches.innerText = (data.bunchesPerBox && data.bunchesPerBox[0]) ? data.bunchesPerBox[0] : "";
+        trHeader.appendChild(tdBunches);
+        
+        // Columna ACCIONES con rowspan=5
+        const tdActions = document.createElement("td");
+        tdActions.rowSpan = 5; // Se establece rowspan=5
+        tdActions.classList.add("text-center");
+        
+        // Botón para eliminar el grupo completo
+        const deleteGroupBtn = document.createElement("button");
+        deleteGroupBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        deleteGroupBtn.classList.add("btn", "btn-danger", "btn-sm");
+        deleteGroupBtn.title = "Eliminar grupo completo";
+        deleteGroupBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Elimina todas las filas que tengan el mismo groupId
+          const groupRows = tbody.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+          groupRows.forEach(row => row.remove());
+        });
+        tdActions.appendChild(deleteGroupBtn);
+        trHeader.appendChild(tdActions);
+        
+        // Agregar la fila header al tbody
+        tbody.appendChild(trHeader);
+        
+        // --- Crear las 4 subfilas restantes (para completar las 5 filas) ---
+        for (let i = 1; i < 5; i++) {
+          const tr = document.createElement("tr");
+          tr.setAttribute("data-group-id", groupId);
+          
+          // En estas subfilas no se crean las columnas BOX, #BOXES y ACCIONES (ya que se fusionaron)
+          
+          // Columna VARIETY: asigna el valor fijo correspondiente
+          const tdVar = document.createElement("td");
+          tdVar.innerText = fixedVarieties[i];
+          tr.appendChild(tdVar);
+          
+          // Columna BUNCHES/BOX: editable
+          const tdBunch = document.createElement("td");
+          tdBunch.contentEditable = true;
+          tdBunch.innerText = (data.bunchesPerBox && data.bunchesPerBox[i]) ? data.bunchesPerBox[i] : "";
+          tr.appendChild(tdBunch);
+          
+          // (No se agrega la columna ACCIONES en estas subfilas)
+          tbody.appendChild(tr);
+        }
+    }
+      
+      
+
+    function resetEmpaqueMixTable() {
+        const tbody = document.querySelector("#empaqueMixTable tbody");
+        tbody.innerHTML = "";
+    }
+      
+      
+      
+
     // Función para renderizar la tabla a partir de los bloques obtenidos desde Firebase.
     function renderPackRateBlocks(blocks) {
         const packrateTable = document.getElementById("packrateTable");

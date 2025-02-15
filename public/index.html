@@ -69,6 +69,13 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="empaqueMixBtn">
+                                <i class="fas fa-layer-group"></i>
+                                <span class="link-text">Empaque Mix</span>
+                            </a>
+                          </li>                          
+
                         <!-- Cerrar Sesión -->
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
@@ -268,6 +275,40 @@
                     <div id="alertEmpaque"></div>
                 </div>
                 <!-- Fin de empaqueSection -->
+
+                <!-- =========================
+                    SECCIÓN DE EMPAQUE MIX
+                    ========================= -->
+                <div id="empaqueMixSection" style="display: none; margin-top: 2rem;">
+                    <h2>Empaque Mix</h2>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                    <!-- Botón para agregar un grupo (al menos 1 fila inicial) -->
+                    <button class="btn btn-primary" id="addEmpaqueMixGroupBtn">Agregar Grupo Mix</button>
+                    <!-- Botón para resetear el módulo Empaque Mix -->
+                    <button id="resetEmpaqueMixBtn" class="btn btn-warning">
+                        <i class="fa fa-refresh"></i> Resetear Empaque Mix
+                    </button>
+                    </div>
+                    <div class="table-responsive">
+                    <table id="empaqueMixTable" class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>BOX</th>
+                            <th>#BOXES</th>
+                            <th>VARIETY</th>
+                            <th>BUNCHES/BOX</th>
+                            <th>ACCIONES</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Las filas se crearán dinámicamente -->
+                        </tbody>
+                    </table>
+                    </div>
+                    <!-- Contenedor para alertas (opcional) -->
+                    <div id="alertEmpaqueMix"></div>
+                </div>
+                
 
                 <!-- =========================
                      SECCIÓN DE PACK RATE
