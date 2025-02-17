@@ -1646,25 +1646,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStemsTotal(groupId);
     }
 
-    function calculateEmpaqueRow(row) {
-        const numCajasCell = row.querySelector('td[data-col="NumCajas"]');
-        const sobranteCell = row.querySelector('td[data-col="Sobrante"]');
-        const procesoCell = row.querySelector('td[data-col="Proceso"]');
-        const totalEmpaqueCell = row.querySelector('td[data-col="TotalEmpaque"]');
-        const totalSobranteFCell = row.querySelector('td[data-col="TotalSobranteFuturo"]');
-    
-        const numCajas = parseInt(numCajasCell?.innerText.trim()) || 0;
-        const sobrante = parseInt(sobranteCell?.innerText.trim()) || 0;
-        const proceso = parseInt(procesoCell?.innerText.trim()) || 0;
-    
-        // EJEMPLO de cálculo
-        const totalEmpaque = numCajas * 10; 
-        const totalSobranteFuturo = sobrante - proceso; 
-    
-        totalEmpaqueCell.innerText = totalEmpaque.toString();
-        totalSobranteFCell.innerText = totalSobranteFuturo.toString();
-    }
-
     function updateStemsTotal(groupId) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         let totalStems = 0;
