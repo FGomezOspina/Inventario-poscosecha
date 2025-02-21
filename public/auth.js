@@ -67,12 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const configNavItem = document.getElementById('configNavItem');      // <li> de Configuración
         const inventarioNavItem = document.getElementById('inventarioNavItem'); // <li> de Inventario
         const soloEmpaqueNavItem = document.getElementById('soloEmpaqueNavItem'); // <li> de Empaque
+        const soloEmpaqueMixItem = document.getElementById('soloEmpaqueMixItem')
       
         // Si no hay usuario logueado, ocultar todo (salvo "Cerrar Sesión" si quieres mantenerlo)
         if (!window.currentUser) {
             if (configNavItem) configNavItem.style.display = 'none';
             if (inventarioNavItem) inventarioNavItem.style.display = 'none';
             if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'none';
+            if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'none';
             return;
         }
       
@@ -82,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (configNavItem) configNavItem.style.display = 'none';
         if (inventarioNavItem) inventarioNavItem.style.display = 'none';
         if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'none';
+        if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'none';
       
         // Reglas por rol
         if (role === 'admin') {
@@ -89,14 +92,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (configNavItem) configNavItem.style.display = 'block';
             if (inventarioNavItem) inventarioNavItem.style.display = 'block';
             if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'block';
+            if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'block';
         } 
         else if (role === 'inventario') {
             // Solo inventario
             if (inventarioNavItem) inventarioNavItem.style.display = 'block';
+            if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'none';
         }
         else if (role === 'empaque') {
             // Solo empaque
             if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'block';
+            if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'block';
         }
     }
 
