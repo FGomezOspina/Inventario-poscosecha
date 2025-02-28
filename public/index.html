@@ -29,13 +29,13 @@
                             <a class="nav-link collapsed" data-bs-toggle="collapse" href="#configSubmenu" 
                                aria-expanded="false" aria-controls="configSubmenu">
                                 <i class="fas fa-cog"></i>
-                                <span class="link-text">Configuración</span>
+                                <span class="link-text">Settings</span>
                             </a>
                             <ul class="collapse list-unstyled ms-3" id="configSubmenu">
                                 <li class="nav-item">
                                     <a class="nav-link" href="#" id="configBtn">
                                         <i class="fas fa-list"></i>
-                                        <span class="link-text">Categoría</span>
+                                        <span class="link-text">Category</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -57,7 +57,7 @@
                         <li class="nav-item" id="inventarioNavItem">
                             <a class="nav-link" href="#" id="inventarioBtn">
                                 <i class="fas fa-box"></i>
-                                <span class="link-text">Inventario</span>
+                                <span class="link-text">Inventory</span>
                             </a>
                         </li>
 
@@ -65,14 +65,14 @@
                         <li class="nav-item" id="soloEmpaqueNavItem">
                             <a class="nav-link" href="#" id="empaqueBtn">
                                 <i class="fas fa-boxes"></i>
-                                <span class="link-text">Empaque</span>
+                                <span class="link-text">Packing</span>
                             </a>
                         </li>
 
                         <li class="nav-item" id="soloEmpaqueMixItem">
                             <a class="nav-link" href="#" id="empaqueMixBtn">
                                 <i class="fas fa-layer-group"></i>
-                                <span class="link-text">Empaque Mix</span>
+                                <span class="link-text">Packing Mix</span>
                             </a>
                           </li>                          
 
@@ -80,7 +80,7 @@
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
                                 <i class="fas fa-sign-out-alt"></i>
-                                <span class="link-text">Cerrar Sesión</span>
+                                <span class="link-text">Log out</span>
                             </a>
                         </li>
                     </ul>
@@ -100,24 +100,24 @@
                      ========================= -->
                 <div id="inventarioSection" class="pt-3 pb-2 mb-3 border-bottom" style="display: none;">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-                        <h1 class="h2">Inventario</h1>
+                        <h1 class="h2">Inventory</h1>
                         <!-- Botones de acción -->
                         <div>
-                            <button class="btn btn-primary" id="addGroupBtn">Agregar Variedad</button>
+                            <button class="btn btn-primary" id="addGroupBtn">Add Variety</button>
                             <button id="resetTableBtn" class="btn btn-danger">
-                                <i class="fa fa-refresh"></i> Resetear Tabla
+                                <i class="fa fa-refresh"></i> Reset Table
                             </button>
-                            <button class="btn btn-success" id="generateExcelBtn">Generar Excel</button>
-                            <button class="btn btn-info" id="sendMailBtn">Enviar Correo</button>
-                            <button class="btn btn-secondary" id="toggleSummaryBtn">Mostrar Resúmenes</button>
+                            <button class="btn btn-success" id="generateExcelBtn">Generate Excel</button>
+                            <button class="btn btn-info" id="sendMailBtn">Send Email</button>
+                            <button class="btn btn-secondary" id="toggleSummaryBtn">Show Summaries</button>
                             <!-- Nuevo botón para guardar en Firebase -->
-                            <button class="btn btn-warning" id="saveInventarioFirebaseBtn">Guardar</button>
+                            <button class="btn btn-warning" id="saveInventarioFirebaseBtn">Save</button>
                         </div>
                     </div>
 
                     <!-- Campo para el responsable del conteo -->
                     <div class="mb-3">
-                        <label for="responsable" class="form-label">Responsable del Conteo:</label>
+                        <label for="responsable" class="form-label">Counting Responsible:</label>
                         <input type="text" class="form-control" id="responsable" placeholder="Ingrese el nombre del responsable">
                     </div>
 
@@ -127,12 +127,12 @@
                             <thead>
                                 <tr>
                                     <th class="col-variety">Variety</th>
-                                    <th class="col-tipo">Tipo</th>
+                                    <th class="col-tipo">Type</th>
                                     <th class="col-batch">Batch</th>
                                     <th class="col-fecha" title="Fecha">
                                         <i class="fa fa-calendar" aria-hidden="false"></i>
                                     </th>
-                                    <th class="col-tj-reg">Tipo de ramo</th>
+                                    <th class="col-tj-reg">Bouque Type</th>
                                     <th class="col-long">Long</th>
                                     <th class="col-p1">P1</th>
                                     <th class="col-p2">P2</th>
@@ -146,8 +146,8 @@
                                     <th class="col-bunches-total">Bunches Total</th>
                                     <th class="col-stems">Stems</th>
                                     <th class="col-stems-total">Stems Total</th>
-                                    <th class="col-notas">Notas</th>
-                                    <th class="col-acciones">Acciones</th>
+                                    <th class="col-notas">Notes</th>
+                                    <th class="col-acciones">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -158,10 +158,10 @@
 
                     <!-- Contenedor para las tablas resumidas -->
                     <div id="summaryTables" class="mt-4" style="display: none;">
-                        <h3>Resúmenes</h3>
+                        <h3>Summaries</h3>
                         <!-- Tabla Por Longitud -->
                         <div class="mb-4">
-                            <h4>Por Longitud</h4>
+                            <h4>By lenght</h4>
                             <div class="table-responsive">
                                 <table id="summaryByLength" class="table table-bordered">
                                     <thead>
@@ -180,7 +180,7 @@
 
                         <!-- Tabla Por Tipo de Ramo -->
                         <div class="mb-4">
-                            <h4>Por Tipo de Ramo</h4>
+                            <h4>By Bouquet Type</h4>
                             <div class="table-responsive">
                                 <table id="summaryByBouquetType" class="table table-bordered">
                                     <thead>
@@ -201,7 +201,7 @@
 
                         <!-- Tabla Por Batch -->
                         <div class="mb-4">
-                            <h4>Por Batch</h4>
+                            <h4>By Batch</h4>
                             <div class="table-responsive">
                                 <table id="summaryByBatch" class="table table-bordered">
                                     <thead>
@@ -210,7 +210,7 @@
                                             <th>Batch</th>
                                             <th>Long</th>
                                             <th>Stems</th>
-                                            <th>Fecha</th>
+                                            <th>Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -223,7 +223,7 @@
 
                     <!-- Contenedor para el Gran Total -->
                     <div class="grand-total-container">
-                        <strong>Gran Total de Stems:</strong> <span id="grandTotalValue">0</span>
+                        <strong>Grand Total of Stems:</strong> <span id="grandTotalValue">0</span>
                     </div>
 
                     <!-- Contenedor de alertas para Inventario -->
@@ -235,18 +235,18 @@
                      SECCIÓN DE EMPAQUE
                      ========================= -->
                 <div id="empaqueSection" style="display: none; margin-top: 2rem;">
-                    <h2>Empaque</h2>
+                    <h2>Packing</h2>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <button class="btn btn-primary" id="addEmpaqueRowBtn">Agregar Variedad</button>
+                        <button class="btn btn-primary" id="addEmpaqueRowBtn">Add Variety</button>
                         <!-- Spinner de Carga -->
                         <div id="loadingSpinner" class="spinner-border text-primary" role="status" style="display: none;">
-                          <span class="visually-hidden">Cargando...</span>
+                          <span class="visually-hidden">Loading...</span>
                         </div>
                         <!-- Nuevo botón para actualizar la tabla -->
-                        <button class="btn btn-success" id="updateTableBtn">Actualizar la Tabla</button>
+                        <button class="btn btn-success" id="updateTableBtn">Update Table</button>
                         <!-- Botón de Resetear Tabla en el Módulo de Empaque -->
                         <button id="resetEmpaqueTableBtn" class="btn btn-warning mb-3">
-                            <i class="fa fa-refresh"></i> Resetear Tabla
+                            <i class="fa fa-refresh"></i> Reset Table
                         </button>
                     </div>                    
                     <div class="table-responsive">
@@ -254,16 +254,16 @@
                             <thead>
                                 <tr>
                                     <th>Variety</th>
-                                    <th>Tipo de Ramo</th>
+                                    <th>Bouquet Type</th>
                                     <th>Long</th>
-                                    <th>Caja</th>
-                                    <th>#Cajas</th>
+                                    <th>Box</th>
+                                    <th>#Boxes</th>
                                     <th>Total UND</th>
-                                    <th>Total Empaque</th>
-                                    <th>Sobrante</th>
-                                    <th>Proceso</th>
-                                    <th>TOTAL DISPONIBLE</th>
-                                    <th>Acciones</th>
+                                    <th>Total Packing</th>
+                                    <th>Remaining</th>
+                                    <th>Process</th>
+                                    <th>TOTAL AVAILABLE</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>                            
                             <tbody>
@@ -280,13 +280,13 @@
                     SECCIÓN DE EMPAQUE MIX
                     ========================= -->
                 <div id="empaqueMixSection" style="display: none; margin-top: 2rem;">
-                    <h2>Empaque Mix</h2>
+                    <h2>Packing Mix</h2>
                     <div class="d-flex justify-content-between align-items-center mb-2">
                     <!-- Botón para agregar un grupo (al menos 1 fila inicial) -->
-                    <button class="btn btn-primary" id="addEmpaqueMixGroupBtn">Agregar Grupo Mix</button>
+                    <button class="btn btn-primary" id="addEmpaqueMixGroupBtn">Add Mix Group</button>
                     <!-- Botón para resetear el módulo Empaque Mix -->
                     <button id="resetEmpaqueMixBtn" class="btn btn-warning">
-                        <i class="fa fa-refresh"></i> Resetear Empaque Mix
+                        <i class="fa fa-refresh"></i> Reset Packing Mix
                     </button>
                     </div>
                     <div class="table-responsive">
@@ -297,7 +297,7 @@
                             <th>#BOXES</th>
                             <th>VARIETY</th>
                             <th>BUNCHES/BOX</th>
-                            <th>ACCIONES</th>
+                            <th>ACTIONS</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -317,7 +317,7 @@
                     <h2 class="mt-4">Pack Rate</h2>
                     <!-- Botón para guardar los datos de Pack Rate en Firebase -->
                     <div class="mb-3">
-                        <button class="btn btn-success" id="savePackRateBtn">Guardar PackRate</button>
+                        <button class="btn btn-success" id="savePackRateBtn">Save PackRate</button>
                     </div>
                     <div class="table-responsive packrate-table-container">
                         <table id="packrateTable" class="table table-striped table-hover">
@@ -356,7 +356,7 @@
                     <table id="packrateMixTable" class="table table-bordered">
                         <thead>
                         <tr>
-                            <th>RAMO</th>
+                            <th>BOUQUET</th>
                             <th>PACKRATE MIX BOXES</th>
                             <th>LONG</th>
                             <th>ARTIST</th>
@@ -383,7 +383,7 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="stemsConfigModalLabel">Configuración de STEMS</h5>
+            <h5 class="modal-title" id="stemsConfigModalLabel">STEMS Configuration</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
           </div>
           <div class="modal-body">
@@ -407,8 +407,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button id="saveStemsConfigBtn" type="button" class="btn btn-success">Guardar cambios</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button id="saveStemsConfigBtn" type="button" class="btn btn-success">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -419,19 +419,19 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+            <h5 class="modal-title" id="loginModalLabel">Log in</h5>
           </div>
           <div class="modal-body">
             <form id="loginForm">
               <div class="mb-3">
-                <label for="username" class="form-label">Usuario</label>
+                <label for="username" class="form-label">User</label>
                 <input type="text" class="form-control" id="username" required>
               </div>
               <div class="mb-3">
-                <label for="password" class="form-label">Contraseña</label>
+                <label for="password" class="form-label">Password</label>
                 <input type="password" class="form-control" id="password" required>
               </div>
-              <button type="submit" class="btn btn-primary">Ingresar</button>
+              <button type="submit" class="btn btn-primary">Enter</button>
             </form>
           </div>
         </div>

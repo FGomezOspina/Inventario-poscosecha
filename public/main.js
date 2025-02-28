@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Opciones
     const longDefaults = [];
     const hypericumLongs = ['', ''];
-    const tjRegOptions = ["TJ", "REG", "WS10", "NF"];
+    const tjRegOptions = ["TJ", "REG", "WS10", "NF", "SU30"];
 
     // Variable global para guardar la configuración de PackRate (los "blocks") provenientes de Firebase
     let packRateData = [];
@@ -322,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         select.classList.add('form-select', 'form-select-sm');
         select.style.minWidth = '100px';
         
+        // Se recorren las opciones incluyendo SU30
         tjRegOptions.forEach(optionValue => {
             const option = document.createElement('option');
             option.value = optionValue;
@@ -343,9 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         return select;
     }
-    
-    
-    
 
     // Función para obtener la fila desde una celda
     function getRowFromCell(cell) {
@@ -1538,27 +1536,22 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn('La fila no tiene un ID de grupo.');
             return;
         }
-
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         if (!groupRows.length) {
             console.warn(`No se encontraron filas para el ID de grupo ${groupId}.`);
             return;
         }
-
         const mainRow = groupRows[0];
         const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
         const tipo = tipoCell ? tipoCell.innerText.trim() : '';
-
         if (!tipo) {
             console.warn(`La fila principal del grupo ${groupId} no tiene definido el "Tipo".`);
             return;
         }
-
         if (!config[tipo]) {
             console.warn(`Configuración para la categoría "${tipo}" no encontrada en config.`);
             return;
         }
-
         const tjRegCell = row.querySelector('td[data-col="TJ - REG"] select');
         const longCell = row.querySelector('td[data-col="Long"]');
         const tjRegValue = tjRegCell ? tjRegCell.value : '';
@@ -1570,7 +1563,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let bunchesPerProcona = 0;
         let stemsPerBunch = 0;
 
-        // Se agrega "NF" igual que "TJ" y "WS10"
         if (tjRegValue === "TJ" || tjRegValue === "WS10" || tjRegValue === "NF") {
             if (config[tipo][tjRegValue]) {
                 bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona || 0;
@@ -1581,8 +1573,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tjRegValue === "REG") {
             if (config[tipo].REG) {
                 const regConfig = config[tipo].REG;
-
-                // Obtener stemsPerBunch
                 if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].stemsPerBunch !== undefined) {
                     stemsPerBunch = regConfig.lengths[longValue].stemsPerBunch;
                 } else if (regConfig.stemsPerBunch !== undefined) {
@@ -1591,8 +1581,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     stemsPerBunch = 0;
                     console.warn(`stemsPerBunch no está definido para tipo "${tipo}" en REG.`);
                 }
-
-                // Obtener bunchesPerProcona
                 if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].bunchesPerProcona !== undefined) {
                     bunchesPerProcona = regConfig.lengths[longValue].bunchesPerProcona;
                 } else if (regConfig.bunchesPerProcona !== undefined) {
@@ -1604,8 +1592,15 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 console.warn(`Configuración para tipo "${tipo}" y TJ - REG "REG" no encontrada en config.`);
             }
+        } else if (tjRegValue === "SU30") {
+            // Nueva rama para SU30: leer de la configuración definida en config.js
+            if (config[tipo]["SU30"]) {
+                bunchesPerProcona = config[tipo]["SU30"].bunchesPerProcona || 0;
+                stemsPerBunch = config[tipo]["SU30"].stemsPerBunch || 0;
+            } else {
+                console.warn(`Configuración para tipo "${tipo}" y SU30 no encontrada en config.`);
+            }
         } else {
-            // Otros casos
             bunchesPerProcona = 0;
             stemsPerBunch = 0;
         }
@@ -1645,6 +1640,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateStemsTotal(groupId);
     }
+
+    
+    
 
     function updateStemsTotal(groupId) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);

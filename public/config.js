@@ -1,13 +1,11 @@
-// config.js
-
 document.addEventListener('DOMContentLoaded', () => {
+    // Configuración predeterminada con la nueva sección SU30 en cada categoría
     const defaultConfigs = {
         VERONICA: {
             TJ: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
-            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
             NF: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
@@ -25,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
             WS10: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 10
+            },
+            // NUEVA SECCIÓN SU30
+            SU30: {
+                bunchesPerProcona: 8,
+                stemsPerBunch: 30
             }
         },
         HYPERICUM: {
@@ -32,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 40,
                 stemsPerBunch: 7
             },
-            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
             NF: {
                 bunchesPerProcona: 40,
                 stemsPerBunch: 7
@@ -49,6 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
             WS10: {
                 bunchesPerProcona: 40,
                 stemsPerBunch: 10
+            },
+            SU30: {
+                bunchesPerProcona: 8,
+                stemsPerBunch: 30
             }
         },
         EUPATORIUM: {
@@ -56,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
-            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
             NF: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
@@ -73,6 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
             WS10: {
                 bunchesPerProcona: 10,
                 stemsPerBunch: 10
+            },
+            SU30: {
+                bunchesPerProcona: 8,
+                stemsPerBunch: 30
             }
         },
         PAPYRUS: {
@@ -80,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
-            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
             NF: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
@@ -97,6 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
             WS10: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 10
+            },
+            SU30: {
+                bunchesPerProcona: 8,
+                stemsPerBunch: 30
             }
         },
         ORIGANUM: {
@@ -104,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
-            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
             NF: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
@@ -121,6 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
             WS10: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 10
+            },
+            SU30: {
+                bunchesPerProcona: 8,
+                stemsPerBunch: 30
             }
         },
         MENTHA: {
@@ -128,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
             },
-            // ==== NUEVA SECCIÓN NF (igual que TJ) ====
             NF: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 7
@@ -145,6 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
             WS10: {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 10
+            },
+            SU30: {
+                bunchesPerProcona: 8,
+                stemsPerBunch: 30
             }
         }
     };
@@ -195,15 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-dialog modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="configModalLabel">Configuración</h5>
+                        <h5 class="modal-title" id="configModalLabel">Settings</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <form id="configForm">
                             <div class="mb-3">
-                                <label for="configCategory" class="form-label">Categoría</label>
+                                <label for="configCategory" class="form-label">Category</label>
                                 <select class="form-select" id="configCategory" name="configCategory">
-                                    <option value="" disabled selected>Seleccione una categoría</option>
+                                    <option value="" disabled selected>Select a Category</option>
                                     ${Object.keys(defaultConfigs).map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                                 </select>
                             </div>
@@ -241,8 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let formHtml = '';
 
-            // Se agrega NF al array de tipos
-            ['TJ', 'REG', 'WS10', 'NF'].forEach(tipo => {
+            // Incluir los tipos, ahora con SU30 añadido
+            ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
                 const tipoConfig = config[category][tipo] || {};
 
                 formHtml += `<h5>${tipo}</h5>`;
@@ -268,7 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                     formHtml += '<h6>Longitudes:</h6>';
                     const lengths = tipoConfig.lengths || {};
-                    // Utilizar las longitudes de defaultConfigs para asegurar todas las longitudes
                     Object.keys(defaultConfigs[category].REG.lengths).forEach(long => {
                         const longConfig = lengths[long] || { bunchesPerProcona: 0, stemsPerBunch: '' };
                         formHtml += `
@@ -299,8 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Se agrega NF al array de tipos
-            ['TJ', 'REG', 'WS10', 'NF'].forEach(tipo => {
+            // Incluir SU30 en el array de tipos
+            ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
                 if (!config[selectedCategory][tipo]) {
                     config[selectedCategory][tipo] = {};
                 }
@@ -315,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     config[selectedCategory][tipo].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
                     config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsValue) ? 0 : stemsValue;
                 } else {
-                    // REG
+                    // Para REG
                     const stemsPerBunchDefaultKey = `${selectedCategory}_REG_stemsPerBunch_default`;
                     const stemsPerBunchDefaultValue = parseInt(formData.get(stemsPerBunchDefaultKey));
                     config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsPerBunchDefaultValue) ? 0 : stemsPerBunchDefaultValue;
@@ -348,17 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Actualizar la configuración en localStorage
             localStorage.setItem('config', JSON.stringify(config));
 
-            // Asegurar que estas funciones sean accesibles globalmente
             if (typeof window.saveTableData === 'function') {
                 window.saveTableData();
-            } else {
-                console.warn('saveTableData no está definido.');
             }
-
             if (typeof window.updateAllCalculations === 'function') {
                 window.updateAllCalculations();
-            } else {
-                console.warn('updateAllCalculations no está definido.');
             }
 
             bootstrapModal.hide();
@@ -390,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alertContainer.appendChild(alert);
 
-        // Cierra la alerta tras 3 segundos (puedes cambiar este tiempo)
+        // Cierra la alerta tras 3 segundos
         setTimeout(() => {
             alert.classList.remove('show');
             alert.classList.add('hide');
@@ -403,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (configBtn) {
         configBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Ejemplo de control de permisos
+            // Ejemplo de control de permisos: solo admin puede acceder
             if (window.currentUser && window.currentUser.role === 'admin') { 
                 openConfigModal();
             } else {
