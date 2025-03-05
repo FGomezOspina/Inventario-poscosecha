@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
-            // Solo se ejecuta una vez para evitar múltiples "submit" event listeners
+            // Se ejecuta sólo una vez para evitar múltiples listeners
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const username = document.getElementById('username').value.trim();
@@ -25,11 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const user = users.find(u => u.username === username && u.password === password);
                 if (user) {
-                    window.currentUser = user; // Asignar al objeto global
+                    window.currentUser = user; 
                     localStorage.setItem('currentUser', JSON.stringify(window.currentUser));
                     loginModal.hide();
                     showAlert(`Bienvenido, ${window.currentUser.username}.`);
                     updateUIForRole();
+                    updateSidebarUserInfo();
                 } else {
                     showAlert('Usuario o contraseña incorrectos.', 'danger');
                 }
@@ -61,15 +62,29 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => alert.remove(), 500);
         }, 3000);
     }
+
+    function updateSidebarUserInfo() {
+        // Muestra el nombre y rol del usuario en el sidebar
+        const sidebarUsername = document.getElementById('sidebarUsername');
+        const sidebarUserRole = document.getElementById('sidebarUserRole');
+
+        if (window.currentUser) {
+            sidebarUsername.textContent = window.currentUser.username;
+            sidebarUserRole.textContent = window.currentUser.role;
+        } else {
+            sidebarUsername.textContent = 'User Name';
+            sidebarUserRole.textContent = 'Role';
+        }
+    }
     
     function updateUIForRole() {
         // Referencias a los elementos del sidebar
-        const configNavItem = document.getElementById('configNavItem');      // <li> de Configuración
-        const inventarioNavItem = document.getElementById('inventarioNavItem'); // <li> de Inventario
-        const soloEmpaqueNavItem = document.getElementById('soloEmpaqueNavItem'); // <li> de Empaque
-        const soloEmpaqueMixItem = document.getElementById('soloEmpaqueMixItem')
-      
-        // Si no hay usuario logueado, ocultar todo (salvo "Cerrar Sesión" si quieres mantenerlo)
+        const configNavItem = document.getElementById('configNavItem');
+        const inventarioNavItem = document.getElementById('inventarioNavItem');
+        const soloEmpaqueNavItem = document.getElementById('soloEmpaqueNavItem');
+        const soloEmpaqueMixItem = document.getElementById('soloEmpaqueMixItem');
+
+        // Si no hay usuario logueado, ocultar todo
         if (!window.currentUser) {
             if (configNavItem) configNavItem.style.display = 'none';
             if (inventarioNavItem) inventarioNavItem.style.display = 'none';
@@ -88,19 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
       
         // Reglas por rol
         if (role === 'admin') {
-            // Admin ve todo
             if (configNavItem) configNavItem.style.display = 'block';
             if (inventarioNavItem) inventarioNavItem.style.display = 'block';
             if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'block';
             if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'block';
         } 
         else if (role === 'inventario') {
-            // Solo inventario
             if (inventarioNavItem) inventarioNavItem.style.display = 'block';
-            if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'none';
+            // El rol 'inventario' no ve "Packing" ni "Packing Mix"
         }
         else if (role === 'empaque') {
-            // Solo empaque
             if (soloEmpaqueNavItem) soloEmpaqueNavItem.style.display = 'block';
             if (soloEmpaqueMixItem) soloEmpaqueMixItem.style.display = 'block';
         }
@@ -110,23 +122,35 @@ document.addEventListener('DOMContentLoaded', () => {
         window.currentUser = null;
         localStorage.removeItem('currentUser');
         showLoginModal();
+        updateSidebarUserInfo();
+        updateUIForRole();
     }
 
-    // Mostrar el modal de inicio de sesión si no hay usuario almacenado
+    // Cargar usuario almacenado
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
         window.currentUser = JSON.parse(storedUser);
         updateUIForRole();
+        updateSidebarUserInfo();
     } else {
         showLoginModal();
     }
 
-    // Event listener para el botón de cerrar sesión
+    // Botón de cerrar sesión
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             logout();
+        });
+    }
+
+    // Botón toggle para el sidebar (versión móvil)
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    const sidebarMenu = document.getElementById('sidebarMenu');
+    if (toggleSidebarBtn && sidebarMenu) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            sidebarMenu.classList.toggle('show');
         });
     }
 });

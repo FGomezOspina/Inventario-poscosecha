@@ -202,37 +202,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guardar la configuración fusionada de nuevo en localStorage para asegurar su integridad
     localStorage.setItem('config', JSON.stringify(config));
 
+    // ===================================
+    // FUNCION PARA ABRIR EL MODAL DE CONFIG
+    // ===================================
     function openConfigModal() {
+        // Creamos dinámicamente el modal con clases modernas
         const modal = document.createElement('div');
         modal.classList.add('modal', 'fade');
         modal.setAttribute('tabindex', '-1');
         modal.setAttribute('aria-labelledby', 'configModalLabel');
         modal.setAttribute('aria-hidden', 'true');
 
+        // Estructura del modal con clase adicional "config-modal-content" para estilo moderno
         modal.innerHTML = `
-            <div class="modal-dialog modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="configModalLabel">Settings</h5>
+            <div class="modal-dialog modal-dialog-scrollable modal-lg config-modal-dialog">
+                <div class="modal-content config-modal-content">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title" id="configModalLabel">
+                            <i class="fas fa-cog me-2"></i> Settings
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <form id="configForm">
                             <div class="mb-3">
-                                <label for="configCategory" class="form-label">Category</label>
+                                <label for="configCategory" class="form-label fw-bold">Category</label>
                                 <select class="form-select" id="configCategory" name="configCategory">
                                     <option value="" disabled selected>Select a Category</option>
                                     ${Object.keys(defaultConfigs).map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                                 </select>
                             </div>
-                            <div id="categoryConfig">
+                            <div id="categoryConfig" class="p-2 rounded" style="background-color: #f9f9f9;">
                                 <!-- Configuración específica de la categoría seleccionada -->
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer border-0">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-primary" id="saveConfigBtn" disabled>Guardar cambios</button>
+                        <button type="button" class="btn btn-primary" id="saveConfigBtn" disabled>
+                            <i class="fas fa-save me-1"></i> Guardar cambios
+                        </button>
                     </div>
                 </div>
             </div>
@@ -253,49 +262,62 @@ document.addEventListener('DOMContentLoaded', () => {
             saveConfigBtn.disabled = !selectedCategory;
         });
 
-        // Función para generar el formulario específico para una categoría
+        // Generar el formulario específico para la categoría
         function generateSpecificConfigForm(category) {
-            if (!config[category]) return '<p>No hay configuración disponible para esta categoría.</p>';
+            if (!config[category]) {
+                return '<p>No hay configuración disponible para esta categoría.</p>';
+            }
 
             let formHtml = '';
 
-            // Incluir los tipos, ahora con SU30 añadido
+            // Incluir los tipos, con SU30
             ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
                 const tipoConfig = config[category][tipo] || {};
-
-                formHtml += `<h5>${tipo}</h5>`;
+                formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo}</h5>`;
 
                 if (tipo !== 'REG') {
                     formHtml += `
                         <div class="mb-3">
-                            <label>Bunches/Procona:</label>
-                            <input type="number" class="form-control" name="${category}_${tipo}_bunchesPerProcona" value="${tipoConfig.bunchesPerProcona !== undefined ? tipoConfig.bunchesPerProcona : 0}">
+                            <label class="form-label">Bunches/Procona:</label>
+                            <input type="number" class="form-control" 
+                                   name="${category}_${tipo}_bunchesPerProcona" 
+                                   value="${tipoConfig.bunchesPerProcona ?? 0}">
                         </div>
                         <div class="mb-3">
-                            <label>Stems/Bunch:</label>
-                            <input type="number" class="form-control" name="${category}_${tipo}_stemsPerBunch" value="${tipoConfig.stemsPerBunch !== undefined ? tipoConfig.stemsPerBunch : 0}">
+                            <label class="form-label">Stems/Bunch:</label>
+                            <input type="number" class="form-control" 
+                                   name="${category}_${tipo}_stemsPerBunch" 
+                                   value="${tipoConfig.stemsPerBunch ?? 0}">
                         </div>
                     `;
                 } else {
                     // Para REG
                     formHtml += `
                         <div class="mb-3">
-                            <label>Stems/Bunch (Predeterminado):</label>
-                            <input type="number" class="form-control" name="${category}_REG_stemsPerBunch_default" value="${tipoConfig.stemsPerBunch !== undefined ? tipoConfig.stemsPerBunch : 0}">
+                            <label class="form-label">Stems/Bunch (Predeterminado):</label>
+                            <input type="number" class="form-control"
+                                   name="${category}_REG_stemsPerBunch_default"
+                                   value="${tipoConfig.stemsPerBunch ?? 0}">
                         </div>
+                        <h6 class="fw-semibold">Longitudes:</h6>
                     `;
-                    formHtml += '<h6>Longitudes:</h6>';
                     const lengths = tipoConfig.lengths || {};
                     Object.keys(defaultConfigs[category].REG.lengths).forEach(long => {
                         const longConfig = lengths[long] || { bunchesPerProcona: 0, stemsPerBunch: '' };
                         formHtml += `
-                            <div class="mb-3">
-                                <label>Bunches/Procona para ${long} cm:</label>
-                                <input type="number" class="form-control" name="${category}_REG_bunchesPerProcona_${long}" value="${longConfig.bunchesPerProcona !== undefined ? longConfig.bunchesPerProcona : 0}">
-                            </div>
-                            <div class="mb-3">
-                                <label>Stems/Bunch para ${long} cm:</label>
-                                <input type="number" class="form-control" name="${category}_REG_stemsPerBunch_${long}" value="${longConfig.stemsPerBunch !== undefined ? longConfig.stemsPerBunch : ''}">
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <label class="form-label">Bunches/Procona para ${long} cm:</label>
+                                    <input type="number" class="form-control"
+                                           name="${category}_REG_bunchesPerProcona_${long}"
+                                           value="${longConfig.bunchesPerProcona ?? 0}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Stems/Bunch para ${long} cm:</label>
+                                    <input type="number" class="form-control"
+                                           name="${category}_REG_stemsPerBunch_${long}"
+                                           value="${longConfig.stemsPerBunch ?? ''}">
+                                </div>
                             </div>
                         `;
                     });
@@ -309,23 +331,21 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.querySelector('#saveConfigBtn').addEventListener('click', () => {
             const form = modal.querySelector('#configForm');
             const formData = new FormData(form);
-
             const selectedCategory = formData.get('configCategory');
+
             if (!selectedCategory) {
                 showAlert('Categoría no seleccionada.', 'danger');
                 return;
             }
 
-            // Incluir SU30 en el array de tipos
+            // Actualizar config para cada tipo
             ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
                 if (!config[selectedCategory][tipo]) {
                     config[selectedCategory][tipo] = {};
                 }
-
                 if (tipo !== 'REG') {
                     const bunchesKey = `${selectedCategory}_${tipo}_bunchesPerProcona`;
                     const stemsKey = `${selectedCategory}_${tipo}_stemsPerBunch`;
-
                     const bunchesValue = parseInt(formData.get(bunchesKey));
                     const stemsValue = parseInt(formData.get(stemsKey));
 
@@ -344,17 +364,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         const bunchesKey = `${selectedCategory}_REG_bunchesPerProcona_${long}`;
                         const stemsPerBunchKey = `${selectedCategory}_REG_stemsPerBunch_${long}`;
 
-                        const bunchesValue = parseInt(formData.get(bunchesKey));
-                        const stemsPerBunchValue = parseInt(formData.get(stemsPerBunchKey));
+                        const bunchesVal = parseInt(formData.get(bunchesKey));
+                        const stemsVal = parseInt(formData.get(stemsPerBunchKey));
 
                         if (!config[selectedCategory][tipo].lengths[long]) {
                             config[selectedCategory][tipo].lengths[long] = {};
                         }
 
-                        config[selectedCategory][tipo].lengths[long].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
+                        config[selectedCategory][tipo].lengths[long].bunchesPerProcona = isNaN(bunchesVal) ? 0 : bunchesVal;
 
-                        if (!isNaN(stemsPerBunchValue)) {
-                            config[selectedCategory][tipo].lengths[long].stemsPerBunch = stemsPerBunchValue;
+                        if (!isNaN(stemsVal)) {
+                            config[selectedCategory][tipo].lengths[long].stemsPerBunch = stemsVal;
                         } else {
                             delete config[selectedCategory][tipo].lengths[long].stemsPerBunch;
                         }
@@ -365,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Actualizar la configuración en localStorage
             localStorage.setItem('config', JSON.stringify(config));
 
+            // Si tienes funciones para recalcular/guardar datos, las llamas aquí
             if (typeof window.saveTableData === 'function') {
                 window.saveTableData();
             }
@@ -377,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showAlert('Configuración guardada correctamente.');
         });
 
+        // Eliminar el modal del DOM al cerrarlo
         modal.addEventListener('hidden.bs.modal', () => {
             modal.remove();
         });
