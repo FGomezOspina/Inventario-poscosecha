@@ -1866,22 +1866,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para generar el workbook de Excel
     async function generateExcelWorkbook() {
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Inventario');
+        const worksheet = workbook.addWorksheet('Inventory');
 
         const responsable = responsableInput.value.trim() || "Desconocido";
         const fechaHora = new Date().toLocaleString();
 
         worksheet.mergeCells('A1:T1');
-        worksheet.getCell('A1').value = `Responsable del Conteo: ${responsable}`;
+        worksheet.getCell('A1').value = `Master: ${responsable}`;
         worksheet.getCell('A1').font = { bold: true };
 
         worksheet.mergeCells('A2:T2');
-        worksheet.getCell('A2').value = `Fecha y Hora de Generación: ${fechaHora}`;
+        worksheet.getCell('A2').value = `Date: ${fechaHora}`;
         worksheet.getCell('A2').font = { bold: true };
 
         worksheet.addRow([]);
 
-        const headers = ["Variety", "Tipo", "Batch", "Fecha", "TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Stems Total", "Notas"];
+        const headers = ["Variety", "Type", "Block", "Date", "TJ - REG", "Long", "P1", "P2", "P3", "P4", "B1", "B2", "B3", "B4", "Bunch/Bucket", "Total Bunches", "Stems", "Stems Total", "Notes"];
         const headerRow = worksheet.addRow(headers);
 
         headerRow.eachCell((cell, colNumber) => {
@@ -1972,7 +1972,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const value = parseInt(cell.innerText.trim()) || 0;
                     excelRowData.push(value);
                     stemsValue = value;
-                } else if (dataCol === "Bunches Total") {
+                } else if (dataCol === "Total Bunches") {
                     const value = parseInt(cell.innerText.trim()) || 0;
                     excelRowData.push(value);
                     bunchesTotalValue = value;
@@ -1983,7 +1983,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const colIndex = headers.indexOf("Stems Total") + 1;
                         worksheet.mergeCells(rowIndex, colIndex, rowIndex + rowspan - 1, colIndex);
                     }
-                } else if (dataCol === "Notas") {
+                } else if (dataCol === "Notes") {
                     excelRowData.push(cell.innerText.trim());
                 } else if (dataCol !== "Acciones") {
                     excelRowData.push(cell.innerText.trim());
@@ -2079,7 +2079,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Hoja "Por Tipo de Ramo"
-        const bouquetSheet = workbook.addWorksheet('Por Tipo de Ramo');
+        const bouquetSheet = workbook.addWorksheet('Bunches');
         const bouquetHeaders = ["Variety", "TJ - REG", "Long", "Bunches Total", "Stems"];
         const bouquetHeaderRow = bouquetSheet.addRow(bouquetHeaders);
 
@@ -2120,7 +2120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Hoja "Por Longitud"
-        const lengthSheet = workbook.addWorksheet('Por Longitud');
+        const lengthSheet = workbook.addWorksheet('Stems');
         const lengthHeaders = ["Variety", "Long", "Stems"];
         const lengthHeaderRow = lengthSheet.addRow(lengthHeaders);
 
@@ -2158,7 +2158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Hoja "Por Batch"
-        const batchSheet = workbook.addWorksheet('Por Batch');
+        const batchSheet = workbook.addWorksheet('Block');
         const batchHeaders = ["Variety", "Batch", "Long", "Stems", "Fecha"];
         const batchHeaderRow = batchSheet.addRow(batchHeaders);
 
