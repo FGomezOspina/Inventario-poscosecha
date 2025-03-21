@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Configuración predeterminada con la nueva sección SU30 en cada categoría
+    //Default settings for all categories
     const defaultConfigs = {
         VERONICA: {
             TJ: {
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 stemsPerBunch: 7
             },
             REG: {
-                stemsPerBunch: 25, // Valor predeterminado para REG
+                stemsPerBunch: 25,
                 lengths: {
                     70: { bunchesPerProcona: 8 },
                     60: { bunchesPerProcona: 8 },
@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bunchesPerProcona: 20,
                 stemsPerBunch: 10
             },
-            // NUEVA SECCIÓN SU30
             SU30: {
                 bunchesPerProcona: 8,
                 stemsPerBunch: 30
@@ -167,20 +166,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Función para realizar una fusión profunda de objetos
+    // Function to perform a deep merge of objects
     function deepMerge(target, source) {
         for (const key in source) {
             if (source.hasOwnProperty(key)) {
+                // If the property is an object and not an array, merge recursively
                 if (
                     source[key] &&
                     typeof source[key] === 'object' &&
                     !Array.isArray(source[key])
                 ) {
+                    // If the target does not have the key or is not an object, initialize it as an empty object
                     if (!target[key] || typeof target[key] !== 'object') {
                         target[key] = {};
                     }
+                    // Recursively merge the nested object
                     deepMerge(target[key], source[key]);
                 } else {
+                    // Otherwise, directly assign the value from the source to the target
                     target[key] = source[key];
                 }
             }
@@ -188,32 +191,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return target;
     }
 
-    // Cargar configuración desde localStorage si existe
+
+    //Load configuration from localStorage if it exists
     const savedConfig = JSON.parse(localStorage.getItem('config'));
     let config = {};
 
     if (savedConfig) {
-        // Fusionar las configuraciones guardadas con las predeterminadas
+        // Merge saved configurations with default settings
         config = deepMerge(JSON.parse(JSON.stringify(defaultConfigs)), savedConfig);
     } else {
         config = JSON.parse(JSON.stringify(defaultConfigs));
     }
 
-    // Guardar la configuración fusionada de nuevo en localStorage para asegurar su integridad
+    // Save the merged configuration back to localStorage to ensure its integrity
     localStorage.setItem('config', JSON.stringify(config));
 
     // ===================================
-    // FUNCION PARA ABRIR EL MODAL DE CONFIG
+    // Function to open the settings modal
     // ===================================
     function openConfigModal() {
-        // Creamos dinámicamente el modal con clases modernas
+        // Dynamically create the modal with modern classes
         const modal = document.createElement('div');
         modal.classList.add('modal', 'fade');
         modal.setAttribute('tabindex', '-1');
         modal.setAttribute('aria-labelledby', 'configModalLabel');
         modal.setAttribute('aria-hidden', 'true');
 
-        // Estructura del modal con clase adicional "config-modal-content" para estilo moderno
+        // Modal structure with an additional class "config-modal-content" for a modern style
         modal.innerHTML = `
             <div class="modal-dialog modal-dialog-scrollable modal-lg config-modal-dialog">
                 <div class="modal-content config-modal-content">
@@ -253,16 +257,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const saveConfigBtn = modal.querySelector('#saveConfigBtn');
 
-        // Manejar el cambio de categoría para cargar su configuración
+        // Handle category change to load its configuration
         modal.querySelector('#configCategory').addEventListener('change', function() {
             const selectedCategory = this.value;
             const categoryConfigDiv = modal.querySelector('#categoryConfig');
-            // Generar el formulario específico para la categoría
+            // Generate the specific form for the category
             categoryConfigDiv.innerHTML = generateSpecificConfigForm(selectedCategory);
             saveConfigBtn.disabled = !selectedCategory;
         });
 
-        // Generar el formulario específico para la categoría
+        // Generate the specific form for the selected category
         function generateSpecificConfigForm(category) {
             if (!config[category]) {
                 return '<p>No hay configuración disponible para esta categoría.</p>';
@@ -270,11 +274,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let formHtml = '';
 
-            // Incluir los tipos, con SU30
+            // // Include field types
             ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
                 const tipoConfig = config[category][tipo] || {};
                 formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo}</h5>`;
-
+                // For REG
                 if (tipo !== 'REG') {
                     formHtml += `
                         <div class="mb-3">
@@ -291,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
                 } else {
-                    // Para REG
                     formHtml += `
                         <div class="mb-3">
                             <label class="form-label">Stems/Bunch (Predeterminado):</label>
@@ -327,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return formHtml;
         }
 
-        // Manejar el botón de guardar configuración
+        // Handle the save configuration button
         modal.querySelector('#saveConfigBtn').addEventListener('click', () => {
             const form = modal.querySelector('#configForm');
             const formData = new FormData(form);
@@ -338,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Actualizar config para cada tipo
+            // // Update configuration for each type
             ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
                 if (!config[selectedCategory][tipo]) {
                     config[selectedCategory][tipo] = {};
@@ -352,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     config[selectedCategory][tipo].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
                     config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsValue) ? 0 : stemsValue;
                 } else {
-                    // Para REG
+                    // For REG
                     const stemsPerBunchDefaultKey = `${selectedCategory}_REG_stemsPerBunch_default`;
                     const stemsPerBunchDefaultValue = parseInt(formData.get(stemsPerBunchDefaultKey));
                     config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsPerBunchDefaultValue) ? 0 : stemsPerBunchDefaultValue;
@@ -382,10 +385,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Actualizar la configuración en localStorage
+            // Update the configuration in localStorage
             localStorage.setItem('config', JSON.stringify(config));
 
-            // Si tienes funciones para recalcular/guardar datos, las llamas aquí
+            // If there are functions to recalculate/save data, call them here
             if (typeof window.saveTableData === 'function') {
                 window.saveTableData();
             }
@@ -404,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Función para mostrar alertas (similar a la de main.js)
+    // // Function to display alerts (similar to the one in main.js)
     function showAlert(message, type = 'success') {
         let alertContainer = document.getElementById('alertContainer');
         if (!alertContainer) {
@@ -423,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alertContainer.appendChild(alert);
 
-        // Cierra la alerta tras 3 segundos
+        // Auto-close after 3 seconds
         setTimeout(() => {
             alert.classList.remove('show');
             alert.classList.add('hide');
@@ -431,12 +434,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // Event listener para el botón de configuración
+    // Event listener botón of configuration
     const configBtn = document.getElementById('configBtn');
     if (configBtn) {
         configBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Ejemplo de control de permisos: solo admin puede acceder
+            // Justo admin can access
             if (window.currentUser && window.currentUser.role === 'admin') { 
                 openConfigModal();
             } else {

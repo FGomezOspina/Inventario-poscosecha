@@ -1,6 +1,6 @@
 // server.js
 
-// ========== 1. IMPORTACIONES Y CONFIGURACIÓN INICIAL ==========
+// ========== 1. IMPORTS AND INITIAL CONFIGURATION ==========
 const express = require('express');
 const path = require('path');
 const nodemailer = require('nodemailer');
@@ -11,17 +11,16 @@ require('dotenv').config();
 const app = express();
 const upload = multer();
 
-// Configuración básica
+// Basic configuration
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ========== 2. INICIALIZAR FIREBASE ADMIN ==========
-// app.js o index.js (el archivo principal de tu servidor)
+// ========== 2. INITIALIZE FIREBASE ADMIN ==========
 const cron = require('node-cron');
 const admin = require('firebase-admin');
 
-// Verificar variable de entorno con credenciales Firebase
+// Verify environment variable with Firebase credentials
 if (!process.env.FIREBASE_CREDENTIALS) {
   console.error('ERROR: La variable de entorno FIREBASE_CREDENTIALS no está definida.');
   process.exit(1);
@@ -35,22 +34,22 @@ try {
   process.exit(1);
 }
 
-// Inicializar Firebase Admin
+// Initialize Firebase Admin
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://<TU-PROYECTO>.firebaseio.com' // Reemplaza <TU-PROYECTO> con el nombre de tu proyecto
+  
 });
 
 const db = admin.firestore();
 
-// ========== 3. ENDPOINTS PRINCIPALES (INVENTARIO, PACKRATE, ETC.) ==========
+// ========== 3. MAIN ENDPOINTS (INVENTORY, PACKRATE, ETC.) ==========
 
-// --- 3.1. Endpoint raíz ---
+// --- 3.1. main Endpoint ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// --- 3.2. Endpoint para enviar email (con archivo adjunto) ---
+// --- 3.2. Endpoint to send email (with file) ---
 app.post('/send-email', upload.single('file'), (req, res) => {
   const { toEmail } = req.body;
   const file = req.file;
@@ -62,13 +61,13 @@ app.post('/send-email', upload.single('file'), (req, res) => {
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'fabio.gomez@fli.com.co', // Reemplaza con tu correo
-      pass: 'lgepmrsgvwqhihsk'         // Reemplaza con tu contraseña o contraseña de aplicación
+      user: 'fabio.gomez@fli.com.co', 
+      pass: 'lgepmrsgvwqhihsk'        
     }
   });
 
   let mailOptions = {
-    from: process.env.EMAIL_USER, // Asegúrate de definir EMAIL_USER en tu archivo .env
+    from: process.env.EMAIL_USER, 
     to: toEmail,
     subject: 'Inventario',
     text: `Fecha de envío: ${new Date().toLocaleString()}`,
@@ -91,20 +90,20 @@ app.post('/send-email', upload.single('file'), (req, res) => {
   });
 });
 
-// ========== 4. ENDPOINTS PARA FIRESTORE: PACKRATE ==========
+// ========== 4. ENDPOINTS for FIRESTORE: PACKRATE ==========
 
-// --- 4.1. Crear o actualizar PACKRATE ---
+// --- 4.1. Create or update PACKRATE ---
 app.post('/api/packrate', async (req, res) => {
   try {
     const packRateData = req.body;
     packRateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
 
     if (packRateData.groupId) {
-      // Actualizar documento existente
+      // Update existing document
       await db.collection('packrate').doc(packRateData.groupId).set(packRateData, { merge: true });
       res.status(200).json({ message: "Documento actualizado" });
     } else {
-      // Crear nuevo documento
+      // Create new document
       packRateData.createdAt = admin.firestore.FieldValue.serverTimestamp();
       const docRef = await db.collection('packrate').add(packRateData);
       res.status(200).json({ id: docRef.id });
@@ -115,7 +114,7 @@ app.post('/api/packrate', async (req, res) => {
   }
 });
 
-// --- 4.2. Obtener todos los PACKRATE ---
+// --- 4.2. Get all PACKRATE ---
 app.get('/api/packrate', async (req, res) => {
   try {
     const snapshot = await db.collection('packrate').get();
@@ -130,9 +129,9 @@ app.get('/api/packrate', async (req, res) => {
   }
 });
 
-// ========== 5. ENDPOINTS PARA FIRESTORE: INVENTARIO ==========
+// ========== 5. ENDPOINTS for FIRESTORE: INVENTORY ==========
 
-// --- 5.1. Crear o actualizar INVENTARIO ---
+// --- 5.1. Create o update INVENTORY ---
 app.post('/api/inventario', async (req, res) => {
   try {
     const { variety, tipoRamo, long, bunchesTotal } = req.body;
@@ -141,10 +140,10 @@ app.post('/api/inventario', async (req, res) => {
       return res.status(400).json({ error: 'Faltan campos (variety, tipoRamo, long)' });
     }
 
-    // Construimos un ID basado en variety, tipoRamo y long
+    // We build an ID based on variety, typeRamo and long
     const docId = `${variety.toUpperCase()}_${tipoRamo.toUpperCase()}_${long}`;
 
-    // Hacemos el set con merge: true
+    // We make the set with merge: true
     await db.collection('inventario').doc(docId).set({
       variety,
       tipoRamo,
@@ -161,15 +160,15 @@ app.post('/api/inventario', async (req, res) => {
 });
 
 /**
- * Endpoint para actualizar Total Disponible y obtener Bunches Total.
- * Recibe: { variety, tipoRamo, long, totalEmpaque }
- * Retorna: { sobrante, bunchesTotal }
+ * Endpoint to update Total Available and get Total Bunches.
+ * Receives: { variety, typeBunch, long, totalPackage }
+ * Returns: { remaining, bunchesTotal }
  */
 app.post('/api/total-disponible', async (req, res) => {
   try {
     const { variety, tipoRamo, long, totalEmpaque } = req.body;
 
-    // 1. Validaciones básicas
+    // 1. Basic validations
     if (!variety || !tipoRamo || !long || totalEmpaque === undefined) {
       return res.status(400).json({ error: 'Faltan campos requeridos.' });
     }
@@ -177,24 +176,24 @@ app.post('/api/total-disponible', async (req, res) => {
       return res.status(400).json({ error: 'totalEmpaque debe ser un número.' });
     }
 
-    // 2. IDs y referencias
+    // 2. IDs y referencys
     const docId = `${variety.toUpperCase()}_${tipoRamo.toUpperCase()}_${long}`;
     const totalDisponibleRef = db.collection('totalDisponible').doc(docId);
     const inventarioRef = db.collection('inventario').doc(docId);
 
-    // 3. Leer documentos en paralelo
+    // 3. Read documents in parallel
     const [totalDisponibleDoc, inventarioDoc] = await Promise.all([
       totalDisponibleRef.get(),
       inventarioRef.get()
     ]);
 
-    // 4. Verificar que exista en inventario
+    // 4. Verify that inventory exists
     if (!inventarioDoc.exists) {
       return res.status(400).json({ error: 'Documento no existe en inventario.' });
     }
 
     const inventarioData = inventarioDoc.data();
-    // Validar consistencia con inventario
+    // Validate consistency with inventory
     if (
       inventarioData.variety.toUpperCase() !== variety.toUpperCase() ||
       inventarioData.tipoRamo.toUpperCase() !== tipoRamo.toUpperCase() ||
@@ -203,7 +202,7 @@ app.post('/api/total-disponible', async (req, res) => {
       return res.status(400).json({ error: 'Inconsistencia entre inventario y totalDisponible.' });
     }
 
-    // 5. Obtenemos disponible_ayer y disponible_hoy actuales (o los creamos en 0)
+    // 5. We obtain current available_day and available_today (or create them at 0)
     let disponibleAyer = 0;
     let disponibleHoy = 0;
 
@@ -212,7 +211,7 @@ app.post('/api/total-disponible', async (req, res) => {
       disponibleAyer = Number(data.disponible_ayer) || 0;
       disponibleHoy  = Number(data.disponible_hoy)  || 0;
     } else {
-      // Si no existe el doc, lo creamos con ambos campos en 0
+      // If the doc does not exist, we create it with both fields in 0
       await totalDisponibleRef.set({
         variety,
         tipoRamo,
@@ -224,32 +223,32 @@ app.post('/api/total-disponible', async (req, res) => {
       });
     }
 
-    // 6. Calcular sobrante
-    //    sobrante = disponible_ayer - totalEmpaque (forzando a 0 si es negativo)
+    // 6. Calculate remaining
+    // remaining = available_ayer - totalPackage (forcing to 0 if negative)
     let sobrante = disponibleAyer - Number(totalEmpaque);
     if (sobrante < 0) sobrante = 0;
 
-    // 7. bunchesTotal del inventario
+    // 7. bunchesTotal of inventory
     let bunchesTotal = Number(inventarioData.bunchesTotal) || 0;
 
-    // 8. El "nuevo disponible hoy" es la suma de (sobrante + bunchesTotal)
+    // 8. The “new available today” is the sum of (leftover + bunchesTotal)
     const nuevoDisponibleHoy = sobrante + bunchesTotal;
 
-    // 9. Actualizar en Firestore
-    //    - disponible_ayer se mantiene
-    //    - disponible_hoy se actualiza
+    // 9. Update in Firestore
+    // - available_yesterday is maintained
+    // - available_today is updated
     await totalDisponibleRef.update({
       disponible_ayer: disponibleAyer,
       disponible_hoy:  nuevoDisponibleHoy,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // 10. Responder al frontend
+    // 10. Rrespond to the frontend
     return res.status(200).json({
-      sobrante,          // ejemplo: 4
-      bunchesTotal,      // ejemplo: 16
-      disponibleAyer,    // ejemplo: 30
-      disponibleHoy: nuevoDisponibleHoy // ejemplo: 20
+      sobrante,          
+      bunchesTotal,     
+      disponibleAyer,    
+      disponibleHoy: nuevoDisponibleHoy 
     });
 
   } catch (error) {
@@ -298,7 +297,7 @@ app.get('/resetDisponiblesDiario', async (req, res) => {
 });
 
 
-// ========== 7. CONFIGURAR EL PUERTO Y ARRANCAR EL SERVIDOR ==========
+// ========== 7. CONFIGURE THE PORT AND START THE SERVER ==========
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor disponible en http://localhost:${PORT} o en http://<TU-IP-LOCAL>:${PORT}`);
