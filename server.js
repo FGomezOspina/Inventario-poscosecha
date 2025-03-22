@@ -296,6 +296,46 @@ app.get('/resetDisponiblesDiario', async (req, res) => {
   //res.status(200).json({ status: "ok", message: "Reset diario ejecutado con éxito (prueba)" });
 });
 
+// ======= NUEVOS ENDPOINTS PARA CONFIGURACIONES =======
+
+// Obtener todas las configuraciones de categorías.
+app.get('/api/config', async (req, res) => {
+  try {
+    const snapshot = await db.collection('configurations').get();
+    const configList = {};
+    snapshot.forEach(doc => {
+      configList[doc.id] = doc.data();
+    });
+    res.status(200).json(configList);
+  } catch (error) {
+    console.error('Error al obtener la configuración:', error);
+    res.status(500).json({ error: 'Error al obtener la configuración' });
+  }
+});
+
+// Crear o actualizar la configuración de una categoría.
+app.post('/api/config', async (req, res) => {
+  try {
+    const { category, configData } = req.body;
+    if (!category || !configData) {
+      return res.status(400).json({ error: 'Faltan datos (category o configData)' });
+    }
+    configData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+    const configRef = db.collection('configurations').doc(category.toUpperCase());
+    const doc = await configRef.get();
+    if (doc.exists) {
+      await configRef.set(configData, { merge: true });
+      res.status(200).json({ message: 'Configuración actualizada' });
+    } else {
+      configData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      await configRef.set(configData);
+      res.status(200).json({ message: 'Categoría creada' });
+    }
+  } catch (error) {
+    console.error('Error al guardar la configuración:', error);
+    res.status(500).json({ error: 'Error al guardar la configuración' });
+  }
+});
 
 // ========== 7. CONFIGURE THE PORT AND START THE SERVER ==========
 const PORT = process.env.PORT || 3000;

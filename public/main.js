@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "ORIGANUM": ["ORIGANUM"]
     };
 
+
     // ============================
     // Logic to the sidebar
     // ============================
