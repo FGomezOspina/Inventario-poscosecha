@@ -364,7 +364,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!config[selectedCategory][tipo].lengths) {
                         config[selectedCategory][tipo].lengths = {};
                     }
-                    Object.keys(defaultConfigs[selectedCategory].REG.lengths).forEach(long => {
+                    // Usamos un objeto fallback en caso de que no exista la configuración por defecto para la categoría
+                    const defaultLengths = (defaultConfigs[selectedCategory] &&
+                                            defaultConfigs[selectedCategory].REG &&
+                                            defaultConfigs[selectedCategory].REG.lengths)
+                                        || {70: {}, 60: {}, 55: {}, 50: {}, 40: {}};
+                    Object.keys(defaultLengths).forEach(long => {
                         const bunchesKey = `${selectedCategory}_REG_bunchesPerProcona_${long}`;
                         const stemsPerBunchKey = `${selectedCategory}_REG_stemsPerBunch_${long}`;
                         const bunchesVal = parseInt(formData.get(bunchesKey));
@@ -402,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAlert('Error al guardar la configuración', 'danger');
             });
         });
+
 
         modal.addEventListener('hidden.bs.modal', () => {
             modal.remove();
@@ -449,27 +455,49 @@ document.addEventListener('DOMContentLoaded', () => {
       
         // Manejador del botón "Crear Categoría"
         createModal.querySelector('#saveNewCategoryBtn').addEventListener('click', () => {
-          const form = createModal.querySelector('#createCategoryForm');
-          const newCategoryName = form.querySelector('#newCategoryName').value.trim();
-          if (!newCategoryName) {
+            const form = createModal.querySelector('#createCategoryForm');
+            const newCategoryName = form.querySelector('#newCategoryName').value.trim();
+            if (!newCategoryName) {
             showAlert('El nombre de la categoría es obligatorio', 'danger');
             return;
-          }
-      
-          // Crear la configuración vacía para la nueva categoría
-          const newCategoryConfig = generateEmptyCategoryConfig();
-      
-          // Enviar la nueva categoría al servidor
-          fetch('/api/config', {
+            }
+        
+            // Extraer datos del formulario
+            const formData = new FormData(form);
+            const newCategoryConfig = {};
+        
+            // Procesar tipos que no son REG
+            ['TJ', 'NF', 'WS10', 'SU30'].forEach(tipo => {
+            newCategoryConfig[tipo] = {
+                bunchesPerProcona: parseInt(formData.get(`${tipo}_bunchesPerProcona`)) || 0,
+                stemsPerBunch: parseInt(formData.get(`${tipo}_stemsPerBunch`)) || 0
+            };
+            });
+        
+            // Procesar el tipo REG
+            newCategoryConfig['REG'] = {
+            stemsPerBunch: parseInt(formData.get('REG_stemsPerBunch_default')) || 0,
+            lengths: {}
+            };
+            // Predefinir longitudes (se pueden ajustar según la necesidad)
+            [70, 60, 55, 50, 40].forEach(long => {
+            newCategoryConfig['REG'].lengths[long] = {
+                bunchesPerProcona: parseInt(formData.get(`REG_bunchesPerProcona_${long}`)) || 0,
+                stemsPerBunch: parseInt(formData.get(`REG_stemsPerBunch_${long}`)) || 0
+            };
+            });
+        
+            // Enviar la nueva categoría al servidor
+            fetch('/api/config', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              category: newCategoryName,
-              configData: newCategoryConfig
+                category: newCategoryName,
+                configData: newCategoryConfig
             })
-          })
-          .then(res => res.json())
-          .then(result => {
+            })
+            .then(res => res.json())
+            .then(result => {
             showAlert(result.message);
             newBootstrapModal.hide();
             createModal.remove();
@@ -479,29 +507,19 @@ document.addEventListener('DOMContentLoaded', () => {
             newOption.value = newCategoryName;
             newOption.text = newCategoryName;
             configCategorySelect.appendChild(newOption);
-            // También actualiza la variable global config
+            // También actualiza la variable global config (se almacena en mayúsculas)
             config[newCategoryName.toUpperCase()] = newCategoryConfig;
-          })
-          .catch(error => {
+            })
+            .catch(error => {
             console.error('Error al crear la categoría:', error);
             showAlert('Error al crear la categoría', 'danger');
-          });
+            });
         });
+  
       
         createModal.addEventListener('hidden.bs.modal', () => {
           createModal.remove();
         });
-    }
-      
-    function generateEmptyCategoryConfig() {
-        // Devuelve una estructura vacía para la nueva categoría
-        return {
-          TJ: { bunchesPerProcona: '', stemsPerBunch: '' },
-          NF: { bunchesPerProcona: '', stemsPerBunch: '' },
-          REG: { stemsPerBunch: '', lengths: {} },
-          WS10: { bunchesPerProcona: '', stemsPerBunch: '' },
-          SU30: { bunchesPerProcona: '', stemsPerBunch: '' }
-        };
     }
       
     function generateEmptyConfigForm() {
