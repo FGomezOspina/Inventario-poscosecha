@@ -166,6 +166,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    // Función para cargar la configuración desde Firebase
+    async function loadConfigFromFirebase() {
+        try {
+            const response = await fetch('/api/config'); // Endpoint que retorna la configuración dinámica
+            const data = await response.json();
+            // Si no se retornan datos, se usa el fallback
+            return Object.keys(data).length ? data : defaultConfigs;
+        } catch (error) {
+            console.error('Error al cargar configuración desde Firebase:', error);
+            return defaultConfigs;
+        }
+    }
+
+    // Cargar la configuración de forma global
+    loadConfigFromFirebase().then(loadedConfig => {
+        window.config = loadedConfig;
+        config = loadedConfig;
+    });
 
     // Function to perform a deep merge of objects (si llegas a necesitar fusionar configuraciones)
     function deepMerge(target, source) {
@@ -202,14 +220,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
     // Function to open the settings modal
     // ===================================
-    function openConfigModal() {
+    async function openConfigModal() {
+        // Cargar la configuración dinámica desde Firebase
+        config = await loadConfigFromFirebase();
+        window.config = config;
+    
         const modal = document.createElement('div');
         modal.classList.add('modal', 'fade');
         modal.setAttribute('tabindex', '-1');
         modal.setAttribute('aria-labelledby', 'configModalLabel');
         modal.setAttribute('aria-hidden', 'true');
-
-        // Modal structure with a "Crear Categoría" button
+    
+        // Estructura del modal con el botón "Crear Categoría"
         modal.innerHTML = `
             <div class="modal-dialog modal-dialog-scrollable modal-lg config-modal-dialog">
                 <div class="modal-content config-modal-content">
@@ -243,13 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-
+    
         document.body.appendChild(modal);
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
-
+    
         const saveConfigBtn = modal.querySelector('#saveConfigBtn');
-
+    
         // Al cambiar de categoría, se carga su configuración en el formulario
         modal.querySelector('#configCategory').addEventListener('change', function() {
             const selectedCategory = this.value;
@@ -310,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveConfigBtn.disabled = !selectedCategory;
         });
           
-
+    
         // Función para generar el formulario específico para la categoría seleccionada
         function generateSpecificConfigForm(category) {
             // Verifica si la categoría existe
@@ -382,12 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return formHtml;
         }
         
-
+    
         // Manejador del botón "Crear Categoría"
         modal.querySelector('#createCategoryBtn').addEventListener('click', () => {
             openCreateCategoryModal();
         });
-
+    
         // Guardar cambios: se actualiza el objeto config y se envía al servidor
         saveConfigBtn.addEventListener('click', () => {
             const form = modal.querySelector('#configForm');
@@ -439,10 +461,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         
-            // Si existe la sección de varieties, se leen sus valores (esto es opcional si ya se han actualizado en la configuración)
+            // Si existe la sección de varieties, se leen sus valores
             const varietiesListEl = modal.querySelector('#varietiesList');
             if (varietiesListEl) {
-                // Se extrae el texto de cada item (sin el botón)
                 const varietyItems = Array.from(varietiesListEl.children);
                 config[selectedCategory].varieties = varietyItems.map(li => li.querySelector('span').textContent.trim());
             }
@@ -467,13 +488,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAlert('Error al guardar la configuración', 'danger');
             });
         });
-        
-
-
+    
         modal.addEventListener('hidden.bs.modal', () => {
             modal.remove();
         });
     }
+    
 
     // Modal para crear una nueva categoría
     function openCreateCategoryModal() {

@@ -59,16 +59,48 @@ document.addEventListener('DOMContentLoaded', () => {
     // fields to the main table
     const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
 
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Esperamos a cargar las varieties desde Firebase
+        varietyOptions = await loadVarietyOptions();
+        console.log("Variety Options cargadas:", varietyOptions);
+        if (!localStorage.getItem('tableData')) {
+          addGroup();
+        } else {
+          loadTableData();
+        }
+    });
+      
+      
     // Variety
-    const varietyOptions = {
-        "VERONICA": ["ARTIST", "BIZARRE", "CAYA", "JUNE", "NAVY", "ROSWITHA"],
-        "MENTHA": ["MENTHA", "MENTHA SPRAY"],
-        "HYPERICUM": ["BELLIMO", "TANGO", "UNO"],
-        "EUPATORIUM": ["MOMENTS", "PINK"],
-        "PAPYRUS": ["MAXUS", "LUXUS"],
-        "ORIGANUM": ["ORIGANUM"]
-    };
+    let varietyOptions = {};
 
+    // Función para cargar las varieties dinámicamente desde Firebase usando el endpoint de configuración
+    async function loadVarietyOptions() {
+        try {
+        const response = await fetch('/api/config');
+        if (!response.ok) {
+            throw new Error('Error en la respuesta de /api/config');
+        }
+        const configData = await response.json();
+        // Se asume que configData es un objeto en el que cada clave es una categoría y
+        // cada documento tiene (entre otros campos) un campo "varieties"
+        const options = {};
+        Object.keys(configData).forEach(category => {
+            options[category] = configData[category].varieties || [];
+        });
+        return options;
+        } catch (error) {
+        console.error('Error al cargar varieties desde Firebase:', error);
+        // Fallback: Devuelve un objeto vacío o valores por defecto si se prefiere
+        return {};
+        }
+    }
+  
+
+    // Cargar las varieties al iniciar la aplicación
+    loadVarietyOptions().then(data => {
+        varietyOptions = data;
+    });
 
     // ============================
     // Logic to the sidebar
@@ -225,80 +257,83 @@ document.addEventListener('DOMContentLoaded', () => {
     function createVarietySelect(selectedVariety = '') {
         const cell = document.createElement('td');
         cell.setAttribute('data-col', 'Variety');
-        cell.setAttribute('tabindex', '0'); //Allow the cell to receive focus.
+        cell.setAttribute('tabindex', '0');
 
         const selectVariety = document.createElement('select');
         selectVariety.classList.add('form-select', 'form-select-sm');
 
-        // Add an empty option.
+        // Opción vacía
         const emptyOption = document.createElement('option');
         emptyOption.value = '';
         emptyOption.text = 'Seleccione Variety';
         selectVariety.appendChild(emptyOption);
 
-        // Add the Variety options.
-        Object.keys(varietyOptions).forEach(tipo => {
+        // Si existen datos en varietyOptions, creamos los optgroups
+        if (varietyOptions && Object.keys(varietyOptions).length > 0) {
+            Object.keys(varietyOptions).forEach(category => {
             const optGroup = document.createElement('optgroup');
-            optGroup.label = tipo;
-
-            varietyOptions[tipo].forEach(variety => {
+            optGroup.label = category;
+            varietyOptions[category].forEach(variety => {
                 const option = document.createElement('option');
                 option.value = variety;
                 option.text = variety;
                 if (variety === selectedVariety) {
-                    option.selected = true;
+                option.selected = true;
                 }
                 optGroup.appendChild(option);
             });
-
             selectVariety.appendChild(optGroup);
-        });
+            });
+            // Si el valor guardado no se encontró entre las opciones, lo agregamos como extra
+            let found = false;
+            Object.keys(varietyOptions).forEach(category => {
+            if (varietyOptions[category].includes(selectedVariety)) {
+                found = true;
+            }
+            });
+            if (!found && selectedVariety) {
+            const extraOption = document.createElement('option');
+            extraOption.value = selectedVariety;
+            extraOption.text = selectedVariety;
+            extraOption.selected = true;
+            selectVariety.appendChild(extraOption);
+            }
+        } else {
+            // Si no hay datos en varietyOptions, agregamos la opción actual (si existe)
+            if (selectedVariety) {
+            const option = document.createElement('option');
+            option.value = selectedVariety;
+            option.text = selectedVariety;
+            option.selected = true;
+            selectVariety.appendChild(option);
+            }
+        }
 
-        // Event listener to update "Type" when "Variety" changes.
+        // Evento: al cambiar la selección se actualiza la celda Tipo y se recalculan datos
         selectVariety.addEventListener('change', () => {
             const row = getRowFromCell(selectVariety);
             const groupId = row.getAttribute('data-group-id');
-            const selectedVariety = selectVariety.value;
-            const selectedTipo = getTipoForVariety(selectedVariety);
+            const newSelected = selectVariety.value;
+            const selectedTipo = getTipoForVariety(newSelected);
             const tipoCell = row.querySelector('td[data-col="Tipo"]');
             if (tipoCell) {
-                tipoCell.innerText = selectedTipo || '';
+            tipoCell.innerText = selectedTipo || '';
             }
-
-            // Update calculations for all rows in the group.
+            // Actualizamos cálculos en todas las filas del grupo
             const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-            groupRows.forEach(groupRow => {
-                updateCalculations(groupRow);
-            });
-
-            // Save the current data.
+            groupRows.forEach(r => updateCalculations(r));
             saveTableData();
-
-            // Handle the addition or removal of extra rows if the category is HYPERICUM.
-            if (selectedTipo === 'HYPERICUM') {
-                // Check how many rows the group currently has.
-                const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-                if (currentGroupRows.length < 5) {
-                    // === Here, 2 extra rows are automatically added for HYPERICUM. ===
-                    addExtraRows(groupId, 2, true);
-                }
-            } else {
-                // If it is not HYPERICUM, make sure there are only 3 rows.
-                const currentGroupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-                if (currentGroupRows.length > 3) {
-                    removeExtraRows(groupId, currentGroupRows.length - 3); // Remove extra rows.
-                }
-            }
-
-            // Update the summary tables.
             populateSummaryTables();
-            // Update grandtotal
             updateGrandTotal();
         });
 
+        // Se retorna la celda que contiene el select
         cell.appendChild(selectVariety);
         return cell;
     }
+
+
+      
 
     // // Function to get the Type based on the selected Variety
     function getTipoForVariety(selectedVariety) {
@@ -595,59 +630,59 @@ document.addEventListener('DOMContentLoaded', () => {
     function addGroup() {
         const longsArray = longDefaults; 
         const numRows = 3;
-
+    
         const groupId = Date.now();
         const mainRow = dataTable.insertRow();
         mainRow.setAttribute('data-group-id', groupId);
-
-        // Create "Variety" and "Type" cells with `rowspan`.
+    
+        // Creamos la celda "Variety" usando createVarietySelect (la cual ahora utiliza varietyOptions dinámico)
         const varietyCell = createVarietySelect();
         varietyCell.setAttribute('rowspan', numRows);
         mainRow.appendChild(varietyCell);
-
+    
+        // Creamos la celda "Tipo"
         const tipoCell = document.createElement('td');
         tipoCell.setAttribute('data-col', 'Tipo');
         tipoCell.setAttribute('rowspan', numRows);
         tipoCell.innerText = ''; 
         tipoCell.setAttribute('tabindex', '0'); 
         mainRow.appendChild(tipoCell);
-
-        // Cell "Batch"
+    
+        // Celda "Batch"
         const batchCell = createEditableCell('Batch', '', numRows);
         mainRow.appendChild(batchCell);
-
-        // Cell "Date" with update date
+    
+        // Celda "Fecha"
         const today = new Date().toISOString().split('T')[0]; 
         const fechaCell = createDateCell('Fecha', today, numRows);
         mainRow.appendChild(fechaCell);
-
-        // Add data cells for the first row.
+    
+        // Agregar las celdas de datos para la primera fila
         addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
-
-        // "Stems Total" cell with `rowspan`.
+    
+        // Celda "Stems Total" con rowspan
         const stemsTotalCell = document.createElement('td');
         stemsTotalCell.setAttribute('rowspan', numRows);
         stemsTotalCell.classList.add('text-center');
         stemsTotalCell.setAttribute('data-col', 'Stems Total');
         stemsTotalCell.innerText = '';
         stemsTotalCell.setAttribute('tabindex', '0');
-
-        // Insert the "Stems Total" cell before "Notes".
+    
+        // Insertar "Stems Total" antes de la celda "Notas"
         const notasCell = mainRow.querySelector('td[data-col="Notas"]');
         const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
         mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
-
-        // "Actions" cell with `rowspan`.
+    
+        // Celda "Acciones" con rowspan
         const actionCell = document.createElement('td');
         actionCell.setAttribute('rowspan', numRows);
         actionCell.classList.add('text-center');
-
-        // "Delete Group" button.
+    
+        // Botón para eliminar el grupo
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
         deleteBtn.classList.add('delete-btn');
         deleteBtn.title = 'Eliminar grupo';
-
         const handleDelete = () => {
             if (confirm('¿Are you sure you want to delete this group?')) {
                 const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
@@ -664,19 +699,17 @@ document.addEventListener('DOMContentLoaded', () => {
             handleDelete();
         });
         actionCell.appendChild(deleteBtn);
-
-        // "Add Line" button (for groups that are NOT HYPERICUM).
+    
+        // Botón para agregar línea (solo para grupos que no sean HYPERICUM)
         const addLineBtn = document.createElement('button');
         addLineBtn.innerHTML = '<i class="fa fa-plus"></i>';
         addLineBtn.classList.add('add-line-btn');
         addLineBtn.title = 'Agregar línea';
-        
         addLineBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
             const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
             const tipo = tipoCell ? tipoCell.innerText.trim() : '';
-
             if (tipo === 'HYPERICUM') {
                 showAlert('No se pueden agregar líneas adicionales para el grupo HYPERICUM.', 'warning');
                 return;
@@ -685,16 +718,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showAlert('Se agregó una nueva línea al grupo.', 'success');
         });
         actionCell.appendChild(addLineBtn);
-
+    
         mainRow.appendChild(actionCell);
-
-        // Add sub-rows to complete the 3 rows.
+    
+        // Agregar filas adicionales para completar las 3 filas
         for (let i = 1; i < numRows; i++) {
             const subRow = dataTable.insertRow();
             subRow.setAttribute('data-group-id', groupId);
             addDataCellsToRow(subRow, i, groupId, false, longsArray);
         }
-
+    
         updateCalculations(mainRow);
         updateStemsTotal(groupId);
         saveTableData();
@@ -702,6 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateSummaryTables();
         updateGrandTotal();
     }
+    
 
     /**
      * The `addGroupEmpaque` function dynamically creates a new row for a group in a table, allowing
@@ -1772,56 +1806,67 @@ document.addEventListener('DOMContentLoaded', () => {
      * it to local storage along with a responsible person's input.
      */
     function saveTableData() {
-        const table = document.getElementById('dataTable');
-        const groups = {};
+  const table = document.getElementById('dataTable');
+  const groups = {};
 
-        table.querySelectorAll('tbody tr').forEach(row => {
-            const groupId = row.getAttribute('data-group-id');
-            if (!groupId) return;
+  table.querySelectorAll('tbody tr').forEach(row => {
+    const groupId = row.getAttribute('data-group-id');
+    if (!groupId) return;
 
-            if (!groups[groupId]) {
-                groups[groupId] = {
-                    variety: '',
-                    tipo: '',
-                    batch: '',
-                    fecha: '',
-                    stemsTotal: 0,
-                    rows: []
-                };
-            }
-
-            const group = groups[groupId];
-            const isMainRow = row.cells[0].getAttribute('data-col') === 'Variety';
-
-            if (isMainRow) {
-                // The variety of the select of the first cell is saved.
-                const varietySelect = row.cells[0].querySelector('select');
-                group.variety = varietySelect ? varietySelect.value : '';
-                // Instead of taking directly the value of the select “TJ - REG”, the type is calculated using the function getTipoForVariety
-                group.tipo = getTipoForVariety(group.variety);
-                group.batch = row.cells[2].innerText.trim();
-                const fechaCell = row.querySelector('td[data-col="Fecha"]');
-                const fechaInput = fechaCell ? fechaCell.querySelector('input') : null;
-                group.fecha = fechaInput ? fechaInput.value : '';
-                const stemsTotalCell = row.querySelector('td[data-col="Stems Total"]');
-                group.stemsTotal = stemsTotalCell ? parseInt(stemsTotalCell.innerText.trim()) : 0;
-            }
-
-            const rowData = {};
-            const startIndex = isMainRow ? 4 : 0;
-            const endIndex = isMainRow ? row.cells.length - 2 : row.cells.length - 1;
-
-            for (let i = startIndex; i < endIndex; i++) {
-                const field = row.cells[i].getAttribute('data-col');
-                const select = row.cells[i].querySelector('select');
-                rowData[field] = select ? select.value : row.cells[i].innerText.trim();
-            }
-            group.rows.push(rowData);
-        });
-
-        localStorage.setItem('tableData', JSON.stringify(groups));
-        localStorage.setItem('responsable', responsableInput.value.trim());
+    if (!groups[groupId]) {
+      groups[groupId] = {
+        variety: '',
+        tipo: '',
+        batch: '',
+        fecha: '',
+        stemsTotal: 0,
+        rows: []
+      };
     }
+    const group = groups[groupId];
+
+    // Se considera que la fila principal tiene la celda "Variety" en el índice 0
+    const mainCell = row.cells[0];
+    const isMainRow = mainCell && mainCell.getAttribute('data-col') === 'Variety';
+
+    if (isMainRow) {
+      // Extraemos el valor del select de Variety
+      const varietySelect = mainCell.querySelector('select');
+      group.variety = varietySelect ? varietySelect.value : '';
+      // Calculamos el tipo (usando getTipoForVariety, que tú defines)
+      group.tipo = getTipoForVariety(group.variety);
+      // Extraer "Batch" (asumimos que está en la celda 3, índice 2)
+      group.batch = row.cells[2] ? row.cells[2].innerText.trim() : '';
+      // Extraer la fecha desde la celda "Fecha"
+      const fechaCell = row.querySelector('td[data-col="Fecha"]');
+      const fechaInput = fechaCell ? fechaCell.querySelector('input') : null;
+      group.fecha = fechaInput ? fechaInput.value : '';
+      // Extraer "Stems Total"
+      const stemsTotalCell = row.querySelector('td[data-col="Stems Total"]');
+      group.stemsTotal = stemsTotalCell ? parseInt(stemsTotalCell.innerText.trim(), 10) || 0 : 0;
+    }
+
+    // Recorremos las celdas de la fila para extraer el resto de datos
+    const rowData = {};
+    const startIndex = isMainRow ? 4 : 0; // En fila principal se omiten las primeras 4 celdas
+    const endIndex = row.cells.length - 1; // Se omite la celda de acciones
+    for (let i = startIndex; i < endIndex; i++) {
+      const cell = row.cells[i];
+      if (!cell) continue;
+      const field = cell.getAttribute('data-col');
+      const select = cell.querySelector('select');
+      rowData[field] = select ? select.value : cell.innerText.trim();
+    }
+    group.rows.push(rowData);
+  });
+
+  localStorage.setItem('tableData', JSON.stringify(groups));
+  localStorage.setItem('responsable', responsableInput.value.trim());
+  console.log("Datos guardados en localStorage:", groups);
+    }
+
+      
+      
 
     /**
      * The `loadTableData` function retrieves saved data from local storage and dynamically populates a
@@ -1829,132 +1874,155 @@ document.addEventListener('DOMContentLoaded', () => {
      * deleting groups or adding lines.
      */
     function loadTableData() {
+        // Limpiar la tabla
+        dataTable.innerHTML = "";
         const data = JSON.parse(localStorage.getItem('tableData'));
         const responsable = localStorage.getItem('responsable') || '';
         responsableInput.value = responsable;
 
         if (data && Object.keys(data).length > 0) {
             Object.keys(data).forEach(groupId => {
-                const group = data[groupId];
-                if (group.rows.length > 0) {
-                    const numRows = group.rows.length;
-                    const longsArray = group.rows.map(row => row["Long"]);
+            const group = data[groupId];
+            if (group.rows && group.rows.length > 0) {
+                const numRows = group.rows.length;
+                const longsArray = group.rows.map(row => row["Long"]);
 
-                    const mainRow = dataTable.insertRow();
-                    mainRow.setAttribute('data-group-id', groupId);
+                const mainRow = dataTable.insertRow();
+                mainRow.setAttribute('data-group-id', groupId);
 
-                    // Create “Variety” cell (select) with rowspan
-                    const varietyCell = createVarietySelect(group.variety);
-                    varietyCell.setAttribute('rowspan', numRows);
-                    mainRow.appendChild(varietyCell);
+                // Crear la celda "Variety" usando createVarietySelect() con el valor guardado
+                const varietyCell = createVarietySelect(group.variety || "");
+                varietyCell.setAttribute('rowspan', numRows);
+                mainRow.appendChild(varietyCell);
 
-                    // Create “Type” cell
-                    const tipoCell = document.createElement('td');
-                    tipoCell.setAttribute('data-col', 'Tipo');
-                    tipoCell.setAttribute('rowspan', numRows);
-                    // The type is recalculated using getTipoForVariety with the saved variety
-                    tipoCell.innerText = getTipoForVariety(group.variety) || '';
-                    tipoCell.setAttribute('tabindex', '0');
-                    mainRow.appendChild(tipoCell);
+                // Crear la celda "Tipo" usando el valor calculado con getTipoForVariety()
+                const tipoCell = document.createElement('td');
+                tipoCell.setAttribute('data-col', 'Tipo');
+                tipoCell.setAttribute('rowspan', numRows);
+                tipoCell.innerText = getTipoForVariety(group.variety) || '';
+                tipoCell.setAttribute('tabindex', '0');
+                mainRow.appendChild(tipoCell);
 
-                    const batchCell = createEditableCell('Batch', group.batch, numRows);
-                    mainRow.appendChild(batchCell);
+                const batchCell = createEditableCell('Batch', group.batch, numRows);
+                mainRow.appendChild(batchCell);
 
-                    const fechaValue = group.fecha || new Date().toISOString().split('T')[0];
-                    const fechaCell = createDateCell('Fecha', fechaValue, numRows);
-                    mainRow.appendChild(fechaCell);
+                const fechaValue = group.fecha || new Date().toISOString().split('T')[0];
+                const fechaCell = createDateCell('Fecha', fechaValue, numRows);
+                mainRow.appendChild(fechaCell);
 
-                    // Add data cells for the main row
-                    addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
+                // Agregar las celdas de datos para la fila principal
+                addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
 
-                    const stemsTotalCell = document.createElement('td');
-                    stemsTotalCell.setAttribute('rowspan', numRows);
-                    stemsTotalCell.classList.add('text-center');
-                    stemsTotalCell.setAttribute('data-col', 'Stems Total');
-                    stemsTotalCell.innerText = group.stemsTotal || '';
-                    stemsTotalCell.setAttribute('tabindex', '0');
+                const stemsTotalCell = document.createElement('td');
+                stemsTotalCell.setAttribute('rowspan', numRows);
+                stemsTotalCell.classList.add('text-center');
+                stemsTotalCell.setAttribute('data-col', 'Stems Total');
+                stemsTotalCell.innerText = group.stemsTotal || '';
+                stemsTotalCell.setAttribute('tabindex', '0');
 
-                    const notasCell = mainRow.querySelector('td[data-col="Notas"]');
-                    const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
-                    mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
+                const notasCell = mainRow.querySelector('td[data-col="Notas"]');
+                const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
+                mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
 
-                    // Actions cell (delete group + add line)
-                    const actionCell = document.createElement('td');
-                    actionCell.setAttribute('rowspan', numRows);
-                    actionCell.classList.add('text-center');
+                // Celda de Acciones (botones eliminar grupo y agregar línea)
+                const actionCell = document.createElement('td');
+                actionCell.setAttribute('rowspan', numRows);
+                actionCell.classList.add('text-center');
 
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
-                    deleteBtn.classList.add('delete-btn');
-                    deleteBtn.title = 'Eliminar grupo';
-                    deleteBtn.addEventListener('click', () => {
-                        if (confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
-                            const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-                            groupRows.forEach(r => dataTable.removeChild(r));
-                            saveTableData();
-                            showAlert('Grupo eliminado correctamente.', 'warning');
-                            populateSummaryTables();
-                            updateGrandTotal();
-                        }
-                    });
-                    actionCell.appendChild(deleteBtn);
-                    const addLineBtn = document.createElement('button');
-                    addLineBtn.innerHTML = '<i class="fa fa-plus"></i>';
-                    addLineBtn.classList.add('add-line-btn');
-                    addLineBtn.title = 'Agregar línea';
-                    addLineBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        // Here you can add the logic to add an extra line
-                        addExtraRows(groupId, 1, false);
-                        showAlert('Se agregó una nueva línea al grupo.', 'success');
-                    });
-                    actionCell.appendChild(addLineBtn);
-                    mainRow.appendChild(actionCell);
-
-                    // For the main row, assign each data cell as stored
-                    const fieldsToUse = fields;
-                    fieldsToUse.forEach((field, idx) => {
-                        const cellIndex = idx + 4;
-                        const cell = mainRow.cells[cellIndex];
-                        if (cell) {
-                            if (field === "TJ - REG") {
-                                cell.querySelector('select').value = group.rows[0][field] || 'REG';
-                            } else {
-                                cell.innerText = group.rows[0][field] || '';
-                            }
-                        }
-                    });
-
-                    // For each subrow, reconstruct using the saved data
-                    for (let i = 1; i < numRows; i++) {
-                        const subRow = dataTable.insertRow();
-                        subRow.setAttribute('data-group-id', groupId);
-                        addDataCellsToRow(subRow, i, groupId, false, longsArray);
-                        fieldsToUse.forEach((field, idx) => {
-                            const cell = subRow.cells[idx];
-                            if (cell) {
-                                if (field === "TJ - REG") {
-                                    cell.querySelector('select').value = group.rows[i][field] || 'REG';
-                                } else {
-                                    cell.innerText = group.rows[i][field] || '';
-                                }
-                            }
-                        });
-                    }
-                    // Maintain calculations for the entire group
-                    const groupRowsLoaded = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
-                    groupRowsLoaded.forEach(r => {
-                        updateCalculations(r);
-                    });
-                    updateStemsTotal(groupId);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.title = 'Eliminar grupo';
+                deleteBtn.addEventListener('click', () => {
+                if (confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
+                    const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+                    groupRows.forEach(r => dataTable.removeChild(r));
+                    saveTableData();
+                    showAlert('Grupo eliminado correctamente.', 'warning');
+                    populateSummaryTables();
+                    updateGrandTotal();
                 }
+                });
+                actionCell.appendChild(deleteBtn);
+                const addLineBtn = document.createElement('button');
+                addLineBtn.innerHTML = '<i class="fa fa-plus"></i>';
+                addLineBtn.classList.add('add-line-btn');
+                addLineBtn.title = 'Agregar línea';
+                addLineBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                addExtraRows(groupId, 1, false);
+                showAlert('Se agregó una nueva línea al grupo.', 'success');
+                });
+                actionCell.appendChild(addLineBtn);
+                mainRow.appendChild(actionCell);
+
+                // Para la fila principal, asignar los datos almacenados en las celdas
+                const fieldsToUse = fields;
+                fieldsToUse.forEach((field, idx) => {
+                const cellIndex = idx + 4;
+                const cell = mainRow.cells[cellIndex];
+                if (cell) {
+                    if (field === "TJ - REG") {
+                    cell.querySelector('select').value = group.rows[0][field] || 'REG';
+                    } else {
+                    cell.innerText = group.rows[0][field] || '';
+                    }
+                }
+                });
+
+                // Reconstruir las subfilas según los datos guardados
+                for (let i = 1; i < numRows; i++) {
+                const subRow = dataTable.insertRow();
+                subRow.setAttribute('data-group-id', groupId);
+                addDataCellsToRow(subRow, i, groupId, false, longsArray);
+                fieldsToUse.forEach((field, idx) => {
+                    const cell = subRow.cells[idx];
+                    if (cell) {
+                    if (field === "TJ - REG") {
+                        cell.querySelector('select').value = group.rows[i][field] || 'REG';
+                    } else {
+                        cell.innerText = group.rows[i][field] || '';
+                    }
+                    }
+                });
+                }
+                // Recalcular totales para el grupo
+                const groupRowsLoaded = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+                groupRowsLoaded.forEach(r => updateCalculations(r));
+                updateStemsTotal(groupId);
+            }
             });
             updateAllCalculations();
             populateSummaryTables();
+            updateGrandTotal();
+
+            // Finalmente, actualizamos todos los selects de Variety para que tengan todas las opciones
+            updateAllVarietySelects();
         }
     }
+    
+
+    function updateAllVarietySelects() {
+        // Recorremos cada celda con data-col="Variety" en la tabla
+        const varietyCells = dataTable.querySelectorAll('td[data-col="Variety"]');
+        varietyCells.forEach(cell => {
+            const oldSelect = cell.querySelector('select');
+            if (oldSelect) {
+            const currentValue = oldSelect.value; // Valor guardado
+            // Crear un nuevo select con el valor actual
+            const newSelectWrapper = createVarietySelect(currentValue);
+            const newSelect = newSelectWrapper.querySelector('select');
+            // Reemplazar el contenido de la celda por el nuevo select (con todas las opciones)
+            cell.innerHTML = "";
+            cell.appendChild(newSelect);
+            }
+        });
+    }
+
+
 
     
+
 
     // Function to generate the Excel workbook
     async function generateExcelWorkbook() {
