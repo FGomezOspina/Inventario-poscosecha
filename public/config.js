@@ -254,9 +254,62 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.querySelector('#configCategory').addEventListener('change', function() {
             const selectedCategory = this.value;
             const categoryConfigDiv = modal.querySelector('#categoryConfig');
+            // Generar el formulario específico para la categoría
             categoryConfigDiv.innerHTML = generateSpecificConfigForm(selectedCategory);
+          
+            // Agregar la sección de Varieties
+            categoryConfigDiv.innerHTML += `
+              <hr class="my-3">
+              <h5 class="fw-bold">Varieties</h5>
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" id="newVarietyInput" placeholder="Enter variety">
+                <button class="btn btn-outline-secondary" type="button" id="addVarietyBtn">Agregar Variedad</button>
+              </div>
+              <ul class="list-group" id="varietiesList"></ul>
+            `;
+          
+            // Si ya existen variedades en la configuración, se cargan en la lista; de lo contrario, se inicializa a vacío.
+            if (!config[selectedCategory].varieties) {
+              config[selectedCategory].varieties = [];
+            }
+            updateVarietiesList(config[selectedCategory].varieties);
+          
+            // Evento para agregar nueva variedad
+            categoryConfigDiv.querySelector('#addVarietyBtn').addEventListener('click', () => {
+              const newVarietyInput = categoryConfigDiv.querySelector('#newVarietyInput');
+              const newVariety = newVarietyInput.value.trim();
+              if (newVariety && !config[selectedCategory].varieties.includes(newVariety)) {
+                config[selectedCategory].varieties.push(newVariety);
+                updateVarietiesList(config[selectedCategory].varieties);
+                newVarietyInput.value = '';
+              }
+            });
+          
+            // Función para actualizar la lista de variedades en la interfaz
+            function updateVarietiesList(varietiesArray) {
+              const varietiesListEl = categoryConfigDiv.querySelector('#varietiesList');
+              varietiesListEl.innerHTML = '';
+              varietiesArray.forEach((variety, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `<span>${variety}</span>`;
+                // Botón para eliminar la variedad
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn btn-sm btn-danger';
+                removeBtn.textContent = 'Eliminar';
+                removeBtn.addEventListener('click', () => {
+                   config[selectedCategory].varieties.splice(index, 1);
+                   updateVarietiesList(config[selectedCategory].varieties);
+                });
+                li.appendChild(removeBtn);
+                varietiesListEl.appendChild(li);
+              });
+            }
+          
+            // Habilitar el botón de guardar solo si se seleccionó una categoría
             saveConfigBtn.disabled = !selectedCategory;
         });
+          
 
         // Función para generar el formulario específico para la categoría seleccionada
         function generateSpecificConfigForm(category) {
@@ -340,12 +393,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const form = modal.querySelector('#configForm');
             const formData = new FormData(form);
             const selectedCategory = formData.get('configCategory');
-
+        
             if (!selectedCategory) {
                 showAlert('Categoría no seleccionada.', 'danger');
                 return;
             }
-
+        
             ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
                 if (!config[selectedCategory][tipo]) {
                     config[selectedCategory][tipo] = {};
@@ -364,11 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!config[selectedCategory][tipo].lengths) {
                         config[selectedCategory][tipo].lengths = {};
                     }
-                    // Usamos un objeto fallback en caso de que no exista la configuración por defecto para la categoría
                     const defaultLengths = (defaultConfigs[selectedCategory] &&
                                             defaultConfigs[selectedCategory].REG &&
                                             defaultConfigs[selectedCategory].REG.lengths)
-                                        || {70: {}, 60: {}, 55: {}, 50: {}, 40: {}};
+                                           || {70: {}, 60: {}, 55: {}, 50: {}, 40: {}};
                     Object.keys(defaultLengths).forEach(long => {
                         const bunchesKey = `${selectedCategory}_REG_bunchesPerProcona_${long}`;
                         const stemsPerBunchKey = `${selectedCategory}_REG_stemsPerBunch_${long}`;
@@ -386,7 +438,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             });
-
+        
+            // Si existe la sección de varieties, se leen sus valores (esto es opcional si ya se han actualizado en la configuración)
+            const varietiesListEl = modal.querySelector('#varietiesList');
+            if (varietiesListEl) {
+                // Se extrae el texto de cada item (sin el botón)
+                const varietyItems = Array.from(varietiesListEl.children);
+                config[selectedCategory].varieties = varietyItems.map(li => li.querySelector('span').textContent.trim());
+            }
+        
             // Enviar la configuración actualizada al servidor
             fetch('/api/config', {
                 method: 'POST',
@@ -407,6 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAlert('Error al guardar la configuración', 'danger');
             });
         });
+        
 
 
         modal.addEventListener('hidden.bs.modal', () => {
