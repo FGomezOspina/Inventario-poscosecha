@@ -68,17 +68,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         config = firebaseConfig;  
         // 3. Guardar en localStorage para fallback
         localStorage.setItem('config', JSON.stringify(config));  
-        console.log("Configuración cargada (Firebase):", config);
-
-         // Aquí muestras específicamente la sección para VERONICA
-        console.log("config[VERONICA] =", config["VERONICA"]);
     
         // 4. Extraer las varieties de config si así lo deseas
         varietyOptions = {};
         Object.keys(config).forEach(category => {
           varietyOptions[category] = config[category].varieties || [];
         });
-        console.log("Variety Options cargadas:", varietyOptions);
     
         // 5. Cargar o crear la tabla
         if (!localStorage.getItem('tableData')) {

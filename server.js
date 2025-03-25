@@ -325,11 +325,11 @@ app.post('/api/config', async (req, res) => {
     const doc = await configRef.get();
     if (doc.exists) {
       await configRef.set(configData, { merge: true });
-      res.status(200).json({ message: 'Configuración actualizada' });
+      res.status(200).json({ message: 'Updated configuration' });
     } else {
       configData.createdAt = admin.firestore.FieldValue.serverTimestamp();
       await configRef.set(configData);
-      res.status(200).json({ message: 'Categoría creada' });
+      res.status(200).json({ message: 'Category created' });
     }
   } catch (error) {
     console.error('Error al guardar la configuración:', error);

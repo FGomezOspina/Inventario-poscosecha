@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h5 class="modal-title" id="configModalLabel">
                             <i class="fas fa-cog me-2"></i> Settings
                         </h5>
-                        <button id="createCategoryBtn" class="btn btn-outline-primary me-2">Crear Categoría</button>
+                        <button id="createCategoryBtn" class="btn btn-outline-primary me-2">Create Category</button>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
@@ -257,9 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </form>
                     </div>
                     <div class="modal-footer border-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" id="saveConfigBtn" disabled>
-                            <i class="fas fa-save me-1"></i> Guardar cambios
+                            <i class="fas fa-save me-1"></i> Save changes
                         </button>
                     </div>
                 </div>
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <h5 class="fw-bold">Varieties</h5>
               <div class="input-group mb-3">
                 <input type="text" class="form-control" id="newVarietyInput" placeholder="Enter variety">
-                <button class="btn btn-outline-secondary" type="button" id="addVarietyBtn">Agregar Variedad</button>
+                <button class="btn btn-outline-secondary" type="button" id="addVarietyBtn">Add Variety</button>
               </div>
               <ul class="list-group" id="varietiesList"></ul>
             `;
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Botón para eliminar la variedad
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'btn btn-sm btn-danger';
-                removeBtn.textContent = 'Eliminar';
+                removeBtn.textContent = 'Delete';
                 removeBtn.addEventListener('click', () => {
                    config[selectedCategory].varieties.splice(index, 1);
                    updateVarietiesList(config[selectedCategory].varieties);
@@ -507,16 +507,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="createCategoryModalLabel">Crear Nueva Categoría</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <h5 class="modal-title" id="createCategoryModalLabel">Create New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
                 <form id="createCategoryForm">
                   <div class="mb-3">
-                    <label for="newCategoryName" class="form-label">Nombre de la Categoría</label>
+                    <label for="newCategoryName" class="form-label">Name category</label>
                     <input type="text" class="form-control" id="newCategoryName" required>
                   </div>
-                  <h6>Configurar Tipos (TJ, NF, REG, WS10, SU30):</h6>
+                  
                   <div id="categoryConfig" class="p-2 rounded" style="background-color: #f9f9f9;">
                     <!-- Aquí se generarán los campos para cada tipo -->
                     ${generateEmptyConfigForm()}
@@ -524,8 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </form>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="saveNewCategoryBtn">Crear Categoría</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewCategoryBtn">Create category</button>
               </div>
             </div>
           </div>
