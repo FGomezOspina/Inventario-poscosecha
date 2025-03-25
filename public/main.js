@@ -639,17 +639,36 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function addGroup() {
         const longsArray = longDefaults; 
-        const numRows = 3;
-    
+        // Por defecto se crean 3 filas
+        let numRows = 3;
+        
         const groupId = Date.now();
         const mainRow = dataTable.insertRow();
         mainRow.setAttribute('data-group-id', groupId);
-    
-        // Creamos la celda "Variety" usando createVarietySelect (la cual ahora utiliza varietyOptions dinámico)
+        
+        // Creamos la celda "Variety" usando createVarietySelect (la cual utiliza varietyOptions dinámico)
         const varietyCell = createVarietySelect();
         varietyCell.setAttribute('rowspan', numRows);
         mainRow.appendChild(varietyCell);
-    
+        
+        // *** MODIFICACIÓN: Agregar listener para actualizar el número de filas según el tipo ***
+        const varietySelect = varietyCell.querySelector('select');
+        varietySelect.addEventListener('change', () => {
+            const newValue = varietySelect.value;
+            const newTipo = getTipoForVariety(newValue);
+            // Obtener las filas actuales del grupo
+            const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
+            // Si es HYPERICUM y hay menos de 5 filas, agregar las faltantes
+            if (newTipo === 'HYPERICUM' && groupRows.length < 5) {
+                addExtraRows(groupId, 5 - groupRows.length, true);
+            }
+            // Si no es HYPERICUM y hay más de 3 filas, remover las filas extra
+            else if (newTipo !== 'HYPERICUM' && groupRows.length > 3) {
+                removeExtraRows(groupId, groupRows.length - 3);
+            }
+        });
+        // *** FIN MODIFICACIÓN ***
+        
         // Creamos la celda "Tipo"
         const tipoCell = document.createElement('td');
         tipoCell.setAttribute('data-col', 'Tipo');
@@ -657,19 +676,19 @@ document.addEventListener('DOMContentLoaded', () => {
         tipoCell.innerText = ''; 
         tipoCell.setAttribute('tabindex', '0'); 
         mainRow.appendChild(tipoCell);
-    
+        
         // Celda "Batch"
         const batchCell = createEditableCell('Batch', '', numRows);
         mainRow.appendChild(batchCell);
-    
+        
         // Celda "Fecha"
         const today = new Date().toISOString().split('T')[0]; 
         const fechaCell = createDateCell('Fecha', today, numRows);
         mainRow.appendChild(fechaCell);
-    
+        
         // Agregar las celdas de datos para la primera fila
         addDataCellsToRow(mainRow, 0, groupId, true, longsArray);
-    
+        
         // Celda "Stems Total" con rowspan
         const stemsTotalCell = document.createElement('td');
         stemsTotalCell.setAttribute('rowspan', numRows);
@@ -677,17 +696,17 @@ document.addEventListener('DOMContentLoaded', () => {
         stemsTotalCell.setAttribute('data-col', 'Stems Total');
         stemsTotalCell.innerText = '';
         stemsTotalCell.setAttribute('tabindex', '0');
-    
+        
         // Insertar "Stems Total" antes de la celda "Notas"
         const notasCell = mainRow.querySelector('td[data-col="Notas"]');
         const notasIndex = Array.prototype.indexOf.call(mainRow.cells, notasCell);
         mainRow.insertBefore(stemsTotalCell, mainRow.cells[notasIndex]);
-    
+        
         // Celda "Acciones" con rowspan
         const actionCell = document.createElement('td');
         actionCell.setAttribute('rowspan', numRows);
         actionCell.classList.add('text-center');
-    
+        
         // Botón para eliminar el grupo
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
@@ -709,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
             handleDelete();
         });
         actionCell.appendChild(deleteBtn);
-    
+        
         // Botón para agregar línea (solo para grupos que no sean HYPERICUM)
         const addLineBtn = document.createElement('button');
         addLineBtn.innerHTML = '<i class="fa fa-plus"></i>';
@@ -728,16 +747,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showAlert('Se agregó una nueva línea al grupo.', 'success');
         });
         actionCell.appendChild(addLineBtn);
-    
+        
         mainRow.appendChild(actionCell);
-    
-        // Agregar filas adicionales para completar las 3 filas
+        
+        // Agregar filas adicionales para completar el número de filas (por defecto 3)
         for (let i = 1; i < numRows; i++) {
             const subRow = dataTable.insertRow();
             subRow.setAttribute('data-group-id', groupId);
             addDataCellsToRow(subRow, i, groupId, false, longsArray);
         }
-    
+        
         updateCalculations(mainRow);
         updateStemsTotal(groupId);
         saveTableData();
@@ -745,6 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateSummaryTables();
         updateGrandTotal();
     }
+
     
 
     /**
