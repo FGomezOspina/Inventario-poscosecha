@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // ============================
     // Variables declaration
     // ============================
@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load config (if doesnt exists, use defaultConfig)
     let config = JSON.parse(localStorage.getItem('config')) || defaultConfig;
+    // Variety
+    let varietyOptions = {};
 
     // Options
     const longDefaults = [];
@@ -59,42 +61,59 @@ document.addEventListener('DOMContentLoaded', () => {
     // fields to the main table
     const fields = ["TJ - REG", "Long", "P1", "P2", "P3", "P4", "R1", "R2", "R3", "R4", "Bunches/Procona", "Bunches Total", "Stems", "Notas"];
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Esperamos a cargar las varieties desde Firebase
-        varietyOptions = await loadVarietyOptions();
+    try {
+        // 1. Cargar la configuración completa desde Firebase
+        const firebaseConfig = await loadVarietyOptions(); 
+        // 2. Reemplazar config con la versión de Firebase
+        config = firebaseConfig;  
+        // 3. Guardar en localStorage para fallback
+        localStorage.setItem('config', JSON.stringify(config));  
+        console.log("Configuración cargada (Firebase):", config);
+
+         // Aquí muestras específicamente la sección para VERONICA
+        console.log("config[VERONICA] =", config["VERONICA"]);
+    
+        // 4. Extraer las varieties de config si así lo deseas
+        varietyOptions = {};
+        Object.keys(config).forEach(category => {
+          varietyOptions[category] = config[category].varieties || [];
+        });
         console.log("Variety Options cargadas:", varietyOptions);
+    
+        // 5. Cargar o crear la tabla
         if (!localStorage.getItem('tableData')) {
           addGroup();
         } else {
           loadTableData();
         }
-    });
-      
-      
-    // Variety
-    let varietyOptions = {};
+    
+      } catch (err) {
+        console.error("Error al cargar la configuración desde Firebase:", err);
+    }
+    
+
 
     // Función para cargar las varieties dinámicamente desde Firebase usando el endpoint de configuración
     async function loadVarietyOptions() {
         try {
-        const response = await fetch('/api/config');
-        if (!response.ok) {
+            const response = await fetch('/api/config');
+            if (!response.ok) {
             throw new Error('Error en la respuesta de /api/config');
-        }
-        const configData = await response.json();
-        // Se asume que configData es un objeto en el que cada clave es una categoría y
-        // cada documento tiene (entre otros campos) un campo "varieties"
-        const options = {};
-        Object.keys(configData).forEach(category => {
-            options[category] = configData[category].varieties || [];
-        });
-        return options;
+            }
+            const configData = await response.json();
+            
+            // configData se asume que es un objeto donde cada clave (por ej. "VERONICA", "HYPERICUM", etc.)
+            // contiene toda la configuración: .varieties, .TJ, .REG, etc.
+            // Retornamos configData tal cual, sin sobrescribir solo con .varieties
+            return configData;
+            
         } catch (error) {
-        console.error('Error al cargar varieties desde Firebase:', error);
-        // Fallback: Devuelve un objeto vacío o valores por defecto si se prefiere
-        return {};
+            console.error('Error al cargar la configuración desde Firebase:', error);
+            // Fallback: Devuelve un objeto vacío o un default en caso de error
+            return {};
         }
     }
+
   
 
     // Cargar las varieties al iniciar la aplicación
@@ -250,7 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.remove();
         }, 3000);
     }
-  
 
 
     // / Function to create the Variety select dropdown
@@ -262,97 +280,123 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectVariety = document.createElement('select');
         selectVariety.classList.add('form-select', 'form-select-sm');
 
-        // Opción vacía
+        // Agregamos una opción vacía
         const emptyOption = document.createElement('option');
         emptyOption.value = '';
         emptyOption.text = 'Seleccione Variety';
         selectVariety.appendChild(emptyOption);
 
-        // Si existen datos en varietyOptions, creamos los optgroups
+        // Verificamos si varietyOptions existe y tiene categorías
         if (varietyOptions && Object.keys(varietyOptions).length > 0) {
+            // Recorremos cada categoría para crear un <optgroup>
             Object.keys(varietyOptions).forEach(category => {
-            const optGroup = document.createElement('optgroup');
-            optGroup.label = category;
-            varietyOptions[category].forEach(variety => {
-                const option = document.createElement('option');
-                option.value = variety;
-                option.text = variety;
-                if (variety === selectedVariety) {
-                option.selected = true;
-                }
-                optGroup.appendChild(option);
+                // Obtenemos el array de variedades. Si no existe, tomamos un array vacío.
+                const varietiesArr = varietyOptions[category].varieties || [];
+
+                // Creamos el optgroup
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = category;
+
+                // Iteramos sobre el array de variedades
+                varietiesArr.forEach(variety => {
+                    const option = document.createElement('option');
+                    option.value = variety;
+                    option.text = variety;
+                    if (variety === selectedVariety) {
+                        option.selected = true;
+                    }
+                    optGroup.appendChild(option);
+                });
+
+                selectVariety.appendChild(optGroup);
             });
-            selectVariety.appendChild(optGroup);
-            });
-            // Si el valor guardado no se encontró entre las opciones, lo agregamos como extra
+
+            // Si el valor seleccionado no se encontró entre las opciones, se agrega como opción extra
             let found = false;
             Object.keys(varietyOptions).forEach(category => {
-            if (varietyOptions[category].includes(selectedVariety)) {
-                found = true;
-            }
+                const varietiesArr = varietyOptions[category].varieties || [];
+                if (varietiesArr.includes(selectedVariety)) {
+                    found = true;
+                }
             });
             if (!found && selectedVariety) {
-            const extraOption = document.createElement('option');
-            extraOption.value = selectedVariety;
-            extraOption.text = selectedVariety;
-            extraOption.selected = true;
-            selectVariety.appendChild(extraOption);
+                const extraOption = document.createElement('option');
+                extraOption.value = selectedVariety;
+                extraOption.text = selectedVariety;
+                extraOption.selected = true;
+                selectVariety.appendChild(extraOption);
             }
         } else {
             // Si no hay datos en varietyOptions, agregamos la opción actual (si existe)
             if (selectedVariety) {
-            const option = document.createElement('option');
-            option.value = selectedVariety;
-            option.text = selectedVariety;
-            option.selected = true;
-            selectVariety.appendChild(option);
+                const option = document.createElement('option');
+                option.value = selectedVariety;
+                option.text = selectedVariety;
+                option.selected = true;
+                selectVariety.appendChild(option);
             }
         }
 
-        // Evento: al cambiar la selección se actualiza la celda Tipo y se recalculan datos
+        // Evento: al cambiar la selección, se actualiza la celda "Tipo" y se recalculan datos
         selectVariety.addEventListener('change', () => {
-            const row = getRowFromCell(selectVariety);
+            // Función auxiliar para ubicar la fila desde el <select>
+            const row = getRowFromCell(selectVariety);  
             const groupId = row.getAttribute('data-group-id');
             const newSelected = selectVariety.value;
             const selectedTipo = getTipoForVariety(newSelected);
+
+            // Actualizamos la celda "Tipo"
             const tipoCell = row.querySelector('td[data-col="Tipo"]');
             if (tipoCell) {
-            tipoCell.innerText = selectedTipo || '';
+                tipoCell.innerText = selectedTipo || '';
             }
-            // Actualizamos cálculos en todas las filas del grupo
+
+            // Recalculamos para todas las filas del mismo grupo
             const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
             groupRows.forEach(r => updateCalculations(r));
+
+            // Guardamos los datos, actualizamos tablas resumidas y el gran total
             saveTableData();
             populateSummaryTables();
             updateGrandTotal();
         });
 
-        // Se retorna la celda que contiene el select
+        // Insertamos el <select> en la celda y retornamos la celda completa
         cell.appendChild(selectVariety);
         return cell;
     }
 
 
-      
 
     // // Function to get the Type based on the selected Variety
     function getTipoForVariety(variety) {
         if (!variety) return '';
-        // Suponiendo que las claves de varietyOptions sean las categorías (p.ej., "VERONICA", "MENTHA", etc.)
+        
+        // Pasamos la cadena a mayúsculas para la comparación
         const varietyU = variety.toUpperCase();
+        
         for (const category in varietyOptions) {
-            // Comparamos ambas en mayúsculas
+            // 1) Si la categoría en mayúsculas coincide exactamente
+            //    con el nombre de la variedad en mayúsculas, retornamos esa categoría
             if (category.toUpperCase() === varietyU) {
             return category;
             }
-            // O, si lo que quieres es buscar si la variety está dentro del array de cada categoría:
-            if (varietyOptions[category].some(v => v.toUpperCase() === varietyU)) {
-            return category;
+
+            // 2) Verificamos si en la propiedad 'varieties' de esta categoría
+            //    existe un array y si en él se encuentra la variedad
+            const catObj = varietyOptions[category];
+            if (catObj && Array.isArray(catObj.varieties)) {
+            // Usamos .some() únicamente si 'varieties' es realmente un array
+            if (catObj.varieties.some(v => v.toUpperCase() === varietyU)) {
+                return category;
+            }
             }
         }
-        // Si no se encontró, devuelve el valor original o una cadena por defecto
+
+        // Si no se encontró en ninguna categoría, devolvemos la 'variety' tal cual
         return variety;
-    }
+        }
+
 
 
     // // Function to create the select element
@@ -1677,112 +1721,120 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCalculations(row) {
         const groupId = row.getAttribute('data-group-id');
         if (!groupId) {
-            console.warn('La fila no tiene un ID de grupo.');
-            return;
+          console.warn('La fila no tiene un ID de grupo.');
+          return;
         }
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         if (!groupRows.length) {
-            console.warn(`No se encontraron filas para el ID de grupo ${groupId}.`);
-            return;
+          console.warn(`No se encontraron filas para el ID de grupo ${groupId}.`);
+          return;
         }
         const mainRow = groupRows[0];
         const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
         const tipo = tipoCell ? tipoCell.innerText.trim() : '';
         if (!tipo) {
-            console.warn(`La fila principal del grupo ${groupId} no tiene definido el "Tipo".`);
-            return;
+          console.warn(`La fila principal del grupo ${groupId} no tiene definido el "Tipo".`);
+          return;
         }
         if (!config[tipo]) {
-            console.warn(`Configuración para la categoría "${tipo}" no encontrada en config.`);
-            return;
+          console.warn(`Configuración para la categoría "${tipo}" no encontrada en config.`);
+          return;
         }
+        
+        // Obtener el valor de TJ - REG y Long
         const tjRegCell = row.querySelector('td[data-col="TJ - REG"] select');
         const longCell = row.querySelector('td[data-col="Long"]');
         const tjRegValue = tjRegCell ? tjRegCell.value : '';
+        // Convertir el valor de longitud a número y luego a string para la búsqueda (ya que en Firebase la clave podría estar como string)
         const longValue = parseInt(longCell ? longCell.innerText.trim() : '') || 0;
-
+        const longKey = longValue.toString();
+      
         const pFields = ["P1", "P2", "P3", "P4"];
         const rFields = ["R1", "R2", "R3", "R4"];
-
+      
         let bunchesPerProcona = 0;
         let stemsPerBunch = 0;
-
+      
         if (tjRegValue === "TJ" || tjRegValue === "WS10" || tjRegValue === "NF") {
-            if (config[tipo][tjRegValue]) {
-                bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona || 0;
-                stemsPerBunch = config[tipo][tjRegValue].stemsPerBunch || 0;
-            } else {
-                console.warn(`Configuración para tipo "${tipo}" y TJ - REG "${tjRegValue}" no encontrada en config.`);
-            }
+          if (config[tipo][tjRegValue]) {
+            bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona || 0;
+            stemsPerBunch = config[tipo][tjRegValue].stemsPerBunch || 0;
+          } else {
+            console.warn(`Configuración para categoría "${tipo}" y TJ - REG "${tjRegValue}" no encontrada en config.`);
+          }
         } else if (tjRegValue === "REG") {
-            if (config[tipo].REG) {
-                const regConfig = config[tipo].REG;
-                if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].stemsPerBunch !== undefined) {
-                    stemsPerBunch = regConfig.lengths[longValue].stemsPerBunch;
-                } else if (regConfig.stemsPerBunch !== undefined) {
-                    stemsPerBunch = regConfig.stemsPerBunch;
-                } else {
-                    stemsPerBunch = 0;
-                    console.warn(`stemsPerBunch no está definido para tipo "${tipo}" en REG.`);
-                }
-                if (regConfig.lengths && regConfig.lengths[longValue] && regConfig.lengths[longValue].bunchesPerProcona !== undefined) {
-                    bunchesPerProcona = regConfig.lengths[longValue].bunchesPerProcona;
-                } else if (regConfig.bunchesPerProcona !== undefined) {
-                    bunchesPerProcona = regConfig.bunchesPerProcona;
-                } else {
-                    bunchesPerProcona = 0;
-                    console.warn(`bunchesPerProcona no está definido para tipo "${tipo}" en REG y longitud ${longValue}.`);
-                }
+          if (config[tipo].REG) {
+            const regConfig = config[tipo].REG;
+            // Buscar usando la clave de longitud (longKey)
+            if (regConfig.lengths && regConfig.lengths[longKey] && regConfig.lengths[longKey].stemsPerBunch !== undefined) {
+              stemsPerBunch = regConfig.lengths[longKey].stemsPerBunch;
+            } else if (regConfig.stemsPerBunch !== undefined) {
+              stemsPerBunch = regConfig.stemsPerBunch;
             } else {
-                console.warn(`Configuración para tipo "${tipo}" y TJ - REG "REG" no encontrada en config.`);
+              stemsPerBunch = 0;
+              console.warn(`stemsPerBunch no está definido para categoría "${tipo}" en REG.`);
             }
+            if (regConfig.lengths && regConfig.lengths[longKey] && regConfig.lengths[longKey].bunchesPerProcona !== undefined) {
+              bunchesPerProcona = regConfig.lengths[longKey].bunchesPerProcona;
+            } else if (regConfig.bunchesPerProcona !== undefined) {
+              bunchesPerProcona = regConfig.bunchesPerProcona;
+            } else {
+              bunchesPerProcona = 0;
+              console.warn(`bunchesPerProcona no está definido para categoría "${tipo}" en REG y longitud ${longValue}.`);
+            }
+          } else {
+            console.warn(`Configuración para categoría "${tipo}" y TJ - REG "REG" no encontrada en config.`);
+          }
         } else if (tjRegValue === "SU30") {
-            if (config[tipo]["SU30"]) {
-                bunchesPerProcona = config[tipo]["SU30"].bunchesPerProcona || 0;
-                stemsPerBunch = config[tipo]["SU30"].stemsPerBunch || 0;
-            } else {
-                console.warn(`Configuración para tipo "${tipo}" y SU30 no encontrada en config.`);
-            }
+          if (config[tipo] && config[tipo]["SU30"]) {
+            bunchesPerProcona = config[tipo]["SU30"].bunchesPerProcona || 0;
+            stemsPerBunch = config[tipo]["SU30"].stemsPerBunch || 0;
+          } else {
+            console.warn(`Configuración para categoría "${tipo}" y SU30 no encontrada en config.`);
+          }
         } else {
-            bunchesPerProcona = 0;
-            stemsPerBunch = 0;
+          bunchesPerProcona = 0;
+          stemsPerBunch = 0;
         }
-
+      
+        // Actualizar la celda de Bunches/Procona
         const bunchesPerProconaCell = row.querySelector('td[data-col="Bunches/Procona"]');
         if (bunchesPerProconaCell) {
-            bunchesPerProconaCell.innerText = bunchesPerProcona;
+          bunchesPerProconaCell.innerText = bunchesPerProcona;
         }
-
+      
+        // Calcular el total de bunches usando las celdas de los campos P y R
         let bunchesTotal = 0;
         pFields.forEach(field => {
-            const cell = row.querySelector(`td[data-col="${field}"]`);
-            const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
-            if (value > 0) {
-                bunchesTotal += value * bunchesPerProcona;
-            }
+          const cell = row.querySelector(`td[data-col="${field}"]`);
+          const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
+          if (value > 0) {
+            bunchesTotal += value * bunchesPerProcona;
+          }
         });
-
         rFields.forEach(field => {
-            const cell = row.querySelector(`td[data-col="${field}"]`);
-            const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
-            if (value > 0) {
-                bunchesTotal += value; 
-            }
+          const cell = row.querySelector(`td[data-col="${field}"]`);
+          const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
+          if (value > 0) {
+            bunchesTotal += value;
+          }
         });
-
+      
         const bunchesTotalCell = row.querySelector('td[data-col="Bunches Total"]');
         if (bunchesTotalCell) {
-            bunchesTotalCell.innerText = bunchesTotal;
+          bunchesTotalCell.innerText = bunchesTotal;
         }
-
+      
+        // Calcular y actualizar el total de stems (multiplicación de bunchesTotal por stemsPerBunch)
         const stemsCell = row.querySelector('td[data-col="Stems"]');
         if (stemsCell) {
-            const stems = bunchesTotal * stemsPerBunch;
-            stemsCell.innerText = stems;
+          const stems = bunchesTotal * stemsPerBunch;
+          stemsCell.innerText = stems;
         }
-
+      
         updateStemsTotal(groupId);
     }
+      
 
     /**
      * The function `updateStemsTotal` calculates the total number of stems for a specific group and
