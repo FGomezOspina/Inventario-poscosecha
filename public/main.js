@@ -390,41 +390,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Si no se encontró en ninguna categoría, devolvemos la 'variety' tal cual
         return variety;
+    }
+
+
+
+    /**
+     * Crea un select dinámico con las opciones de tipos de ramo disponibles para una categoría.
+     * @param {string} selectedValue - Valor seleccionado (opcional).
+     * @param {string} category - Categoría a la que pertenece la fila.
+     * @returns {HTMLElement} El elemento <select> con las opciones dinámicas.
+     */
+    function createTJRegSelect(selectedValue = '', category) {
+        // Se obtiene la categoría. Si no se pasa, se usa la primera disponible en config.
+        const cat = category || Object.keys(config)[0];
+        if (!cat || !config[cat]) {
+        console.error('No se encontró una categoría válida en config');
+        return document.createElement('select');
         }
-
-
-
-    // // Function to create the select element
-    function createTJRegSelect(selectedValue = '') {
-        // If no value is provided, "REG" is used by default.
-        const value = selectedValue || 'REG';
+        // Extraer las claves que representan tipos de ramo (excluyendo propiedades internas)
+        let bouquetTypes = Object.keys(config[cat]).filter(key =>
+        !['varieties', 'createdAt', 'updatedAt'].includes(key)
+        );
+    
+        // Si no hay opciones definidas, se usa un fallback
+        if (bouquetTypes.length === 0) {
+        bouquetTypes = ['REG'];
+        }
+    
+        // Determinar el valor a seleccionar: si no se pasa, se usa 'REG' si existe, o el primero
+        const value = selectedValue || (bouquetTypes.includes('REG') ? 'REG' : bouquetTypes[0]);
         const select = document.createElement('select');
         select.classList.add('form-select', 'form-select-sm');
         select.style.minWidth = '100px';
-        
-        // The options are iterated through.
-        tjRegOptions.forEach(optionValue => {
-            const option = document.createElement('option');
-            option.value = optionValue;
-            option.text = optionValue;
-            if (optionValue === value) {
-                option.selected = true;
-            }
-            select.appendChild(option);
+    
+        bouquetTypes.forEach(optionValue => {
+        const option = document.createElement('option');
+        option.value = optionValue;
+        option.text = optionValue;
+        if (optionValue === value) {
+            option.selected = true;
+        }
+        select.appendChild(option);
         });
-        
-        // When the value is changed, the calculations are updated, and the table is saved.
+    
         select.addEventListener('change', () => {
-            const row = getRowFromCell(select);
-            updateCalculations(row);
-            saveTableData();
-            populateSummaryTables();
-            updateGrandTotal();
+        const row = getRowFromCell(select);
+        updateCalculations(row);
+        saveTableData();
+        populateSummaryTables();
+        updateGrandTotal();
         });
-        
         return select;
     }
-
+  
     // Function to get the row from a cell.
     function getRowFromCell(cell) {
         return cell.closest('tr');
