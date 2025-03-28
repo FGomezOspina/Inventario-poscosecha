@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // Load config (if doesnt exists, use defaultConfig)
-    let config = JSON.parse(localStorage.getItem('config')) || defaultConfig;
+    let config = JSON.parse(localStorage.getItem('config')) || defaultConfigs;
     // Variety
     let varietyOptions = {};
 

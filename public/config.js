@@ -165,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
+
+    window.defaultConfigs = defaultConfigs;
     
     // Función para cargar la configuración desde Firebase
     async function loadConfigFromFirebase() {
