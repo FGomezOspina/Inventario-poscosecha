@@ -243,7 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </h5>
                         <button id="createCategoryBtn" class="btn btn-outline-primary me-2">Create Category</button>
                         <!-- Nuevo botón global para crear tipo de ramo -->
-                        <button id="createNewBouquetTypeGlobalBtn" class="btn btn-outline-primary me-2">Create new bouquet type</button>
+                        <button id="createNewBouquetTypeGlobalBtn" class="btn btn-outline-primary me-2">Create new bunche type</button>
+                        <!-- Botón para Eliminar Bunche Type -->
+                        <button id="deleteBouquetTypeGlobalBtn" class="btn btn-outline-danger me-2">Delete Bunche Type</button>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
@@ -275,6 +277,9 @@ document.addEventListener('DOMContentLoaded', () => {
         bootstrapModal.show();
     
         const saveConfigBtn = modal.querySelector('#saveConfigBtn');
+
+         
+
     
         // Al cambiar de categoría, se carga su configuración en el formulario
         modal.querySelector('#configCategory').addEventListener('change', function() {
@@ -514,8 +519,107 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+        function openGlobalDeleteBouquetTypeModal() {
+            const deleteTypeModal = document.createElement('div');
+            deleteTypeModal.classList.add('modal', 'fade');
+            deleteTypeModal.setAttribute('tabindex', '-1');
+            deleteTypeModal.setAttribute('aria-labelledby', 'globalDeleteBouquetTypeModalLabel');
+            deleteTypeModal.setAttribute('aria-hidden', 'true');
+        
+            deleteTypeModal.innerHTML = `
+                <div class="modal-dialog modal-dialog-scrollable modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="globalDeleteBouquetTypeModalLabel">Delete Bunche Type</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul id="buncheTypeList" class="list-group">
+                                <!-- List of Bunche Types will be inserted here -->
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-danger" id="deleteBuncheTypeBtn" disabled>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(deleteTypeModal);
+            const bootstrapModal = new bootstrap.Modal(deleteTypeModal);
+            bootstrapModal.show();
+        
+            // Fetch the current bunche types and populate the list
+            fetch('/api/config')
+                .then(response => response.json())
+                .then(config => {
+                    const buncheTypes = new Set();
+                    // Iterate over the categories and collect all types
+                    Object.values(config).forEach(category => {
+                        Object.keys(category).forEach(type => {
+                            if (type !== 'varieties' && type !== 'createdAt' && type !== 'updatedAt') {
+                                buncheTypes.add(type);
+                            }
+                        });
+                    });
+                    
+                    // Populate the list in the modal with bunche types
+                    const buncheTypeList = deleteTypeModal.querySelector('#buncheTypeList');
+                    buncheTypes.forEach(type => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        li.textContent = type;
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'btn btn-sm btn-danger';
+                        removeBtn.textContent = 'Delete';
+                        removeBtn.addEventListener('click', () => {
+                            deleteBuncheType(type);
+                        });
+                        li.appendChild(removeBtn);
+                        buncheTypeList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al obtener tipos de ramos:', error);
+                });
+        
+            // Function to delete a bunche type globally
+            function deleteBuncheType(type) {
+                fetch(`/api/bunche-type/${type}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result.message);
+                    // Hide and remove the modal after successful deletion
+                    bootstrapModal.hide();
+                    deleteTypeModal.remove();
+
+                    // Reload the page to reflect the changes
+                    location.reload(); // This will refresh the page
+
+                })
+                .catch(error => {
+                    console.error('Error al eliminar el Bunche Type:', error);
+                    alert('Error al eliminar el Bunche Type');
+                });
+            }
+
+            deleteTypeModal.addEventListener('hidden.bs.modal', () => {
+                deleteTypeModal.remove();
+            });
+        }
         
         
+        
+        const deleteBouquetTypeGlobalBtn = document.getElementById('deleteBouquetTypeGlobalBtn');
+        if (deleteBouquetTypeGlobalBtn) {
+            deleteBouquetTypeGlobalBtn.addEventListener('click', () => {
+                openGlobalDeleteBouquetTypeModal();
+            });
+        }
+
 
         // Manejador del botón "Crear Categoría"
         modal.querySelector('#createCategoryBtn').addEventListener('click', () => {
@@ -528,6 +632,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 openGlobalCreateNewBouquetTypeModal();
             });
         }
+
+        // Modificación dentro de openConfigModal()
+        const deleteCategoryBtn = document.createElement('button');
+        deleteCategoryBtn.classList.add('btn', 'btn-danger');
+        deleteCategoryBtn.textContent = 'Delete category';
+        deleteCategoryBtn.addEventListener('click', async () => {
+            const selectedCategory = modal.querySelector('#configCategory').value;
+            if (selectedCategory && confirm(`¿Are you sure you want to delete ${selectedCategory}?`)) {
+              try {
+                // Llamada al servidor para eliminar la categoría
+                const response = await fetch(`/api/config/${selectedCategory}`, { method: 'DELETE' });
+                const result = await response.json();
+          
+                if (response.ok) {
+                  showAlert(result.message);
+                  bootstrapModal.hide();
+                  modal.remove();
+          
+                  // Verificar si el elemento configCategorySelect existe antes de manipularlo
+                  const configCategorySelect = document.querySelector('#configCategory');
+                  if (configCategorySelect) {
+                    const optionToRemove = Array.from(configCategorySelect.options).find(option => option.value === selectedCategory);
+                    if (optionToRemove) {
+                      optionToRemove.remove();
+                    }
+                  }
+                } else {
+                  showAlert(result.error, 'danger');
+                }
+              } catch (error) {
+                console.error('Error al eliminar la categoría:', error);
+                showAlert('Error al eliminar la categoría', 'danger');
+              }
+            }
+        });
+          
+
+        // Añadir el botón de eliminar antes del botón de guardar
+        const modalFooter = modal.querySelector('.modal-footer');
+        modalFooter.insertBefore(deleteCategoryBtn, modalFooter.querySelector('#saveConfigBtn'));
+
 
 
         // Guardar cambios: se actualiza el objeto config y se envía al servidor

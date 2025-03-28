@@ -337,6 +337,73 @@ app.post('/api/config', async (req, res) => {
   }
 });
 
+// Eliminar categoría y sus configuraciones
+app.delete('/api/config/:category', async (req, res) => {
+  const { category } = req.params;
+
+  try {
+    // Eliminamos la categoría y sus configuraciones
+    const configRef = db.collection('configurations').doc(category.toUpperCase());
+    const doc = await configRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Categoría no encontrada' });
+    }
+
+    // Eliminamos la categoría
+    await configRef.delete();
+    // Eliminar otras configuraciones relacionadas con esta categoría si es necesario (por ejemplo, packrate, inventario, etc.)
+    // Esto puede ser necesario si existen colecciones asociadas con la categoría que quieras eliminar
+
+    // Si es necesario eliminar otros documentos, puedes hacer lo siguiente:
+    // await db.collection('packrate').where('category', '==', category).get().then(snapshot => {
+    //   snapshot.forEach(doc => doc.ref.delete());
+    // });
+
+    res.status(200).json({ message: `Category ${category} deleted sucessfully.` });
+  } catch (error) {
+    console.error('Error al eliminar la categoría:', error);
+    res.status(500).json({ error: 'Error al eliminar la categoría' });
+  }
+});
+
+// Eliminar un Bunche Type globalmente para todas las categorías
+app.delete('/api/bunche-type/:buncheType', async (req, res) => {
+  const { buncheType } = req.params;
+
+  try {
+      // Obtenemos todas las categorías de la colección 'configurations'
+      const snapshot = await db.collection('configurations').get();
+      
+      // Iniciamos una transacción para asegurar que los cambios se apliquen de manera atómica
+      const batch = db.batch();
+      
+      snapshot.forEach(doc => {
+          const categoryRef = db.collection('configurations').doc(doc.id);
+
+          // Verificamos si el Bunche Type existe en esta categoría
+          const categoryData = doc.data();
+          if (categoryData[buncheType]) {
+              // Si existe, lo eliminamos
+              batch.update(categoryRef, {
+                  [buncheType]: admin.firestore.FieldValue.delete()
+              });
+          }
+      });
+
+      // Ejecutamos el batch (todos los cambios se aplican al mismo tiempo)
+      await batch.commit();
+      
+      res.status(200).json({ message: `El Bunche type '${buncheType}' ha sido eliminado globalmente de todas las categorías.` });
+  } catch (error) {
+      console.error('Error al eliminar Bunche Type globalmente:', error);
+      res.status(500).json({ error: 'Error al eliminar el Bunche Type globalmente' });
+  }
+});
+
+
+
+
 // ========== 7. CONFIGURE THE PORT AND START THE SERVER ==========
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
