@@ -242,6 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fas fa-cog me-2"></i> Settings
                         </h5>
                         <button id="createCategoryBtn" class="btn btn-outline-primary me-2">Create Category</button>
+                        <!-- Nuevo botón global para crear tipo de ramo -->
+                        <button id="createNewBouquetTypeGlobalBtn" class="btn btn-outline-secondary me-2">Crear tipo de ramo</button>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
@@ -278,9 +280,12 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.querySelector('#configCategory').addEventListener('change', function() {
             const selectedCategory = this.value;
             const categoryConfigDiv = modal.querySelector('#categoryConfig');
-            // Generar el formulario específico para la categoría
+            
+            // Generar el formulario específico para la categoría (incluye todos los tipos existentes)
             categoryConfigDiv.innerHTML = generateSpecificConfigForm(selectedCategory);
-          
+            
+            
+            
             // Agregar la sección de Varieties
             categoryConfigDiv.innerHTML += `
               <hr class="my-3">
@@ -294,124 +299,237 @@ document.addEventListener('DOMContentLoaded', () => {
           
             // Si ya existen variedades en la configuración, se cargan en la lista; de lo contrario, se inicializa a vacío.
             if (!config[selectedCategory].varieties) {
-              config[selectedCategory].varieties = [];
+                config[selectedCategory].varieties = [];
             }
             updateVarietiesList(config[selectedCategory].varieties);
           
             // Evento para agregar nueva variedad
             categoryConfigDiv.querySelector('#addVarietyBtn').addEventListener('click', () => {
-              const newVarietyInput = categoryConfigDiv.querySelector('#newVarietyInput');
-              const newVariety = newVarietyInput.value.trim();
-              if (newVariety && !config[selectedCategory].varieties.includes(newVariety)) {
-                config[selectedCategory].varieties.push(newVariety);
-                updateVarietiesList(config[selectedCategory].varieties);
-                newVarietyInput.value = '';
-              }
+                const newVarietyInput = categoryConfigDiv.querySelector('#newVarietyInput');
+                const newVariety = newVarietyInput.value.trim();
+                if (newVariety && !config[selectedCategory].varieties.includes(newVariety)) {
+                    config[selectedCategory].varieties.push(newVariety);
+                    updateVarietiesList(config[selectedCategory].varieties);
+                    newVarietyInput.value = '';
+                }
             });
+          
           
             // Función para actualizar la lista de variedades en la interfaz
             function updateVarietiesList(varietiesArray) {
-              const varietiesListEl = categoryConfigDiv.querySelector('#varietiesList');
-              varietiesListEl.innerHTML = '';
-              varietiesArray.forEach((variety, index) => {
-                const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                li.innerHTML = `<span>${variety}</span>`;
-                // Botón para eliminar la variedad
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'btn btn-sm btn-danger';
-                removeBtn.textContent = 'Delete';
-                removeBtn.addEventListener('click', () => {
-                   config[selectedCategory].varieties.splice(index, 1);
-                   updateVarietiesList(config[selectedCategory].varieties);
+                const varietiesListEl = categoryConfigDiv.querySelector('#varietiesList');
+                varietiesListEl.innerHTML = '';
+                varietiesArray.forEach((variety, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.innerHTML = `<span>${variety}</span>`;
+                    // Botón para eliminar la variedad
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'btn btn-sm btn-danger';
+                    removeBtn.textContent = 'Delete';
+                    removeBtn.addEventListener('click', () => {
+                        config[selectedCategory].varieties.splice(index, 1);
+                        updateVarietiesList(config[selectedCategory].varieties);
+                    });
+                    li.appendChild(removeBtn);
+                    varietiesListEl.appendChild(li);
                 });
-                li.appendChild(removeBtn);
-                varietiesListEl.appendChild(li);
-              });
             }
           
             // Habilitar el botón de guardar solo si se seleccionó una categoría
             saveConfigBtn.disabled = !selectedCategory;
         });
-          
-    
+         
         // Función para generar el formulario específico para la categoría seleccionada
         function generateSpecificConfigForm(category) {
-            // Verifica si la categoría existe
             if (!config[category]) {
                 return '<p>No hay configuración disponible para esta categoría.</p>';
             }
-        
+            
             let formHtml = '';
         
-            // Recorre los tipos y genera el formulario para cada uno
-            ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
-                const tipoConfig = config[category][tipo] || {}; // Si no existe, se usa un objeto vacío
+            // Recorremos las claves de la categoría y omitimos las que no sean tipos (como "createdAt" o "updatedAt")
+            Object.keys(config[category]).forEach(tipo => {
+                if (tipo === 'varieties' || tipo === 'createdAt' || tipo === 'updatedAt') return;
+                
+                const tipoConfig = config[category][tipo];
                 formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo}</h5>`;
-        
-                if (tipo !== 'REG') {
-                    formHtml += `
-                        <div class="mb-3">
-                            <label class="form-label">Bunches/Procona:</label>
-                            <input type="number" class="form-control" 
-                                   name="${category}_${tipo}_bunchesPerProcona" 
-                                   value="${tipoConfig.bunchesPerProcona ?? ''}">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Stems/Bunch:</label>
-                            <input type="number" class="form-control" 
-                                   name="${category}_${tipo}_stemsPerBunch" 
-                                   value="${tipoConfig.stemsPerBunch ?? ''}">
-                        </div>
-                    `;
-                } else {
-                    // Para 'REG', mostramos los campos de Stems/Bunch y Longitudes
+                
+                // Si es REG o si se marca como un nuevo tipo (con la propiedad newType)
+                if (tipo === 'REG' || tipoConfig.newType) {
                     formHtml += `
                         <div class="mb-3">
                             <label class="form-label">Stems/Bunch (Predeterminado):</label>
                             <input type="number" class="form-control"
-                                   name="${category}_REG_stemsPerBunch_default"
+                                   name="${category}_${tipo}_stemsPerBunch_default"
                                    value="${tipoConfig.stemsPerBunch ?? ''}">
                         </div>
                         <h6 class="fw-semibold">Longitudes:</h6>
                     `;
-        
-                    // Si no hay longitudes en 'tipoConfig', las inicializamos con un objeto vacío
-                    const lengths = tipoConfig.lengths || {};
-        
-                    // Iteramos sobre las longitudes predefinidas (70, 60, 55, 50, 40)
                     const predefinedLengths = [70, 60, 55, 50, 40];
                     predefinedLengths.forEach(long => {
-                        const longConfig = lengths[long] || { bunchesPerProcona: '', stemsPerBunch: '' };
+                        const longConfig = (tipoConfig.lengths && tipoConfig.lengths[long]) || { bunchesPerProcona: '', stemsPerBunch: '' };
                         formHtml += `
                             <div class="row mb-2">
                                 <div class="col-6">
                                     <label class="form-label">Bunches/Procona para ${long} cm:</label>
                                     <input type="number" class="form-control"
-                                           name="${category}_REG_bunchesPerProcona_${long}"
+                                           name="${category}_${tipo}_bunchesPerProcona_${long}"
                                            value="${longConfig.bunchesPerProcona ?? ''}">
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">Stems/Bunch para ${long} cm:</label>
                                     <input type="number" class="form-control"
-                                           name="${category}_REG_stemsPerBunch_${long}"
+                                           name="${category}_${tipo}_stemsPerBunch_${long}"
                                            value="${longConfig.stemsPerBunch ?? ''}">
                                 </div>
                             </div>
                         `;
                     });
+                } else {
+                    // Para tipos existentes sin estructura completa, se muestran únicamente los campos que ya existen
+                    if (tipoConfig.bunchesPerProcona !== undefined) {
+                        formHtml += `
+                            <div class="mb-3">
+                                <label class="form-label">Bunches/Procona:</label>
+                                <input type="number" class="form-control" 
+                                       name="${category}_${tipo}_bunchesPerProcona"
+                                       value="${tipoConfig.bunchesPerProcona}">
+                            </div>
+                        `;
+                    }
+                    if (tipoConfig.stemsPerBunch !== undefined) {
+                        formHtml += `
+                            <div class="mb-3">
+                                <label class="form-label">Stems/Bunch:</label>
+                                <input type="number" class="form-control" 
+                                       name="${category}_${tipo}_stemsPerBunch"
+                                       value="${tipoConfig.stemsPerBunch}">
+                            </div>
+                        `;
+                    }
                 }
             });
         
+            // Este formulario NO incluirá el botón para crear un nuevo tipo aquí, ya que ese botón se moverá a la cabecera
             return formHtml;
         }
         
-    
+
+        function openGlobalCreateNewBouquetTypeModal() {
+            const globalTypeModal = document.createElement('div');
+            globalTypeModal.classList.add('modal', 'fade');
+            globalTypeModal.setAttribute('tabindex', '-1');
+            globalTypeModal.setAttribute('aria-labelledby', 'globalCreateNewTypeModalLabel');
+            globalTypeModal.setAttribute('aria-hidden', 'true');
+        
+            globalTypeModal.innerHTML = `
+              <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="globalCreateNewTypeModalLabel">Crear nuevo tipo de ramo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="globalCreateNewTypeForm">
+                      <div class="mb-3">
+                        <label for="globalNewTypeName" class="form-label">Nombre del nuevo tipo</label>
+                        <input type="text" class="form-control" id="globalNewTypeName" name="globalNewTypeName" required>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="saveGlobalNewTypeBtn">Guardar tipo</button>
+                  </div>
+                </div>
+              </div>
+            `;
+        
+            document.body.appendChild(globalTypeModal);
+            const globalBootstrapModal = new bootstrap.Modal(globalTypeModal);
+            globalBootstrapModal.show();
+        
+            globalTypeModal.querySelector('#saveGlobalNewTypeBtn').addEventListener('click', () => {
+                const form = globalTypeModal.querySelector('#globalCreateNewTypeForm');
+                const formData = new FormData(form);
+                const newTypeName = formData.get('globalNewTypeName').trim();
+                if (!newTypeName) {
+                    showAlert('El nombre del nuevo tipo es obligatorio', 'danger');
+                    return;
+                }
+        
+                // Definir la configuración por defecto para el nuevo tipo (similar a REG)
+                const newTypeDefaultConfig = {
+                    newType: true, // Para identificarlo en el renderizado
+                    stemsPerBunch: 0, // Puedes definir un valor predeterminado o dejarlo en 0
+                    lengths: {}
+                };
+                [70, 60, 55, 50, 40].forEach(long => {
+                    newTypeDefaultConfig.lengths[long] = {
+                        bunchesPerProcona: 0,
+                        stemsPerBunch: 0
+                    };
+                });
+        
+                // Actualizar todas las categorías agregando el nuevo tipo
+                Object.keys(config).forEach(category => {
+                    // Ignoramos propiedades que no sean objetos (por ejemplo, si hubiera createdAt o updatedAt globales)
+                    if (typeof config[category] !== 'object') return;
+                    // Si el tipo ya existe en alguna categoría, aquí se podría decidir actualizarlo o ignorarlo
+                    if (!config[category][newTypeName]) {
+                        config[category][newTypeName] = JSON.parse(JSON.stringify(newTypeDefaultConfig));
+                    }
+                });
+        
+                // Enviar la configuración actualizada para cada categoría
+                const updateRequests = Object.keys(config).map(category => {
+                    if (typeof config[category] !== 'object') return Promise.resolve();
+                    return fetch('/api/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            category: category,
+                            configData: config[category]
+                        })
+                    });
+                });
+        
+                Promise.all(updateRequests)
+                    .then(responses => Promise.all(responses.map(r => r.json())))
+                    .then(results => {
+                        globalBootstrapModal.hide();
+                        globalTypeModal.remove();
+                        showAlert("Nuevo tipo creado en todas las categorías");
+                        // Opcional: refrescar la interfaz si el modal de configuración principal se encuentra abierto
+                    })
+                    .catch(error => {
+                        console.error("Error al actualizar globalmente", error);
+                        showAlert("Error al actualizar globalmente", "danger");
+                    });
+            });
+        
+            globalTypeModal.addEventListener('hidden.bs.modal', () => {
+                globalTypeModal.remove();
+            });
+        }
+        
+        
+        
+
         // Manejador del botón "Crear Categoría"
         modal.querySelector('#createCategoryBtn').addEventListener('click', () => {
             openCreateCategoryModal();
         });
-    
+        
+        const createNewBouquetTypeGlobalBtn = document.getElementById('createNewBouquetTypeGlobalBtn');
+        if (createNewBouquetTypeGlobalBtn) {
+            createNewBouquetTypeGlobalBtn.addEventListener('click', () => {
+                openGlobalCreateNewBouquetTypeModal();
+            });
+        }
+
+
         // Guardar cambios: se actualiza el objeto config y se envía al servidor
         saveConfigBtn.addEventListener('click', () => {
             const form = modal.querySelector('#configForm');
@@ -423,54 +541,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         
-            ['TJ', 'REG', 'WS10', 'NF', 'SU30'].forEach(tipo => {
-                if (!config[selectedCategory][tipo]) {
-                    config[selectedCategory][tipo] = {};
-                }
-                if (tipo !== 'REG') {
+            // Iterar sobre las propiedades de la categoría, ignorando campos internos
+            Object.keys(config[selectedCategory]).forEach(tipo => {
+                if (['varieties', 'createdAt', 'updatedAt'].includes(tipo)) return;
+                const tipoConfig = config[selectedCategory][tipo] || {};
+        
+                // Si es REG o un nuevo tipo (marcado con newType) se actualiza con la estructura completa
+                if (tipo === 'REG' || tipoConfig.newType) {
+                    const stemsPerBunchDefaultKey = `${selectedCategory}_${tipo}_stemsPerBunch_default`;
+                    const stemsPerBunchDefaultValue = parseInt(formData.get(stemsPerBunchDefaultKey));
+                    config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsPerBunchDefaultValue) ? 0 : stemsPerBunchDefaultValue;
+        
+                    // Aseguramos que exista el objeto de longitudes
+                    if (!config[selectedCategory][tipo].lengths) {
+                        config[selectedCategory][tipo].lengths = {};
+                    }
+        
+                    [70, 60, 55, 50, 40].forEach(long => {
+                        const bunchesKey = `${selectedCategory}_${tipo}_bunchesPerProcona_${long}`;
+                        const stemsKey = `${selectedCategory}_${tipo}_stemsPerBunch_${long}`;
+                        const bunchesVal = parseInt(formData.get(bunchesKey));
+                        const stemsVal = parseInt(formData.get(stemsKey));
+                        config[selectedCategory][tipo].lengths[long] = {
+                            bunchesPerProcona: isNaN(bunchesVal) ? 0 : bunchesVal,
+                            stemsPerBunch: isNaN(stemsVal) ? 0 : stemsVal
+                        };
+                    });
+                } else {
+                    // Para los tipos que tienen estructura básica, se actualizan únicamente los campos existentes
                     const bunchesKey = `${selectedCategory}_${tipo}_bunchesPerProcona`;
                     const stemsKey = `${selectedCategory}_${tipo}_stemsPerBunch`;
                     const bunchesValue = parseInt(formData.get(bunchesKey));
                     const stemsValue = parseInt(formData.get(stemsKey));
                     config[selectedCategory][tipo].bunchesPerProcona = isNaN(bunchesValue) ? 0 : bunchesValue;
                     config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsValue) ? 0 : stemsValue;
-                } else {
-                    const stemsPerBunchDefaultKey = `${selectedCategory}_REG_stemsPerBunch_default`;
-                    const stemsPerBunchDefaultValue = parseInt(formData.get(stemsPerBunchDefaultKey));
-                    config[selectedCategory][tipo].stemsPerBunch = isNaN(stemsPerBunchDefaultValue) ? 0 : stemsPerBunchDefaultValue;
-                    if (!config[selectedCategory][tipo].lengths) {
-                        config[selectedCategory][tipo].lengths = {};
-                    }
-                    const defaultLengths = (defaultConfigs[selectedCategory] &&
-                                            defaultConfigs[selectedCategory].REG &&
-                                            defaultConfigs[selectedCategory].REG.lengths)
-                                           || {70: {}, 60: {}, 55: {}, 50: {}, 40: {}};
-                    Object.keys(defaultLengths).forEach(long => {
-                        const bunchesKey = `${selectedCategory}_REG_bunchesPerProcona_${long}`;
-                        const stemsPerBunchKey = `${selectedCategory}_REG_stemsPerBunch_${long}`;
-                        const bunchesVal = parseInt(formData.get(bunchesKey));
-                        const stemsVal = parseInt(formData.get(stemsPerBunchKey));
-                        if (!config[selectedCategory][tipo].lengths[long]) {
-                            config[selectedCategory][tipo].lengths[long] = {};
-                        }
-                        config[selectedCategory][tipo].lengths[long].bunchesPerProcona = isNaN(bunchesVal) ? 0 : bunchesVal;
-                        if (!isNaN(stemsVal)) {
-                            config[selectedCategory][tipo].lengths[long].stemsPerBunch = stemsVal;
-                        } else {
-                            delete config[selectedCategory][tipo].lengths[long].stemsPerBunch;
-                        }
-                    });
                 }
             });
         
-            // Si existe la sección de varieties, se leen sus valores
+            // Actualizar la lista de varieties si existe
             const varietiesListEl = modal.querySelector('#varietiesList');
             if (varietiesListEl) {
                 const varietyItems = Array.from(varietiesListEl.children);
                 config[selectedCategory].varieties = varietyItems.map(li => li.querySelector('span').textContent.trim());
             }
         
-            // Enviar la configuración actualizada al servidor
+            // Enviar la configuración actualizada de la categoría al servidor
             fetch('/api/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -490,6 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAlert('Error al guardar la configuración', 'danger');
             });
         });
+
     
         modal.addEventListener('hidden.bs.modal', () => {
             modal.remove();
@@ -504,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
         createModal.setAttribute('tabindex', '-1');
         createModal.setAttribute('aria-labelledby', 'createCategoryModalLabel');
         createModal.setAttribute('aria-hidden', 'true');
-      
+    
         createModal.innerHTML = `
           <div class="modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
@@ -518,10 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label for="newCategoryName" class="form-label">Name category</label>
                     <input type="text" class="form-control" id="newCategoryName" required>
                   </div>
-                  
                   <div id="categoryConfig" class="p-2 rounded" style="background-color: #f9f9f9;">
-                    <!-- Aquí se generarán los campos para cada tipo -->
-                    ${generateEmptyConfigForm()}
+                    <!-- Aquí se generarán los campos para cada tipo, pero ahora se incluirán todos los tipos existentes -->
+                    ${generateEmptyConfigFormForNewCategory()}
                   </div>
                 </form>
               </div>
@@ -535,160 +650,145 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(createModal);
         const newBootstrapModal = new bootstrap.Modal(createModal);
         newBootstrapModal.show();
-      
-        // Manejador del botón "Crear Categoría"
+    
+        // Manejador del botón "Crear categoría"
         createModal.querySelector('#saveNewCategoryBtn').addEventListener('click', () => {
             const form = createModal.querySelector('#createCategoryForm');
             const newCategoryName = form.querySelector('#newCategoryName').value.trim();
             if (!newCategoryName) {
-            showAlert('El nombre de la categoría es obligatorio', 'danger');
-            return;
+                showAlert('El nombre de la categoría es obligatorio', 'danger');
+                return;
             }
-        
-            // Extraer datos del formulario
-            const formData = new FormData(form);
+    
+            // Construir la configuración de la nueva categoría:
+            // Se toma como referencia los tipos de una categoría existente (si hay alguna)
+            const referenceCategoryKey = Object.keys(config).find(key => typeof config[key] === 'object');
+            let bouquetTypes = [];
+            if (referenceCategoryKey) {
+                // Se toman las claves existentes filtrando campos internos (por ejemplo, varieties, createdAt, updatedAt)
+                bouquetTypes = Object.keys(config[referenceCategoryKey]).filter(tipo => 
+                    !['varieties', 'createdAt', 'updatedAt'].includes(tipo)
+                );
+            } else {
+                // Si no existe ninguna categoría, se usan unos valores por defecto
+                bouquetTypes = ['TJ', 'NF', 'REG', 'WS10', 'SU30'];
+            }
+    
+            // Ahora, para cada tipo existente, se crea la configuración por defecto
             const newCategoryConfig = {};
-        
-            // Procesar tipos que no son REG
-            ['TJ', 'NF', 'WS10', 'SU30'].forEach(tipo => {
-            newCategoryConfig[tipo] = {
-                bunchesPerProcona: parseInt(formData.get(`${tipo}_bunchesPerProcona`)) || 0,
-                stemsPerBunch: parseInt(formData.get(`${tipo}_stemsPerBunch`)) || 0
-            };
+            bouquetTypes.forEach(tipo => {
+                // Si el tipo es REG o se detecta que es un nuevo tipo (por ejemplo, tiene la propiedad newType) se crea la estructura completa
+                if (tipo === 'REG' || (referenceCategoryKey && config[referenceCategoryKey][tipo] && config[referenceCategoryKey][tipo].newType)) {
+                    newCategoryConfig[tipo] = {
+                        // Si es un nuevo tipo, marcamos la propiedad para que se renderice completo
+                        newType: tipo !== 'REG' ? true : undefined,
+                        stemsPerBunch: 0,
+                        lengths: {}
+                    };
+                    [70, 60, 55, 50, 40].forEach(long => {
+                        newCategoryConfig[tipo].lengths[long] = {
+                            bunchesPerProcona: 0,
+                            stemsPerBunch: 0
+                        };
+                    });
+                } else {
+                    // Para tipos básicos (predefinidos que no tengan estructura completa)
+                    newCategoryConfig[tipo] = {
+                        bunchesPerProcona: 0,
+                        stemsPerBunch: 0
+                    };
+                }
             });
-        
-            // Procesar el tipo REG
-            newCategoryConfig['REG'] = {
-            stemsPerBunch: parseInt(formData.get('REG_stemsPerBunch_default')) || 0,
-            lengths: {}
-            };
-            // Predefinir longitudes (se pueden ajustar según la necesidad)
-            [70, 60, 55, 50, 40].forEach(long => {
-            newCategoryConfig['REG'].lengths[long] = {
-                bunchesPerProcona: parseInt(formData.get(`REG_bunchesPerProcona_${long}`)) || 0,
-                stemsPerBunch: parseInt(formData.get(`REG_stemsPerBunch_${long}`)) || 0
-            };
-            });
-        
-            // Enviar la nueva categoría al servidor
+    
+            // Enviar la nueva categoría al servidor usando el formato que espera el endpoint
             fetch('/api/config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                category: newCategoryName,
-                configData: newCategoryConfig
-            })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    category: newCategoryName,
+                    configData: newCategoryConfig
+                })
             })
             .then(res => res.json())
             .then(result => {
-            showAlert(result.message);
-            newBootstrapModal.hide();
-            createModal.remove();
-            // Actualiza el select de categorías en el modal principal
-            const configCategorySelect = document.querySelector('#configCategory');
-            const newOption = document.createElement('option');
-            newOption.value = newCategoryName;
-            newOption.text = newCategoryName;
-            configCategorySelect.appendChild(newOption);
-            // También actualiza la variable global config (se almacena en mayúsculas)
-            config[newCategoryName.toUpperCase()] = newCategoryConfig;
+                showAlert(result.message);
+                newBootstrapModal.hide();
+                createModal.remove();
+                // Actualizar el select de categorías en el modal principal
+                const configCategorySelect = document.querySelector('#configCategory');
+                const newOption = document.createElement('option');
+                newOption.value = newCategoryName;
+                newOption.text = newCategoryName;
+                configCategorySelect.appendChild(newOption);
+                // Actualiza la variable global config (usando, por ejemplo, el nombre en mayúsculas)
+                config[newCategoryName.toUpperCase()] = newCategoryConfig;
             })
             .catch(error => {
-            console.error('Error al crear la categoría:', error);
-            showAlert('Error al crear la categoría', 'danger');
+                console.error('Error al crear la categoría:', error);
+                showAlert('Error al crear la categoría', 'danger');
             });
         });
-  
-      
+    
         createModal.addEventListener('hidden.bs.modal', () => {
-          createModal.remove();
+            createModal.remove();
         });
     }
-      
-    function generateEmptyConfigForm() {
-        // Genera el formulario vacío para la nueva categoría
+    
+    // Función para generar el formulario vacío para la nueva categoría
+    // Aquí se recorren los tipos globales (según los obtenidos de una categoría de referencia)
+    function generateEmptyConfigFormForNewCategory() {
+        const referenceCategoryKey = Object.keys(config).find(key => typeof config[key] === 'object');
+        let bouquetTypes = [];
+        if (referenceCategoryKey) {
+            bouquetTypes = Object.keys(config[referenceCategoryKey]).filter(tipo =>
+                !['varieties', 'createdAt', 'updatedAt'].includes(tipo)
+            );
+        } else {
+            bouquetTypes = ['TJ', 'NF', 'REG', 'WS10', 'SU30'];
+        }
+    
         let formHtml = '';
-        ['TJ', 'NF', 'REG', 'WS10', 'SU30'].forEach(tipo => {
-          formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo}</h5>`;
-          if (tipo !== 'REG') {
-            formHtml += `
-              <div class="mb-3">
-                <label class="form-label">Bunches/Procona:</label>
-                <input type="number" class="form-control" name="${tipo}_bunchesPerProcona" value="">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Stems/Bunch:</label>
-                <input type="number" class="form-control" name="${tipo}_stemsPerBunch" value="">
-              </div>
-            `;
-          } else {
-            formHtml += `
-              <div class="mb-3">
-                <label class="form-label">Stems/Bunch (Predeterminado):</label>
-                <input type="number" class="form-control" name="REG_stemsPerBunch_default" value="">
-              </div>
-              <h6 class="fw-semibold">Longitudes:</h6>
-              <div id="REG_lengths">
-                <div class="row mb-2">
-                  <div class="col-6">
-                    <label class="form-label">Bunches/Procona para 70 cm:</label>
-                    <input type="number" class="form-control" name="REG_bunchesPerProcona_70" value="">
+        bouquetTypes.forEach(tipo => {
+            if (tipo === 'REG' || (referenceCategoryKey && config[referenceCategoryKey][tipo] && config[referenceCategoryKey][tipo].newType)) {
+                formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo} (estructura completa)</h5>`;
+                formHtml += `
+                  <div class="mb-3">
+                    <label class="form-label">Stems/Bunch (Predeterminado):</label>
+                    <input type="number" class="form-control" name="${tipo}_stemsPerBunch_default" value="0">
                   </div>
-                  <div class="col-6">
-                    <label class="form-label">Stems/Bunch para 70 cm:</label>
-                    <input type="number" class="form-control" name="REG_stemsPerBunch_70" value="">
+                  <h6 class="fw-semibold">Longitudes:</h6>
+                `;
+                [70, 60, 55, 50, 40].forEach(long => {
+                    formHtml += `
+                      <div class="row mb-2">
+                          <div class="col-6">
+                              <label class="form-label">Bunches/Procona para ${long} cm:</label>
+                              <input type="number" class="form-control" name="${tipo}_bunchesPerProcona_${long}" value="0">
+                          </div>
+                          <div class="col-6">
+                              <label class="form-label">Stems/Bunch para ${long} cm:</label>
+                              <input type="number" class="form-control" name="${tipo}_stemsPerBunch_${long}" value="0">
+                          </div>
+                      </div>
+                    `;
+                });
+            } else {
+                formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo}</h5>`;
+                formHtml += `
+                  <div class="mb-3">
+                    <label class="form-label">Bunches/Procona:</label>
+                    <input type="number" class="form-control" name="${tipo}_bunchesPerProcona" value="0">
                   </div>
-                </div>
-                <div class="row mb-2">
-                  <div class="col-6">
-                    <label class="form-label">Bunches/Procona para 60 cm:</label>
-                    <input type="number" class="form-control" name="REG_bunchesPerProcona_60" value="">
+                  <div class="mb-3">
+                    <label class="form-label">Stems/Bunch:</label>
+                    <input type="number" class="form-control" name="${tipo}_stemsPerBunch" value="0">
                   </div>
-                  <div class="col-6">
-                    <label class="form-label">Stems/Bunch para 60 cm:</label>
-                    <input type="number" class="form-control" name="REG_stemsPerBunch_60" value="">
-                  </div>
-                </div>
-                <div class="row mb-2">
-                  <div class="col-6">
-                    <label class="form-label">Bunches/Procona para 55 cm:</label>
-                    <input type="number" class="form-control" name="REG_bunchesPerProcona_55" value="">
-                  </div>
-                  <div class="col-6">
-                    <label class="form-label">Stems/Bunch para 55 cm:</label>
-                    <input type="number" class="form-control" name="REG_stemsPerBunch_55" value="">
-                  </div>
-                </div>
-                <div class="row mb-2">
-                  <div class="col-6">
-                    <label class="form-label">Bunches/Procona para 50 cm:</label>
-                    <input type="number" class="form-control" name="REG_bunchesPerProcona_50" value="">
-                  </div>
-                  <div class="col-6">
-                    <label class="form-label">Stems/Bunch para 50 cm:</label>
-                    <input type="number" class="form-control" name="REG_stemsPerBunch_50" value="">
-                  </div>
-                </div>
-                <div class="row mb-2">
-                  <div class="col-6">
-                    <label class="form-label">Bunches/Procona para 40 cm:</label>
-                    <input type="number" class="form-control" name="REG_bunchesPerProcona_40" value="">
-                  </div>
-                  <div class="col-6">
-                    <label class="form-label">Stems/Bunch para 40 cm:</label>
-                    <input type="number" class="form-control" name="REG_stemsPerBunch_40" value="">
-                  </div>
-                </div>
-              </div>
-            `;
-          }
+                `;
+            }
         });
         return formHtml;
     }
-      
-      
-      
-
+    
     // Función para mostrar alertas
     function showAlert(message, type = 'success') {
         let alertContainer = document.getElementById('alertContainer');
