@@ -1734,31 +1734,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateCalculations(row) {
         const groupId = row.getAttribute('data-group-id');
         if (!groupId) {
-          console.warn('La fila no tiene un ID de grupo.');
-          return;
+            console.warn('La fila no tiene un ID de grupo.');
+            return;
         }
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         if (!groupRows.length) {
-          console.warn(`No se encontraron filas para el ID de grupo ${groupId}.`);
-          return;
+            console.warn(`No se encontraron filas para el ID de grupo ${groupId}.`);
+            return;
         }
         const mainRow = groupRows[0];
+        // La celda "Tipo" aquí se espera que contenga el nombre de la categoría (ej. VERONICA, HYPERICUM, etc.)
         const tipoCell = mainRow.querySelector('td[data-col="Tipo"]');
-        const tipo = tipoCell ? tipoCell.innerText.trim() : '';
-        if (!tipo) {
-          console.warn(`La fila principal del grupo ${groupId} no tiene definido el "Tipo".`);
-          return;
+        const categoryName = tipoCell ? tipoCell.innerText.trim() : '';
+        if (!categoryName) {
+            console.warn(`La fila principal del grupo ${groupId} no tiene definido el "Tipo".`);
+            return;
         }
-        if (!config[tipo]) {
-          console.warn(`Configuración para la categoría "${tipo}" no encontrada en config.`);
-          return;
+        if (!config[categoryName]) {
+            console.warn(`Configuración para la categoría "${categoryName}" no encontrada en config.`);
+            return;
         }
         
-        // Obtener el valor de TJ - REG y Long
+        // Se obtiene el valor del select de "TJ - REG" y el valor de la celda "Long"
         const tjRegCell = row.querySelector('td[data-col="TJ - REG"] select');
         const longCell = row.querySelector('td[data-col="Long"]');
         const tjRegValue = tjRegCell ? tjRegCell.value : '';
-        // Convertir el valor de longitud a número y luego a string para la búsqueda (ya que en Firebase la clave podría estar como string)
         const longValue = parseInt(longCell ? longCell.innerText.trim() : '') || 0;
         const longKey = longValue.toString();
       
@@ -1768,85 +1768,89 @@ document.addEventListener('DOMContentLoaded', async () => {
         let bunchesPerProcona = 0;
         let stemsPerBunch = 0;
       
+        // Procesamiento según el tipo de ramo seleccionado en el dropdown
         if (tjRegValue === "TJ" || tjRegValue === "WS10" || tjRegValue === "NF") {
-          if (config[tipo][tjRegValue]) {
-            bunchesPerProcona = config[tipo][tjRegValue].bunchesPerProcona || 0;
-            stemsPerBunch = config[tipo][tjRegValue].stemsPerBunch || 0;
-          } else {
-            console.warn(`Configuración para categoría "${tipo}" y TJ - REG "${tjRegValue}" no encontrada en config.`);
-          }
-        } else if (tjRegValue === "REG") {
-          if (config[tipo].REG) {
-            const regConfig = config[tipo].REG;
-            // Buscar usando la clave de longitud (longKey)
-            if (regConfig.lengths && regConfig.lengths[longKey] && regConfig.lengths[longKey].stemsPerBunch !== undefined) {
-              stemsPerBunch = regConfig.lengths[longKey].stemsPerBunch;
-            } else if (regConfig.stemsPerBunch !== undefined) {
-              stemsPerBunch = regConfig.stemsPerBunch;
+            if (config[categoryName][tjRegValue]) {
+                bunchesPerProcona = config[categoryName][tjRegValue].bunchesPerProcona || 0;
+                stemsPerBunch = config[categoryName][tjRegValue].stemsPerBunch || 0;
             } else {
-              stemsPerBunch = 0;
-              console.warn(`stemsPerBunch no está definido para categoría "${tipo}" en REG.`);
+                console.warn(`Configuración para categoría "${categoryName}" y tipo "${tjRegValue}" no encontrada en config.`);
             }
-            if (regConfig.lengths && regConfig.lengths[longKey] && regConfig.lengths[longKey].bunchesPerProcona !== undefined) {
-              bunchesPerProcona = regConfig.lengths[longKey].bunchesPerProcona;
-            } else if (regConfig.bunchesPerProcona !== undefined) {
-              bunchesPerProcona = regConfig.bunchesPerProcona;
-            } else {
-              bunchesPerProcona = 0;
-              console.warn(`bunchesPerProcona no está definido para categoría "${tipo}" en REG y longitud ${longValue}.`);
-            }
-          } else {
-            console.warn(`Configuración para categoría "${tipo}" y TJ - REG "REG" no encontrada en config.`);
-          }
         } else if (tjRegValue === "SU30") {
-          if (config[tipo] && config[tipo]["SU30"]) {
-            bunchesPerProcona = config[tipo]["SU30"].bunchesPerProcona || 0;
-            stemsPerBunch = config[tipo]["SU30"].stemsPerBunch || 0;
-          } else {
-            console.warn(`Configuración para categoría "${tipo}" y SU30 no encontrada en config.`);
-          }
+            if (config[categoryName] && config[categoryName]["SU30"]) {
+                bunchesPerProcona = config[categoryName]["SU30"].bunchesPerProcona || 0;
+                stemsPerBunch = config[categoryName]["SU30"].stemsPerBunch || 0;
+            } else {
+                console.warn(`Configuración para categoría "${categoryName}" y SU30 no encontrada en config.`);
+            }
+        } 
+        // Aquí se procesan tanto REG como los nuevos tipos que se han creado (marcados con newType)
+        else if (tjRegValue === "REG" || (config[categoryName][tjRegValue] && config[categoryName][tjRegValue].newType)) {
+            // Si se trata de REG se usa la configuración de REG; si es un nuevo tipo, se usa esa entrada
+            const extConfig = (tjRegValue === "REG") ? config[categoryName].REG : config[categoryName][tjRegValue];
+            if (extConfig) {
+                if (extConfig.lengths && extConfig.lengths[longKey] && extConfig.lengths[longKey].stemsPerBunch !== undefined) {
+                    stemsPerBunch = extConfig.lengths[longKey].stemsPerBunch;
+                } else if (extConfig.stemsPerBunch !== undefined) {
+                    stemsPerBunch = extConfig.stemsPerBunch;
+                } else {
+                    stemsPerBunch = 0;
+                    console.warn(`stemsPerBunch no está definido para categoría "${categoryName}" en ${tjRegValue}.`);
+                }
+                if (extConfig.lengths && extConfig.lengths[longKey] && extConfig.lengths[longKey].bunchesPerProcona !== undefined) {
+                    bunchesPerProcona = extConfig.lengths[longKey].bunchesPerProcona;
+                } else if (extConfig.bunchesPerProcona !== undefined) {
+                    bunchesPerProcona = extConfig.bunchesPerProcona;
+                } else {
+                    bunchesPerProcona = 0;
+                    console.warn(`bunchesPerProcona no está definido para categoría "${categoryName}" en ${tjRegValue} y longitud ${longValue}.`);
+                }
+            } else {
+                console.warn(`Configuración para categoría "${categoryName}" y tipo "${tjRegValue}" no encontrada en config.`);
+            }
         } else {
-          bunchesPerProcona = 0;
-          stemsPerBunch = 0;
+            bunchesPerProcona = 0;
+            stemsPerBunch = 0;
         }
       
-        // Actualizar la celda de Bunches/Procona
+        // Actualización de la celda "Bunches/Procona" en la fila actual
         const bunchesPerProconaCell = row.querySelector('td[data-col="Bunches/Procona"]');
         if (bunchesPerProconaCell) {
-          bunchesPerProconaCell.innerText = bunchesPerProcona;
+            bunchesPerProconaCell.innerText = bunchesPerProcona;
         }
       
-        // Calcular el total de bunches usando las celdas de los campos P y R
+        // Cálculo del total de bunches utilizando los campos P y R
         let bunchesTotal = 0;
         pFields.forEach(field => {
-          const cell = row.querySelector(`td[data-col="${field}"]`);
-          const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
-          if (value > 0) {
-            bunchesTotal += value * bunchesPerProcona;
-          }
+            const cell = row.querySelector(`td[data-col="${field}"]`);
+            const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
+            if (value > 0) {
+                bunchesTotal += value * bunchesPerProcona;
+            }
         });
         rFields.forEach(field => {
-          const cell = row.querySelector(`td[data-col="${field}"]`);
-          const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
-          if (value > 0) {
-            bunchesTotal += value;
-          }
+            const cell = row.querySelector(`td[data-col="${field}"]`);
+            const value = parseInt(cell ? cell.innerText.trim() : '') || 0;
+            if (value > 0) {
+                bunchesTotal += value;
+            }
         });
       
         const bunchesTotalCell = row.querySelector('td[data-col="Bunches Total"]');
         if (bunchesTotalCell) {
-          bunchesTotalCell.innerText = bunchesTotal;
+            bunchesTotalCell.innerText = bunchesTotal;
         }
       
-        // Calcular y actualizar el total de stems (multiplicación de bunchesTotal por stemsPerBunch)
+        // Cálculo y actualización del total de stems (bunchesTotal * stemsPerBunch)
         const stemsCell = row.querySelector('td[data-col="Stems"]');
         if (stemsCell) {
-          const stems = bunchesTotal * stemsPerBunch;
-          stemsCell.innerText = stems;
+            const stems = bunchesTotal * stemsPerBunch;
+            stemsCell.innerText = stems;
         }
       
         updateStemsTotal(groupId);
     }
+    
       
 
     /**
@@ -1859,7 +1863,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateStemsTotal(groupId) {
         const groupRows = dataTable.querySelectorAll(`tr[data-group-id="${groupId}"]`);
         let totalStems = 0;
-
+    
         groupRows.forEach(row => {
             const stemsCell = row.querySelector('td[data-col="Stems"]');
             if (stemsCell) {
@@ -1867,13 +1871,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 totalStems += stemsValue;
             }
         });
-
+    
         const mainRow = dataTable.querySelector(`tr[data-group-id="${groupId}"]`);
         const stemsTotalCell = mainRow.querySelector('td[data-col="Stems Total"]');
         if (stemsTotalCell) {
             stemsTotalCell.innerText = totalStems;
         }
-
+    
         updateGrandTotal();
     }
 
@@ -1884,13 +1888,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateGrandTotal() {
         const grandTotalValue = document.getElementById('grandTotalValue');
         let grandTotal = 0;
-
+    
         const stemsTotalCells = dataTable.querySelectorAll('td[data-col="Stems Total"]');
         stemsTotalCells.forEach(cell => {
             const value = parseInt(cell.innerText.trim()) || 0;
             grandTotal += value;
         });
-
+    
         if (grandTotalValue) {
             grandTotalValue.innerText = grandTotal;
         }
@@ -1959,9 +1963,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.setItem('responsable', responsableInput.value.trim());
         console.log("Datos guardados en localStorage:", groups);
     }
-
-      
-      
 
     /**
      * The `loadTableData` function retrieves saved data from local storage and dynamically populates a
