@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </h5>
                         <button id="createCategoryBtn" class="btn btn-outline-primary me-2">Create Category</button>
                         <!-- Nuevo botón global para crear tipo de ramo -->
-                        <button id="createNewBouquetTypeGlobalBtn" class="btn btn-outline-secondary me-2">Crear tipo de ramo</button>
+                        <button id="createNewBouquetTypeGlobalBtn" class="btn btn-outline-primary me-2">Create new bouquet type</button>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
@@ -427,20 +427,20 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="modal-dialog modal-dialog-scrollable modal-lg">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="globalCreateNewTypeModalLabel">Crear nuevo tipo de ramo</h5>
+                    <h5 class="modal-title" id="globalCreateNewTypeModalLabel">Create new bouquet type</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                   </div>
                   <div class="modal-body">
                     <form id="globalCreateNewTypeForm">
                       <div class="mb-3">
-                        <label for="globalNewTypeName" class="form-label">Nombre del nuevo tipo</label>
+                        <label for="globalNewTypeName" class="form-label">Name of the new type</label>
                         <input type="text" class="form-control" id="globalNewTypeName" name="globalNewTypeName" required>
                       </div>
                     </form>
                   </div>
                   <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" id="saveGlobalNewTypeBtn">Guardar tipo</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveGlobalNewTypeBtn">Save type</button>
                   </div>
                 </div>
               </div>
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .then(results => {
                         globalBootstrapModal.hide();
                         globalTypeModal.remove();
-                        showAlert("Nuevo tipo creado en todas las categorías");
+                        showAlert("New type created in all categories");
                         // Opcional: refrescar la interfaz si el modal de configuración principal se encuentra abierto
                     })
                     .catch(error => {
@@ -750,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let formHtml = '';
         bouquetTypes.forEach(tipo => {
             if (tipo === 'REG' || (referenceCategoryKey && config[referenceCategoryKey][tipo] && config[referenceCategoryKey][tipo].newType)) {
-                formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo} (estructura completa)</h5>`;
+                formHtml += `<hr class="my-3"><h5 class="fw-bold">${tipo}</h5>`;
                 formHtml += `
                   <div class="mb-3">
                     <label class="form-label">Stems/Bunch (Predeterminado):</label>
